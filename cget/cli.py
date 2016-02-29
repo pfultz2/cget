@@ -1,4 +1,4 @@
-import click, os, patoolib, urllib, shutil, sys
+import click, os, patoolib, urllib, shutil, sys, base64
 
 if os.name == 'posix' and sys.version_info[0] < 3:
     import subprocess32 as subprocess
@@ -20,6 +20,27 @@ def mkfile(d, file, content, always_write=True):
     if not os.path.exists(p) or always_write:
         write_to(p, content)
     return p
+
+def lsdir(p):
+    return (d for d in os.listdir(p) if os.path.isdir(os.path.join(p, d)))
+
+def symlink_dir(src, dst):
+    for root, dirs, files in os.walk(src):
+        for file in files:
+            path = os.path.relpath(root, src)
+            d = os.path.join(dst, path)
+            mkdir(d)
+            os.symlink(os.path.join(root, file), os.path.join(d, file))
+
+def rm_symlink(file):
+    if os.path.islink(file):
+        f = os.readlink(file)
+        if not os.path.exists(f): os.remove(file)
+
+def rm_symlink_dir(d):
+    for root, dirs, files in os.walk(d):
+        for file in files:
+            rm_symlink(os.path.join(root, file))
 
 def get_dirs(d):
     return (os.path.join(d,o) for o in os.listdir(d) if os.path.isdir(os.path.join(d,o)))
@@ -43,7 +64,9 @@ def cmake(args, cwd=None, toolchain=None):
     return subprocess.Popen(cmake_exe+list(args), cwd=cwd).communicate()
 
 def generate_cmake_toolchain(prefix):
-    yield 'set(CMAKE_INSTALL_PREFIX "{0}")'.format(prefix)
+    yield 'if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)'
+    yield '    set(CMAKE_INSTALL_PREFIX "{0}")'.format(prefix)
+    yield 'endif()'
     yield 'set(CMAKE_PREFIX_PATH "{0}")'.format(prefix)
 
 
@@ -62,9 +85,11 @@ class Builder:
         patoolib.extract_archive(download_to(url, self.tmp_dir), outdir=self.tmp_dir)
         return next(get_dirs(self.tmp_dir))
 
-    def configure(self, src_dir):
+    def configure(self, src_dir, install_prefix=None):
         mkdir(self.build_dir)
-        cmake([src_dir], cwd=self.build_dir, toolchain=self.prefix.toolchain)
+        args = [src_dir]
+        if install_prefix is not None: args.insert(0, '-DCMAKE_INSTALL_PREFIX=' + install_prefix)
+        cmake(args, cwd=self.build_dir, toolchain=self.prefix.toolchain)
 
     def build(self, target=None, config=None, cwd=None, toolchain=None):
         args = ['--build', self.build_dir]
@@ -77,33 +102,63 @@ class CGetPrefix:
         self.prefix = prefix
         self.toolchain = mkfile(prefix, 'cget.cmake', generate_cmake_toolchain(prefix))
 
-    def create_builder(self):
-        return Builder(self, os.path.join(self.prefix, 'tmp'))
+    def create_builder(self, name):
+        return Builder(self, os.path.join(self.prefix, 'tmp-' + name))
 
-    def transform_url(self, url):
+    def get_package_directory(self, name=None):
+        pkg_dir = os.path.join(self.prefix, 'pkg')
+        if name is None: return pkg_dir
+        else: return os.path.join(pkg_dir, name)
+
+    def transform(self, pkg):
+        url = pkg
+        name = None
         if '://' not in url:
             x = url.split('@')
             p = x[0]
             v = 'HEAD'
             if len(x) > 1: v = x[1]
-            return 'https://github.com/{0}/archive/{1}.tar.gz'.format(p, v)
-        else: return url
+            url = 'https://github.com/{0}/archive/{1}.tar.gz'.format(p, v)
+            name = p.replace('/', '__')
+        else:
+            name = '_url_' + base64.encode(url[url.find('://')+3:])
+        return url, name
 
-    def install(self, url):
-        with self.create_builder() as builder:
-            src_dir = builder.fetch(self.transform_url(url))
-            builder.configure(src_dir)
+    def get_name(self, pkg):
+        if pkg.startswith('_url_'): return base64.decode(pkg[5:])
+        else: return pkg.replace('__', '/')
+
+    def install(self, pkg):
+        url, name = self.transform(pkg)
+        pkg_dir = self.get_package_directory(name)
+        if os.path.exists(pkg_dir): return
+        with self.create_builder(name) as builder:
+            src_dir = builder.fetch(url)
+            builder.configure(src_dir, install_prefix=pkg_dir)
             # TODO: On window set config to Release
             builder.build(toolchain=self.toolchain)
             builder.build(target='install')
+            symlink_dir(pkg_dir, self.prefix)
+
+    def remove(self, pkg):
+        url, name = self.transform(pkg)
+        pkg_dir = self.get_package_directory(name)
+        shutil.rmtree(pkg_dir)
+        rm_symlink_dir(self.prefix)
+        # TODO: remove empty directories
+
+    def list(self):
+        return (self.get_name(d) for d in lsdir(self.get_package_directory()))
 
     def delete_dir(self, d):
-        if os.path.exists(d): shutil.rmtree(os.path.join(self.prefix, d))
+        path = os.path.join(self.prefix, d)
+        if os.path.exists(path): shutil.rmtree(path)
 
     def clean(self):
         self.delete_dir('include')
         self.delete_dir('lib')
         self.delete_dir('bin')
+        self.delete_dir('pkg')
         os.remove(self.toolchain)
 
 
@@ -123,11 +178,26 @@ def use_prefix():
 
 @cli.command(name='install')
 @use_prefix()
-@click.argument('urls', nargs=-1)
-def install_command(prefix, urls):
-    """ Install url """
-    for url in urls:
-        prefix.install(url)
+@click.argument('pkgs', nargs=-1)
+def install_command(prefix, pkgs):
+    """ Install package """
+    for pkg in pkgs:
+        prefix.install(pkg)
+
+@cli.command(name='remove')
+@use_prefix()
+@click.argument('pkgs', nargs=-1)
+def remove_command(prefix, pkgs):
+    """ Remove package """
+    for pkg in pkgs:
+        prefix.remove(pkg)
+
+@cli.command(name='list')
+@use_prefix()
+def list_command(prefix):
+    """ List installed packages """
+    for pkg in prefix.list():
+        click.echo(pkg)
 
 @cli.command(name='clean')
 @use_prefix()
