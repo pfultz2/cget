@@ -97,6 +97,15 @@ class CGetPrefix:
             builder.build(toolchain=self.toolchain)
             builder.build(target='install')
 
+    def delete_dir(self, d):
+        if os.path.exists(d): shutil.rmtree(os.path.join(self.prefix, d))
+
+    def clean(self):
+        self.delete_dir('include')
+        self.delete_dir('lib')
+        self.delete_dir('bin')
+        os.remove(self.toolchain)
+
 
 @click.group(context_settings={'help_option_names': ['-h', '--help']})
 @click.version_option(version='0.0.1', prog_name='cget')
@@ -120,14 +129,11 @@ def install_command(prefix, urls):
     for url in urls:
         prefix.install(url)
 
-# @cli.command(name='clean')
-# @use_prefix()
-# @click.argument('urls', nargs=-1)
-# def clean_command(prefix, urls):
-#     """ Clear directory """
-#     for url in urls:
-#         prefix.install(url)
-
+@cli.command(name='clean')
+@use_prefix()
+def clean_command(prefix):
+    """ Clear directory """
+    prefix.clean()
 
 
 if __name__ == '__main__':
