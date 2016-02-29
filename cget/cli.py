@@ -121,11 +121,11 @@ class CGetPrefix:
             url = 'https://github.com/{0}/archive/{1}.tar.gz'.format(p, v)
             name = p.replace('/', '__')
         else:
-            name = '_url_' + base64.encode(url[url.find('://')+3:])
+            name = '_url_' + base64.urlsafe_b64encode(url[url.find('://')+3:])
         return url, name
 
     def get_name(self, pkg):
-        if pkg.startswith('_url_'): return base64.decode(pkg[5:])
+        if pkg.startswith('_url_'): return base64.urlsafe_b64decode(pkg[5:])
         else: return pkg.replace('__', '/')
 
     def install(self, pkg):
