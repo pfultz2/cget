@@ -67,8 +67,15 @@ def download_to(url, download_dir):
         urllib.urlretrieve(url, filename=file, reporthook=hook, data=None)
     return file
 
-def cmake(args, cwd=None, toolchain=None):
+def cmake(args, cwd=None, toolchain=None, env=None):
     cmake_exe = ['cmake']
     if toolchain is not None: cmake_exe.append('-DCMAKE_TOOLCHAIN_FILE={0}'.format(toolchain))
-    return subprocess.Popen(cmake_exe+list(args), cwd=cwd).communicate()
+    return subprocess.Popen(cmake_exe+list(args), cwd=cwd, env=None).communicate()
+
+
+def pkg_config(args, path=None):
+    pkg_config_exe = ['pkg-config']
+    env = {}
+    if path is not None: env['PKG_CONFIG_PATH'] = path
+    return subprocess.Popen(pkg_config_exe+list(args), env=env).communicate()
 

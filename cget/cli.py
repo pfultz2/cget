@@ -20,6 +20,12 @@ class Builder:
     def __exit__(self, type, value, traceback):
         shutil.rmtree(self.tmp_dir)
 
+    def pkg_config_env(self):
+        return {'PKG_CONFIG_PATH': self.prefix.pkg_config_path() }
+
+    def cmake(self, args, cwd=None, toolchain=None):
+        util.cmake(args, cwd=cwd, toolchain=toolchain, env=self.pkg_config_env())
+
     def fetch(self, url):
         patoolib.extract_archive(util.download_to(url, self.tmp_dir), outdir=self.tmp_dir)
         return next(util.get_dirs(self.tmp_dir))
@@ -28,18 +34,21 @@ class Builder:
         util.mkdir(self.build_dir)
         args = [src_dir]
         if install_prefix is not None: args.insert(0, '-DCMAKE_INSTALL_PREFIX=' + install_prefix)
-        util.cmake(args, cwd=self.build_dir, toolchain=self.prefix.toolchain)
+        self.cmake(args, cwd=self.build_dir, toolchain=self.prefix.toolchain)
 
     def build(self, target=None, config=None, cwd=None, toolchain=None):
         args = ['--build', self.build_dir]
         if config is not None: args.extend(['--config', config])
         if target is not None: args.extend(['--target', target])
-        util.cmake(args, cwd=cwd, toolchain=toolchain)
+        self.cmake(args, cwd=cwd, toolchain=toolchain)
 
 class CGetPrefix:
     def __init__(self, prefix):
         self.prefix = prefix
         self.toolchain = util.mkfile(prefix, 'cget.cmake', generate_cmake_toolchain(prefix))
+
+    def get_path(self, path):
+        return os.path.join(self.prefix, path)
 
     def create_builder(self, name):
         return Builder(self, os.path.join(self.prefix, 'tmp-' + name))
@@ -99,6 +108,13 @@ class CGetPrefix:
         os.remove(self.toolchain)
         util.rm_empty_dirs(self.prefix)
 
+    def pkg_config_path(self):
+        libs = [self.get_path(os.path.join('lib', 'pkgconfig')), self.get_path(os.path.join('lib64', 'pkgconfig'))]
+        return ':'.join(libs)
+
+    def pkg_config(self, args):
+        util.pkg_config(args, path=self.pkg_config_path())
+
 
 @click.group(context_settings={'help_option_names': ['-h', '--help']})
 @click.version_option(version='0.0.1', prog_name='cget')
@@ -118,7 +134,7 @@ def use_prefix():
 @use_prefix()
 @click.argument('pkgs', nargs=-1)
 def install_command(prefix, pkgs):
-    """ Install package """
+    """ Install packages """
     for pkg in pkgs:
         prefix.install(pkg)
 
@@ -126,7 +142,7 @@ def install_command(prefix, pkgs):
 @use_prefix()
 @click.argument('pkgs', nargs=-1)
 def remove_command(prefix, pkgs):
-    """ Remove package """
+    """ Remove packages """
     for pkg in pkgs:
         prefix.remove(pkg)
 
@@ -142,6 +158,15 @@ def list_command(prefix):
 def clean_command(prefix):
     """ Clear directory """
     prefix.clean()
+
+@cli.command(name='pkg-config', context_settings=dict(
+    ignore_unknown_options=True,
+))
+@use_prefix()
+@click.argument('args', nargs=-1, type=click.UNPROCESSED)
+def pkg_config_command(prefix, args):
+    """ Pkg config """
+    prefix.pkg_config(args)
 
 
 if __name__ == '__main__':
