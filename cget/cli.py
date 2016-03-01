@@ -1,76 +1,6 @@
-import click, os, patoolib, urllib, shutil, sys, base64
+import click, os, patoolib, shutil, base64
 
-if os.name == 'posix' and sys.version_info[0] < 3:
-    import subprocess32 as subprocess
-else:
-    import subprocess
-
-def write_to(file, lines):
-    content = list((line + "\n" for line in lines))
-    if (len(content) > 0):
-        open(file, 'w').writelines(content)
-
-def mkdir(p):
-    if not os.path.exists(p): os.makedirs(p)
-    return p
-    
-def mkfile(d, file, content, always_write=True):
-    mkdir(d)
-    p = os.path.join(d, file)
-    if not os.path.exists(p) or always_write:
-        write_to(p, content)
-    return p
-
-def lsdir(p):
-    return (d for d in os.listdir(p) if os.path.isdir(os.path.join(p, d)))
-
-def symlink_dir(src, dst):
-    for root, dirs, files in os.walk(src):
-        for file in files:
-            path = os.path.relpath(root, src)
-            d = os.path.join(dst, path)
-            mkdir(d)
-            os.symlink(os.path.join(root, file), os.path.join(d, file))
-
-def rm_symlink(file):
-    if os.path.islink(file):
-        f = os.readlink(file)
-        if not os.path.exists(f): os.remove(file)
-
-def rm_symlink_dir(d):
-    for root, dirs, files in os.walk(d):
-        for file in files:
-            rm_symlink(os.path.join(root, file))
-
-def rm_empty_dirs(d):
-    has_files = False
-    for x in os.listdir(d):
-        p = os.path.join(d, x)
-        if os.path.isdir(p): has_files = has_files or rm_empty_dirs(p)
-        else: has_files = True
-    if not has_files: os.rmdir(d)
-    return has_files
-
-def get_dirs(d):
-    return (os.path.join(d,o) for o in os.listdir(d) if os.path.isdir(os.path.join(d,o)))
-
-def download_to(url, download_dir):
-    name = url.split('/')[-1]
-    file = os.path.join(download_dir, name)
-    click.echo("Downloading {0}".format(url))
-    with click.progressbar(length=100) as bar:
-        def hook(count, block_size, total_size):
-            percent = int(count*block_size*100/total_size)
-            if percent > 100: percent = 100
-            if percent < 0: percent = 0
-            bar.update(percent)
-        urllib.urlretrieve(url, filename=file, reporthook=hook, data=None)
-    return file
-
-def cmake(args, cwd=None, toolchain=None):
-    cmake_exe = ['cmake']
-    if toolchain is not None: cmake_exe.append('-DCMAKE_TOOLCHAIN_FILE={0}'.format(toolchain))
-    return subprocess.Popen(cmake_exe+list(args), cwd=cwd).communicate()
+import cget.util as util
 
 def generate_cmake_toolchain(prefix):
     yield 'if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)'
@@ -85,31 +15,31 @@ class Builder:
         self.tmp_dir = tmp_dir
         self.build_dir = os.path.join(tmp_dir, 'build')
     def __enter__(self):
-        mkdir(self.tmp_dir)
+        util.mkdir(self.tmp_dir)
         return self
     def __exit__(self, type, value, traceback):
         shutil.rmtree(self.tmp_dir)
 
     def fetch(self, url):
-        patoolib.extract_archive(download_to(url, self.tmp_dir), outdir=self.tmp_dir)
-        return next(get_dirs(self.tmp_dir))
+        patoolib.extract_archive(util.download_to(url, self.tmp_dir), outdir=self.tmp_dir)
+        return next(util.get_dirs(self.tmp_dir))
 
     def configure(self, src_dir, install_prefix=None):
-        mkdir(self.build_dir)
+        util.mkdir(self.build_dir)
         args = [src_dir]
         if install_prefix is not None: args.insert(0, '-DCMAKE_INSTALL_PREFIX=' + install_prefix)
-        cmake(args, cwd=self.build_dir, toolchain=self.prefix.toolchain)
+        util.cmake(args, cwd=self.build_dir, toolchain=self.prefix.toolchain)
 
     def build(self, target=None, config=None, cwd=None, toolchain=None):
         args = ['--build', self.build_dir]
         if config is not None: args.extend(['--config', config])
         if target is not None: args.extend(['--target', target])
-        cmake(args, cwd=cwd, toolchain=toolchain)
+        util.cmake(args, cwd=cwd, toolchain=toolchain)
 
 class CGetPrefix:
     def __init__(self, prefix):
         self.prefix = prefix
-        self.toolchain = mkfile(prefix, 'cget.cmake', generate_cmake_toolchain(prefix))
+        self.toolchain = util.mkfile(prefix, 'cget.cmake', generate_cmake_toolchain(prefix))
 
     def create_builder(self, name):
         return Builder(self, os.path.join(self.prefix, 'tmp-' + name))
@@ -147,17 +77,17 @@ class CGetPrefix:
             # TODO: On window set config to Release
             builder.build(toolchain=self.toolchain)
             builder.build(target='install')
-            symlink_dir(pkg_dir, self.prefix)
+            util.symlink_dir(pkg_dir, self.prefix)
 
     def remove(self, pkg):
         url, name = self.transform(pkg)
         pkg_dir = self.get_package_directory(name)
         shutil.rmtree(pkg_dir)
-        rm_symlink_dir(self.prefix)
-        rm_empty_dirs(self.prefix)
+        util.rm_symlink_dir(self.prefix)
+        util.rm_empty_dirs(self.prefix)
 
     def list(self):
-        return (self.get_name(d) for d in lsdir(self.get_package_directory()))
+        return (self.get_name(d) for d in util.lsdir(self.get_package_directory()))
 
     def delete_dir(self, d):
         path = os.path.join(self.prefix, d)
@@ -165,9 +95,9 @@ class CGetPrefix:
 
     def clean(self):
         self.delete_dir('pkg')
-        rm_symlink_dir(self.prefix)
+        util.rm_symlink_dir(self.prefix)
         os.remove(self.toolchain)
-        rm_empty_dirs(self.prefix)
+        util.rm_empty_dirs(self.prefix)
 
 
 @click.group(context_settings={'help_option_names': ['-h', '--help']})
