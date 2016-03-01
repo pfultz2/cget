@@ -1,5 +1,6 @@
 import click, os, patoolib, shutil, base64
 
+from cget import __version__
 import cget.util as util
 
 class Builder:
@@ -120,7 +121,7 @@ class CGetPrefix:
 
 
 @click.group(context_settings={'help_option_names': ['-h', '--help']})
-@click.version_option(version='0.0.1', prog_name='cget')
+@click.version_option(version=__version__, prog_name='cget')
 def cli():
     pass
 
