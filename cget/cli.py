@@ -2,13 +2,6 @@ import click, os, patoolib, shutil, base64
 
 import cget.util as util
 
-def generate_cmake_toolchain(prefix):
-    yield 'if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)'
-    yield '    set(CMAKE_INSTALL_PREFIX "{0}")'.format(prefix)
-    yield 'endif()'
-    yield 'set(CMAKE_PREFIX_PATH "{0}")'.format(prefix)
-
-
 class Builder:
     def __init__(self, prefix, tmp_dir):
         self.prefix = prefix
@@ -45,7 +38,17 @@ class Builder:
 class CGetPrefix:
     def __init__(self, prefix):
         self.prefix = prefix
-        self.toolchain = util.mkfile(prefix, 'cget.cmake', generate_cmake_toolchain(prefix))
+        self.toolchain = self.write_cmake()
+
+    def write_cmake(self, always_write=False, toolchain=None):
+        return util.mkfile(self.prefix, 'cget.cmake', self.generate_cmake_toolchain(toolchain=toolchain), always_write=always_write)
+
+    def generate_cmake_toolchain(self, toolchain=None):
+        if toolchain is not None: yield 'include("{0}")'.format(toolchain)
+        yield 'if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)'
+        yield '    set(CMAKE_INSTALL_PREFIX "{0}")'.format(self.prefix)
+        yield 'endif()'
+        yield 'set(CMAKE_PREFIX_PATH "{0}")'.format(self.prefix)
 
     def get_path(self, path):
         return os.path.join(self.prefix, path)
@@ -129,6 +132,12 @@ def use_prefix():
         return CGetPrefix(prefix)
     return click.option('-p', '--prefix', envvar='CGET_PREFIX', callback=callback)
 
+@cli.command(name='init')
+@use_prefix()
+@click.option('-t', '--toolchain', required=False)
+def init_command(prefix, toolchain):
+    """ Initialize install directory """
+    prefix.write_cmake(always_write=True, toolchain=toolchain)
 
 @cli.command(name='install')
 @use_prefix()
