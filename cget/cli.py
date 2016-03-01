@@ -42,6 +42,15 @@ def rm_symlink_dir(d):
         for file in files:
             rm_symlink(os.path.join(root, file))
 
+def rm_empty_dirs(d):
+    has_files = False
+    for x in os.listdir(d):
+        p = os.path.join(d, x)
+        if os.path.isdir(p): has_files = has_files or rm_empty_dirs(p)
+        else: has_files = True
+    if not has_files: os.rmdir(d)
+    return has_files
+
 def get_dirs(d):
     return (os.path.join(d,o) for o in os.listdir(d) if os.path.isdir(os.path.join(d,o)))
 
@@ -145,7 +154,7 @@ class CGetPrefix:
         pkg_dir = self.get_package_directory(name)
         shutil.rmtree(pkg_dir)
         rm_symlink_dir(self.prefix)
-        # TODO: remove empty directories
+        rm_empty_dirs(self.prefix)
 
     def list(self):
         return (self.get_name(d) for d in lsdir(self.get_package_directory()))
@@ -155,11 +164,10 @@ class CGetPrefix:
         if os.path.exists(path): shutil.rmtree(path)
 
     def clean(self):
-        self.delete_dir('include')
-        self.delete_dir('lib')
-        self.delete_dir('bin')
         self.delete_dir('pkg')
+        rm_symlink_dir(self.prefix)
         os.remove(self.toolchain)
+        rm_empty_dirs(self.prefix)
 
 
 @click.group(context_settings={'help_option_names': ['-h', '--help']})
