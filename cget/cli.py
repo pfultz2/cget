@@ -76,6 +76,12 @@ def pkg_to_name(pkg):
         if pkg.startswith('_url_'): return base64.urlsafe_b64decode(pkg[5:])
         else: return pkg.replace('__', '/')
 
+def parse_alias(s):
+    i = s.find(':', 0, s.find('://'))
+    if i > 0: return s[0:i], s[i+1:]
+    else: return None, s
+
+
 class CGetPrefix:
     def __init__(self, prefix):
         self.prefix = prefix
@@ -112,12 +118,12 @@ class CGetPrefix:
         else: return os.path.join(pkg_dir, name)
 
     def parse_pkg(self, pkg):
-        url = pkg
-        name = None
+        name, url = parse_alias(pkg)
         if '://' not in url:
-            if os.path.isfile(url):
-                url = 'file://' + url
-                name = url_to_pkg(url)
+            f = os.path.expanduser(url)
+            if os.path.isfile(f):
+                url = 'file://' + f
+                if name is None: name = url_to_pkg(f)
             else:
                 x = url.split('@')
                 p = x[0]
@@ -126,7 +132,7 @@ class CGetPrefix:
                 url = 'https://github.com/{0}/archive/{1}.tar.gz'.format(p, v)
                 name = p.replace('/', '__')
         else:
-            name = url_to_pkg(url)
+            if name is None: name = url_to_pkg(url)
         return url, name
 
     def install_all(self, pkgs, test=False):
