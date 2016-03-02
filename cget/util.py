@@ -5,6 +5,29 @@ if os.name == 'posix' and sys.version_info[0] < 3:
 else:
     import subprocess
 
+def as_string(x):
+    if x is None: return ''
+    else: return str(x)
+
+class BuildError(Exception):
+    def __init__(self, msg=None):
+        self.msg = msg
+    def __str__(self):
+        if None: return "Build failed"
+        else: return self.msg
+
+def require(b):
+    if not b: raise BuildError()
+
+def requires(*args):
+    for arg in args:
+        require(arg())
+
+def try_until(*args):
+    for arg in args:
+        if arg(): return True
+    raise BuildError()
+
 def write_to(file, lines):
     content = list((line + "\n" for line in lines))
     if (len(content) > 0):
@@ -74,7 +97,7 @@ def download_to(url, download_dir):
 
 def retrieve_url(url, dst):
     if url.startswith('file://'): return copy_to(url[7:], dst)
-    else: download_to(url, dst)
+    else: return download_to(url, dst)
 
 def cmd(args, **kwargs):
     child = subprocess.Popen(args, **kwargs)

@@ -46,29 +46,6 @@ class Builder:
         if self.is_make_generator: args.extend(['--', '-j', str(multiprocessing.cpu_count())])
         return self.cmake(args, cwd=cwd, toolchain=toolchain)
 
-def as_string(x):
-    if x is None: return ''
-    else: return str(x)
-
-class BuildError(Exception):
-    def __init__(self, msg=None):
-        self.msg = msg
-    def __str__(self):
-        if None: return "Build failed"
-        else: return self.msg
-
-def require(b):
-    if not b: raise BuildError()
-
-def requires(*args):
-    for arg in args:
-        require(arg())
-
-def try_until(*args):
-    for arg in args:
-        if arg(): return True
-    raise BuildError()
-
 def url_to_pkg(url):
     return '_url_' + base64.urlsafe_b64encode(url[url.find('://')+3:])
 
@@ -101,7 +78,7 @@ class CGetPrefix:
             yield '    set(CMAKE_CXX_STD_FLAG "-std={0}")'.format(std)
             yield 'endif()'
         if cxxflags is not None or std is not None:
-            yield 'set(CMAKE_CXX_FLAGS "$ENV{{CXXFLAGS}} ${{CMAKE_CXX_FLAGS_INIT}} ${{CMAKE_CXX_STD_FLAG}} {0}" CACHE STRING "")'.format(as_string(cxxflags))
+            yield 'set(CMAKE_CXX_FLAGS "$ENV{{CXXFLAGS}} ${{CMAKE_CXX_FLAGS_INIT}} ${{CMAKE_CXX_STD_FLAG}} {0}" CACHE STRING "")'.format(util.as_string(cxxflags))
         if ldflags is not None:
             for link_type in ['SHARED', 'MODULE', 'EXE']:
                 yield 'set(CMAKE_{1}_LINKER_FLAGS "$ENV{{LDFLAGS}} {0}" CACHE STRING "")'.format(ldflags, link_type)
@@ -144,14 +121,16 @@ class CGetPrefix:
         if os.path.exists(pkg_dir): return "Package {0} already installed".format(pkg)
         with self.create_builder(name) as builder:
             src_dir = builder.fetch(url)
-            require(builder.configure(src_dir, install_prefix=pkg_dir))
-            require(builder.build(target='all', config='Release'))
+            util.requires(
+                lambda: builder.configure(src_dir, install_prefix=pkg_dir),
+                lambda: builder.build(target='all', config='Release')
+            )
             if test: 
-                try_until(
+                util.try_until(
                     lambda: builder.build(target='check', config='Release'),
                     lambda: builder.build(target='test', config='Release')
                 )
-            require(builder.build(target='install', config='Release'))
+            util.require(builder.build(target='install', config='Release'))
             util.symlink_dir(pkg_dir, self.prefix)
         return "Successfully installed {0}".format(pkg)
 
@@ -180,7 +159,9 @@ class CGetPrefix:
         util.rm_empty_dirs(self.prefix)
 
     def pkg_config_path(self):
-        libs = [self.get_path(os.path.join('lib', 'pkgconfig')), self.get_path(os.path.join('lib64', 'pkgconfig'))]
+        libs = []
+        for p in ['lib', 'lib64', 'share']:
+            libs.append(self.get_path(os.path.join(p, 'pkgconfig')))
         return ':'.join(libs)
 
     def pkg_config(self, args):
@@ -222,6 +203,7 @@ def install_command(prefix, pkgs, test):
         except:
             click.echo("Failed to build package {0}".format(pkg))
             prefix.remove(pkg)
+            raise
 
 @cli.command(name='remove')
 @use_prefix()
