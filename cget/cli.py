@@ -4,7 +4,7 @@ from cget import __version__
 import cget.util as util
 
 class Builder:
-    def __init__(self, prefix, tmp_dir, verbose=True):
+    def __init__(self, prefix, tmp_dir, verbose=False):
         self.prefix = prefix
         self.tmp_dir = tmp_dir
         self.build_dir = os.path.join(tmp_dir, 'build')
@@ -28,7 +28,7 @@ class Builder:
 
     def fetch(self, url):
         self.log("fetch:", url)
-        patoolib.extract_archive(util.download_to(url, self.tmp_dir), outdir=self.tmp_dir)
+        patoolib.extract_archive(util.retrieve_url(url, self.tmp_dir), outdir=self.tmp_dir)
         return next(util.get_dirs(self.tmp_dir))
 
     def configure(self, src_dir, install_prefix=None):
@@ -69,6 +69,13 @@ def try_until(*args):
         if arg(): return True
     raise BuildError()
 
+def url_to_pkg(url):
+    return '_url_' + base64.urlsafe_b64encode(url[url.find('://')+3:])
+
+def pkg_to_name(pkg):
+        if pkg.startswith('_url_'): return base64.urlsafe_b64decode(pkg[5:])
+        else: return pkg.replace('__', '/')
+
 class CGetPrefix:
     def __init__(self, prefix):
         self.prefix = prefix
@@ -104,29 +111,29 @@ class CGetPrefix:
         if name is None: return pkg_dir
         else: return os.path.join(pkg_dir, name)
 
-    def transform(self, pkg):
+    def parse_pkg(self, pkg):
         url = pkg
         name = None
         if '://' not in url:
-            x = url.split('@')
-            p = x[0]
-            v = 'HEAD'
-            if len(x) > 1: v = x[1]
-            url = 'https://github.com/{0}/archive/{1}.tar.gz'.format(p, v)
-            name = p.replace('/', '__')
+            if os.path.isfile(url):
+                url = 'file://' + url
+                name = url_to_pkg(url)
+            else:
+                x = url.split('@')
+                p = x[0]
+                v = 'HEAD'
+                if len(x) > 1: v = x[1]
+                url = 'https://github.com/{0}/archive/{1}.tar.gz'.format(p, v)
+                name = p.replace('/', '__')
         else:
-            name = '_url_' + base64.urlsafe_b64encode(url[url.find('://')+3:])
+            name = url_to_pkg(url)
         return url, name
-
-    def get_name(self, pkg):
-        if pkg.startswith('_url_'): return base64.urlsafe_b64decode(pkg[5:])
-        else: return pkg.replace('__', '/')
 
     def install_all(self, pkgs, test=False):
         for pkg in pkgs: self.install(pkg, test=test)
 
     def install(self, pkg, test=False):
-        url, name = self.transform(pkg)
+        url, name = self.parse_pkg(pkg)
         pkg_dir = self.get_package_directory(name)
         if os.path.exists(pkg_dir): return "Package {0} already installed".format(pkg)
         with self.create_builder(name) as builder:
@@ -143,7 +150,7 @@ class CGetPrefix:
         return "Successfully installed {0}".format(pkg)
 
     def remove(self, pkg):
-        url, name = self.transform(pkg)
+        url, name = self.parse_pkg(pkg)
         pkg_dir = self.get_package_directory(name)
         if os.path.exists(pkg_dir):
             shutil.rmtree(pkg_dir)
@@ -154,7 +161,7 @@ class CGetPrefix:
             return "Package doesn't exists"
 
     def list(self):
-        return (self.get_name(d) for d in util.lsdir(self.get_package_directory()))
+        return (pkg_to_name(d) for d in util.lsdir(self.get_package_directory()))
 
     def delete_dir(self, d):
         path = os.path.join(self.prefix, d)

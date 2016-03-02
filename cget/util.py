@@ -1,4 +1,4 @@
-import click, os, urllib, sys
+import click, os, urllib, sys, shutil
 
 if os.name == 'posix' and sys.version_info[0] < 3:
     import subprocess32 as subprocess
@@ -54,6 +54,11 @@ def rm_empty_dirs(d):
 def get_dirs(d):
     return (os.path.join(d,o) for o in os.listdir(d) if os.path.isdir(os.path.join(d,o)))
 
+def copy_to(src, dst_dir):
+    target = os.path.join(dst_dir, os.path.basename(src))
+    shutil.copyfile(src, target)
+    return target
+
 def download_to(url, download_dir):
     name = url.split('/')[-1]
     file = os.path.join(download_dir, name)
@@ -66,6 +71,10 @@ def download_to(url, download_dir):
             bar.update(percent)
         urllib.urlretrieve(url, filename=file, reporthook=hook, data=None)
     return file
+
+def retrieve_url(url, dst):
+    if url.startswith('file://'): return copy_to(url[7:], dst)
+    else: download_to(url, dst)
 
 def cmd(args, **kwargs):
     child = subprocess.Popen(args, **kwargs)
