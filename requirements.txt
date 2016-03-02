@@ -2,4 +2,3 @@ click
 PyYAML
 glob2
 patool
-subprocess32
