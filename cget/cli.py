@@ -191,6 +191,7 @@ def init_command(prefix, toolchain, cxxflags, ldflags, std):
     """ Initialize install directory """
     prefix.write_cmake(always_write=True, toolchain=toolchain, cxxflags=cxxflags, ldflags=ldflags, std=std)
 
+# TODO: Add a verbose setting
 @cli.command(name='install')
 @use_prefix()
 @click.option('-t', '--test', is_flag=True, help="Test package before installing by running the test or check target")
@@ -203,7 +204,6 @@ def install_command(prefix, pkgs, test):
         except:
             click.echo("Failed to build package {0}".format(pkg))
             prefix.remove(pkg)
-            raise
 
 @cli.command(name='remove')
 @use_prefix()
