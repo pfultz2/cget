@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-import os, re
+import os, re, sys
 
 def get_version(package):
     """Return package version as listed in `__version__` in `init.py`."""
@@ -15,6 +15,8 @@ def get_requires(filename):
     return requirements
 
 project_requirements = get_requires("requirements.txt")
+
+if os.name == 'posix' and sys.version_info[0] < 3: project_requirements.append('subprocess32')
 
 setup(
     name="cget",
