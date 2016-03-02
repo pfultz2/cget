@@ -1,4 +1,4 @@
-import click, os, patoolib, shutil, base64
+import click, os, patoolib, shutil, base64, multiprocessing
 
 from cget import __version__
 import cget.util as util
@@ -8,6 +8,7 @@ class Builder:
         self.prefix = prefix
         self.tmp_dir = tmp_dir
         self.build_dir = os.path.join(tmp_dir, 'build')
+        self.is_make_generator = False
     def __enter__(self):
         util.mkdir(self.tmp_dir)
         return self
@@ -29,27 +30,42 @@ class Builder:
         args = [src_dir]
         if install_prefix is not None: args.insert(0, '-DCMAKE_INSTALL_PREFIX=' + install_prefix)
         self.cmake(args, cwd=self.build_dir, toolchain=self.prefix.toolchain)
+        if os.path.exists(os.path.join(self.build_dir, 'Makefile')): self.is_make_generator = True
 
     def build(self, target=None, config=None, cwd=None, toolchain=None):
         args = ['--build', self.build_dir]
         if config is not None: args.extend(['--config', config])
         if target is not None: args.extend(['--target', target])
+        if self.is_make_generator: args.extend(['--', '-j', str(multiprocessing.cpu_count())])
         self.cmake(args, cwd=cwd, toolchain=toolchain)
+
+def as_string(x):
+    if x is None: return ''
+    else: return str(x)
 
 class CGetPrefix:
     def __init__(self, prefix):
         self.prefix = prefix
         self.toolchain = self.write_cmake()
 
-    def write_cmake(self, always_write=False, toolchain=None):
-        return util.mkfile(self.prefix, 'cget.cmake', self.generate_cmake_toolchain(toolchain=toolchain), always_write=always_write)
+    def write_cmake(self, always_write=False, **kwargs):
+        return util.mkfile(self.prefix, 'cget.cmake', self.generate_cmake_toolchain(**kwargs), always_write=always_write)
 
-    def generate_cmake_toolchain(self, toolchain=None):
+    def generate_cmake_toolchain(self, toolchain=None, cxxflags=None, ldflags=None, std=None):
         if toolchain is not None: yield 'include("{0}")'.format(toolchain)
         yield 'if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)'
         yield '    set(CMAKE_INSTALL_PREFIX "{0}")'.format(self.prefix)
         yield 'endif()'
         yield 'set(CMAKE_PREFIX_PATH "{0}")'.format(self.prefix)
+        if std is not None:
+            yield 'if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")'
+            yield '    set(CMAKE_CXX_STD_FLAG "-std={0}")'.format(std)
+            yield 'endif()'
+        if cxxflags is not None or std is not None:
+            yield 'set(CMAKE_CXX_FLAGS "$ENV{{CXXFLAGS}} ${{CMAKE_CXX_FLAGS_INIT}} ${{CMAKE_CXX_STD_FLAG}} {0}" CACHE STRING "")'.format(as_string(cxxflags))
+        if ldflags is not None:
+            for link_type in ['SHARED', 'MODULE', 'EXE']:
+                yield 'set(CMAKE_{1}_LINKER_FLAGS "$ENV{{LDFLAGS}} {0}" CACHE STRING "")'.format(ldflags, link_type)
 
     def get_path(self, path):
         return os.path.join(self.prefix, path)
@@ -80,7 +96,7 @@ class CGetPrefix:
         if pkg.startswith('_url_'): return base64.urlsafe_b64decode(pkg[5:])
         else: return pkg.replace('__', '/')
 
-    def install(self, pkg):
+    def install(self, pkg, test=False):
         url, name = self.transform(pkg)
         pkg_dir = self.get_package_directory(name)
         if os.path.exists(pkg_dir): return
@@ -89,15 +105,17 @@ class CGetPrefix:
             builder.configure(src_dir, install_prefix=pkg_dir)
             # TODO: On window set config to Release
             builder.build(toolchain=self.toolchain)
+            if test: builder.build(target='check')
             builder.build(target='install')
             util.symlink_dir(pkg_dir, self.prefix)
 
     def remove(self, pkg):
         url, name = self.transform(pkg)
         pkg_dir = self.get_package_directory(name)
-        shutil.rmtree(pkg_dir)
-        util.rm_symlink_dir(self.prefix)
-        util.rm_empty_dirs(self.prefix)
+        if os.path.exists(pkg_dir):
+            shutil.rmtree(pkg_dir)
+            util.rm_symlink_dir(self.prefix)
+            util.rm_empty_dirs(self.prefix)
 
     def list(self):
         return (self.get_name(d) for d in util.lsdir(self.get_package_directory()))
@@ -131,22 +149,26 @@ def use_prefix():
         prefix = value
         if prefix is None: prefix = os.path.join(os.getcwd(), 'cget')
         return CGetPrefix(prefix)
-    return click.option('-p', '--prefix', envvar='CGET_PREFIX', callback=callback)
+    return click.option('-p', '--prefix', envvar='CGET_PREFIX', callback=callback, help='Set prefix used to install packages')
 
 @cli.command(name='init')
 @use_prefix()
-@click.option('-t', '--toolchain', required=False)
-def init_command(prefix, toolchain):
+@click.option('-t', '--toolchain', required=False, help="Set cmake toolchain file to use")
+@click.option('--cxxflags', required=False, help="Set additional c++ flags")
+@click.option('--ldflags', required=False, help="Set additional linker flags")
+@click.option('--std', required=False, help="Set C++ standard if available")
+def init_command(prefix, toolchain, cxxflags, ldflags, std):
     """ Initialize install directory """
-    prefix.write_cmake(always_write=True, toolchain=toolchain)
+    prefix.write_cmake(always_write=True, toolchain=toolchain, cxxflags=cxxflags, ldflags=ldflags, std=std)
 
 @cli.command(name='install')
 @use_prefix()
+@click.option('-t', '--test', is_flag=True, help="Test package before installing by running the check target")
 @click.argument('pkgs', nargs=-1)
-def install_command(prefix, pkgs):
+def install_command(prefix, pkgs, test):
     """ Install packages """
     for pkg in pkgs:
-        prefix.install(pkg)
+        prefix.install(pkg, test=test)
 
 @cli.command(name='remove')
 @use_prefix()
