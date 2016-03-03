@@ -1,6 +1,6 @@
 import click, os, urllib, sys, shutil
 
-import archive
+import tarfile
 
 if os.name == 'posix' and sys.version_info[0] < 3:
     import subprocess32 as subprocess
@@ -110,8 +110,7 @@ def retrieve_url(url, dst):
     else: return download_to(url, dst)
 
 def extract_ar(a, d):
-    # patoolib.extract_archive(a, outdir=d)
-    archive.extract(a, d)
+    tarfile.TarFile(a).extractall(d)
 
 def cmd(args, **kwargs):
     child = subprocess.Popen(args, **kwargs)
