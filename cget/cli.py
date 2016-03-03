@@ -208,7 +208,6 @@ def install_command(prefix, pkgs, test):
         except:
             click.echo("Failed to build package {0}".format(pkg))
             prefix.remove(pkg)
-            raise
 
 @cli.command(name='remove')
 @use_prefix()

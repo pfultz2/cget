@@ -1,4 +1,4 @@
-import click, os, urllib, sys, shutil
+import click, os, sys, shutil
 
 import tarfile
 
@@ -6,6 +6,11 @@ if os.name == 'posix' and sys.version_info[0] < 3:
     import subprocess32 as subprocess
 else:
     import subprocess
+
+if os.name == 'posix' and sys.version_info[0] < 3:
+    import urllib
+else:
+    import urllib.request as urllib
 
 def as_bytes(s):
     if sys.version_info[0] < 3: return bytes(s)
@@ -110,7 +115,7 @@ def retrieve_url(url, dst):
     else: return download_to(url, dst)
 
 def extract_ar(a, d):
-    tarfile.TarFile(a).extractall(d)
+    tarfile.open(a).extractall(d)
 
 def cmd(args, **kwargs):
     child = subprocess.Popen(args, **kwargs)
