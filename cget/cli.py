@@ -46,8 +46,8 @@ class Builder:
         if self.is_make_generator: args.extend(['--', '-j', str(multiprocessing.cpu_count())])
         return self.cmake(args, cwd=cwd, toolchain=toolchain)
 
-def as_bytes(s):
-    return bytes(s, 'UTF-8')
+def quote(s):
+    return s.replace("\\", "\\\\")
 
 def url_to_pkg(url):
     x = url[url.find('://')+3:]
@@ -74,9 +74,9 @@ class CGetPrefix:
     def generate_cmake_toolchain(self, toolchain=None, cxxflags=None, ldflags=None, std=None):
         if toolchain is not None: yield 'include("{0}")'.format(toolchain)
         yield 'if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)'
-        yield '    set(CMAKE_INSTALL_PREFIX "{0}")'.format(self.prefix)
+        yield '    set(CMAKE_INSTALL_PREFIX "{0}")'.format(quote(self.prefix))
         yield 'endif()'
-        yield 'set(CMAKE_PREFIX_PATH "{0}")'.format(self.prefix)
+        yield 'set(CMAKE_PREFIX_PATH "{0}")'.format(quote(self.prefix))
         if std is not None:
             yield 'if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")'
             yield '    set(CMAKE_CXX_STD_FLAG "-std={0}")'.format(std)
@@ -208,6 +208,7 @@ def install_command(prefix, pkgs, test):
         except:
             click.echo("Failed to build package {0}".format(pkg))
             prefix.remove(pkg)
+            raise
 
 @cli.command(name='remove')
 @use_prefix()
