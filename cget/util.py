@@ -117,15 +117,19 @@ def retrieve_url(url, dst):
 def extract_ar(a, d):
     tarfile.open(a).extractall(d)
 
+def as_shell(args):
+    if os.name == 'posix': return ['/bin/sh', '-c', ' '.join(args)]
+    else: return args
+
 def cmd(args, **kwargs):
-    child = subprocess.Popen(args, **kwargs)
+    child = subprocess.Popen(as_shell(args), **kwargs)
     child.communicate()
     return child.returncode == 0
 
 def cmake(args, cwd=None, toolchain=None, env=None):
     cmake_exe = ['cmake']
     if toolchain is not None: cmake_exe.append('-DCMAKE_TOOLCHAIN_FILE={0}'.format(toolchain))
-    return cmd(cmake_exe+list(args), cwd=cwd, env=None)
+    return cmd(cmake_exe+list(args), cwd=cwd, env=env)
 
 
 def pkg_config(args, path=None):

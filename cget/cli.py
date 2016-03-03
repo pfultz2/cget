@@ -43,7 +43,9 @@ class Builder:
         args = ['--build', self.build_dir]
         if config is not None: args.extend(['--config', config])
         if target is not None: args.extend(['--target', target])
-        if self.is_make_generator: args.extend(['--', '-j', str(multiprocessing.cpu_count())])
+        if self.is_make_generator: 
+            args.extend(['--', '-j', str(multiprocessing.cpu_count())])
+            if self.verbose: args.append('VERBOSE=1')
         return self.cmake(args, cwd=cwd, toolchain=toolchain)
 
 def quote(s):
@@ -90,8 +92,8 @@ class CGetPrefix:
     def get_path(self, path):
         return os.path.join(self.prefix, path)
 
-    def create_builder(self, name):
-        return Builder(self, os.path.join(self.prefix, 'tmp-' + name))
+    def create_builder(self, name, verbose=False):
+        return Builder(self, os.path.join(self.prefix, 'tmp-' + name), verbose)
 
     def get_package_directory(self, name=None):
         pkg_dir = os.path.join(self.prefix, 'pkg')
@@ -119,11 +121,11 @@ class CGetPrefix:
     def install_all(self, pkgs, test=False):
         for pkg in pkgs: self.install(pkg, test=test)
 
-    def install(self, pkg, test=False):
+    def install(self, pkg, test=False, verbose=False):
         url, name = self.parse_pkg(pkg)
         pkg_dir = self.get_package_directory(name)
         if os.path.exists(pkg_dir): return "Package {0} already installed".format(pkg)
-        with self.create_builder(name) as builder:
+        with self.create_builder(name, verbose) as builder:
             src_dir = builder.fetch(url)
             util.requires(
                 lambda: builder.configure(src_dir, install_prefix=pkg_dir),
@@ -199,15 +201,17 @@ def init_command(prefix, toolchain, cxxflags, ldflags, std):
 @cli.command(name='install')
 @use_prefix()
 @click.option('-t', '--test', is_flag=True, help="Test package before installing by running the test or check target")
+@click.option('-v', '--verbose', is_flag=True, envvar='VERBOSE', help="Verbose mode")
 @click.argument('pkgs', nargs=-1)
-def install_command(prefix, pkgs, test):
+def install_command(prefix, pkgs, test, verbose):
     """ Install packages """
     for pkg in pkgs:
         try:
-            click.echo(prefix.install(pkg, test=test))
+            click.echo(prefix.install(pkg, test=test, verbose=verbose))
         except:
             click.echo("Failed to build package {0}".format(pkg))
             prefix.remove(pkg)
+            if verbose: raise
 
 @cli.command(name='remove')
 @use_prefix()

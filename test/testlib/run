@@ -1,9 +1,11 @@
 cget list
 cget clean
 cget list
-cget install libsimple.tar.gz
+cget install --verbose libsimple.tar.gz
 cget list
+cget pkg-config --list-all
 cget pkg-config --exists simple
+cget pkg-config --cflags --libs simple
 cget remove libsimple.tar.gz
 cget list
 cget clean
