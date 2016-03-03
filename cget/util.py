@@ -5,9 +5,14 @@ if os.name == 'posix' and sys.version_info[0] < 3:
 else:
     import subprocess
 
+def as_bytes(s):
+    if sys.version_info[0] < 3: return bytes(s)
+    else: return bytes(s, "UTF-8")
+
 def as_string(x):
     if x is None: return ''
-    else: return str(x)
+    elif sys.version_info[0] < 3: return str(x)
+    else: return str(x, encoding="UTF-8")
 
 class BuildError(Exception):
     def __init__(self, msg=None):
@@ -45,7 +50,10 @@ def mkfile(d, file, content, always_write=True):
     return p
 
 def lsdir(p):
-    return (d for d in os.listdir(p) if os.path.isdir(os.path.join(p, d)))
+    if os.path.exists(p):
+        return (d for d in os.listdir(p) if os.path.isdir(os.path.join(p, d)))
+    else:
+        return []
 
 def symlink_dir(src, dst):
     for root, dirs, files in os.walk(src):

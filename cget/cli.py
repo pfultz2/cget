@@ -46,12 +46,16 @@ class Builder:
         if self.is_make_generator: args.extend(['--', '-j', str(multiprocessing.cpu_count())])
         return self.cmake(args, cwd=cwd, toolchain=toolchain)
 
+def as_bytes(s):
+    return bytes(s, 'UTF-8')
+
 def url_to_pkg(url):
-    return '_url_' + base64.urlsafe_b64encode(url[url.find('://')+3:])
+    x = url[url.find('://')+3:]
+    return '_url_' + util.as_string(base64.urlsafe_b64encode(util.as_bytes(x)))
 
 def pkg_to_name(pkg):
-        if pkg.startswith('_url_'): return base64.urlsafe_b64decode(pkg[5:])
-        else: return pkg.replace('__', '/')
+    if pkg.startswith('_url_'): return base64.urlsafe_b64decode(pkg[5:])
+    else: return pkg.replace('__', '/')
 
 def parse_alias(s):
     i = s.find(':', 0, s.find('://'))
@@ -100,7 +104,7 @@ class CGetPrefix:
             f = os.path.expanduser(url)
             if os.path.isfile(f):
                 url = 'file://' + f
-                if name is None: name = url_to_pkg(f)
+                if name is None: name = url_to_pkg(url)
             else:
                 x = url.split('@')
                 p = x[0]
