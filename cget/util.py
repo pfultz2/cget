@@ -1,5 +1,7 @@
 import click, os, urllib, sys, shutil
 
+import archive
+
 if os.name == 'posix' and sys.version_info[0] < 3:
     import subprocess32 as subprocess
 else:
@@ -106,6 +108,10 @@ def download_to(url, download_dir):
 def retrieve_url(url, dst):
     if url.startswith('file://'): return copy_to(url[7:], dst)
     else: return download_to(url, dst)
+
+def extract_ar(a, d):
+    # patoolib.extract_archive(a, outdir=d)
+    archive.extract(a, d)
 
 def cmd(args, **kwargs):
     child = subprocess.Popen(args, **kwargs)

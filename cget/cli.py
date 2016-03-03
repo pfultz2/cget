@@ -1,4 +1,4 @@
-import click, os, patoolib, shutil, base64, multiprocessing
+import click, os, shutil, base64, multiprocessing
 
 from cget import __version__
 import cget.util as util
@@ -28,7 +28,7 @@ class Builder:
 
     def fetch(self, url):
         self.log("fetch:", url)
-        patoolib.extract_archive(util.retrieve_url(url, self.tmp_dir), outdir=self.tmp_dir)
+        util.extract_ar(util.retrieve_url(url, self.tmp_dir), self.tmp_dir)
         return next(util.get_dirs(self.tmp_dir))
 
     def configure(self, src_dir, install_prefix=None):
