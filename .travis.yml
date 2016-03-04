@@ -14,5 +14,4 @@ matrix:
                 - python
 
 script:
-    - cd $CHECKOUT_PATH
     - python setup.py install && && python ./test/test.py
