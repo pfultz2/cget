@@ -14,4 +14,4 @@ matrix:
                 - python
 
 script:
-    - python setup.py install && python ./test/test.py
+    - python setup.py install --user && python ./test/test.py
