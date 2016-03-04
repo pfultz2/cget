@@ -15,6 +15,8 @@ matrix:
                 - cmake
 
 script:
+    - cmake --version
+    - python --version
     - PWD=`pwd`
     - mkdir usr
     - PREFIX="$PWD/usr"
