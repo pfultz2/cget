@@ -12,6 +12,9 @@ if os.name == 'posix' and sys.version_info[0] < 3:
 else:
     import urllib.request as urllib
 
+def is_string(obj):
+    return isinstance(obj, basestring)
+
 def as_bytes(s):
     if sys.version_info[0] < 3: return bytes(s)
     else: return bytes(s, "UTF-8")
@@ -117,8 +120,12 @@ def retrieve_url(url, dst):
 def extract_ar(a, d):
     tarfile.open(a).extractall(d)
 
+def join_args(args):
+    if is_string(args): return args
+    else: return ' '.join(args)
+
 def as_shell(args):
-    if os.name == 'posix': return ['/bin/sh', '-c', ' '.join(args)]
+    if os.name == 'posix': return ['/bin/sh', '-c', join_args(args)]
     else: return args
 
 def cmd(args, **kwargs):

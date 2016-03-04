@@ -1,9 +1,5 @@
-import os, sys, tarfile, shutil
+import os, tarfile, shutil, cget.util
 
-if os.name == 'posix' and sys.version_info[0] < 3:
-    import subprocess32 as subprocess
-else:
-    import subprocess
 
 def is_string(obj):
     return isinstance(obj, basestring)
@@ -20,24 +16,13 @@ class TestError(Exception):
         if None: return "Test failed"
         else: return self.msg
 
-def join_args(args):
-    if is_string(args): return args
-    else: return ' '.join(args)
-
-def as_shell(args):
-    if os.name == 'posix': return ['/bin/sh', '-c', join_args(args)]
-    else: return args
-
-def cmd(args, **kwargs):
-    c = as_shell(args)
-    print(c)
-    child = subprocess.Popen(as_shell(args), **kwargs)
-    child.communicate()
-    if child.returncode != 0: raise TestError()
+def require(b):
+    if not b: raise TestError()
 
 def cmds(g, cwd):
     for x in g:
-        cmd(x, cwd=cwd)
+        print(x)
+        require(cget.util.cmd(x, cwd=cwd))
 
 def basename(p):
     d, b = os.path.split(p)
@@ -56,7 +41,6 @@ class TmpDir:
         os.makedirs(self.tmp_dir)
         return self.tmp_dir
     def __exit__(self, type, value, traceback):
-        # pass
         shutil.rmtree(self.tmp_dir)
 
 def run_test(f):
@@ -64,7 +48,7 @@ def run_test(f):
     with TmpDir(get_path('tmp')) as tmp_dir:
         f(tmp_dir)
 
-def test_install(url, lib):
+def test_install(url, lib, alias=None):
     yield 'cget list'
     yield 'cget clean'
     yield 'cget list'
@@ -73,7 +57,8 @@ def test_install(url, lib):
     yield 'cget pkg-config --list-all'
     yield 'cget pkg-config --exists {0}'.format(lib)
     yield 'cget pkg-config --cflags --libs {0}'.format(lib)
-    yield 'cget remove {0}'.format(url)
+    if alias is None: yield 'cget remove {0}'.format(url)
+    else: yield 'cget remove {0}'.format(alias)
     yield 'cget list'
     yield 'cget clean'
     yield 'cget list'
@@ -83,5 +68,9 @@ def test_tar(d):
     ar = os.path.join(d, 'libsimple.tar.gz')
     create_ar(archive=ar, src=get_path('libsimple'))
     cmds(test_install(url=ar, lib='simple'), cwd=d)
+
+# @run_test
+def test_dir(d):
+    cmds(test_install(url=get_path('libsimple'), lib='simple'), cwd=d)
 
 
