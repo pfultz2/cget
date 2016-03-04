@@ -12,6 +12,7 @@ matrix:
               packages:
                 - util-linux
                 - python
+                - cmake
 
 script:
     - python setup.py install --user && python ./test/test.py
