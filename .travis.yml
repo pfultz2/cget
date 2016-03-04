@@ -1,0 +1,18 @@
+language: cpp
+script: cmake
+
+matrix:
+    include:
+        # OSX
+        - os: osx
+        # Linux
+        - os: linux
+          addons:
+            apt:
+              packages:
+                - util-linux
+                - python
+
+script:
+    - cd $CHECKOUT_PATH
+    - python setup.py install && && python ./test/test.py
