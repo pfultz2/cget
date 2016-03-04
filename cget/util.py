@@ -97,7 +97,8 @@ def get_dirs(d):
 
 def copy_to(src, dst_dir):
     target = os.path.join(dst_dir, os.path.basename(src))
-    shutil.copyfile(src, target)
+    if os.path.isfile(src): shutil.copyfile(src, target)
+    else: shutil.copytree(src, target)
     return target
 
 def download_to(url, download_dir):

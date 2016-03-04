@@ -4,10 +4,10 @@ import os, tarfile, shutil, cget.util
 def is_string(obj):
     return isinstance(obj, basestring)
 
-test_dir = os.path.dirname(os.path.realpath(__file__))
+__test_dir__ = os.path.dirname(os.path.realpath(__file__))
 
 def get_path(p):
-    return os.path.join(test_dir, p)
+    return os.path.join(__test_dir__, p)
 
 class TestError(Exception):
     def __init__(self, msg=None):
@@ -19,11 +19,6 @@ class TestError(Exception):
 def require(b):
     if not b: raise TestError()
 
-def cmds(g, cwd):
-    for x in g:
-        print(x)
-        require(cget.util.cmd(x, cwd=cwd))
-
 def basename(p):
     d, b = os.path.split(p)
     if len(b) > 0: return b
@@ -34,19 +29,30 @@ def create_ar(archive, src):
         name = basename(src)
         f.add(src, arcname=name)
 
-class TmpDir:
+class TestDir:
     def __init__(self, tmp_dir):
         self.tmp_dir = tmp_dir
     def __enter__(self):
         os.makedirs(self.tmp_dir)
-        return self.tmp_dir
+        return self
     def __exit__(self, type, value, traceback):
         shutil.rmtree(self.tmp_dir)
 
+    def cmd(self, *args, **kwargs):
+        require(cget.util.cmd(*args, cwd=self.tmp_dir, **kwargs))
+
+    def cmds(self, g):
+        for x in g:
+            print(x)
+            self.cmd(x)  
+
+    def get_path(self, p):
+        return os.path.join(self.tmp_dir, p)
+
 def run_test(f):
     # TODO: Use test name
-    with TmpDir(get_path('tmp')) as tmp_dir:
-        f(tmp_dir)
+    with TestDir(get_path('tmp')) as d:
+        f(d)
 
 def test_install(url, lib, alias=None):
     yield 'cget list'
@@ -65,12 +71,22 @@ def test_install(url, lib, alias=None):
 
 @run_test
 def test_tar(d):
-    ar = os.path.join(d, 'libsimple.tar.gz')
+    ar = d.get_path('libsimple.tar.gz')
     create_ar(archive=ar, src=get_path('libsimple'))
-    cmds(test_install(url=ar, lib='simple'), cwd=d)
+    d.cmds(test_install(url=ar, lib='simple'))
 
-# @run_test
+@run_test
+def test_tar_alias(d):
+    ar = d.get_path('libsimple.tar.gz')
+    create_ar(archive=ar, src=get_path('libsimple'))
+    d.cmds(test_install(url='simple:'+ar, lib='simple', alias='simple'))
+
+@run_test
 def test_dir(d):
-    cmds(test_install(url=get_path('libsimple'), lib='simple'), cwd=d)
+    d.cmds(test_install(url=get_path('libsimple'), lib='simple'))
+
+@run_test
+def test_dir_alias(d):
+    d.cmds(test_install(url='simple:'+get_path('libsimple'), lib='simple', alias='simple'))
 
 

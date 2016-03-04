@@ -28,7 +28,9 @@ class Builder:
 
     def fetch(self, url):
         self.log("fetch:", url)
-        util.extract_ar(util.retrieve_url(url, self.tmp_dir), self.tmp_dir)
+        f = util.retrieve_url(url, self.tmp_dir)
+        if os.path.isfile(f):
+            util.extract_ar(f, self.tmp_dir)
         return next(util.get_dirs(self.tmp_dir))
 
     def configure(self, src_dir, install_prefix=None):
@@ -104,7 +106,7 @@ class CGetPrefix:
         name, url = parse_alias(pkg)
         if '://' not in url:
             f = os.path.expanduser(url)
-            if os.path.isfile(f):
+            if os.path.exists(f):
                 url = 'file://' + f
                 if name is None: name = url_to_pkg(url)
             else:
