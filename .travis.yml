@@ -15,4 +15,8 @@ matrix:
                 - cmake
 
 script:
-    - python setup.py install --user && python ./test/test.py
+    - PWD=`pwd`
+    - mkdir usr
+    - PREFIX="$PWD/usr"
+    - export PATH="$PREFIX/bin:$PATH"
+    - python setup.py install --prefix $PREFIX && python ./test/test.py
