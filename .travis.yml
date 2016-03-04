@@ -21,4 +21,5 @@ script:
     - mkdir usr
     - PREFIX="$PWD/usr"
     - export PATH="$PREFIX/bin:$PATH"
+    - export PYTHONPATH="$PREFIX"
     - python setup.py install --prefix $PREFIX && python ./test/test.py
