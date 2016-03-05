@@ -39,8 +39,9 @@ The archive will be unpacked and installed.
 
 An url to the package:
 
-   cget install http://zlib.net/zlib-1.2.8.tar.gz
+    cget install http://zlib.net/zlib-1.2.8.tar.gz
 
+The file will downloaded, unpacked, and installed.
 
 ### Github
 
