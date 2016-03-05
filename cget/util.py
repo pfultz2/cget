@@ -31,16 +31,20 @@ class BuildError(Exception):
         if None: return "Build failed"
         else: return self.msg
 
-def require(b):
-    if not b: raise BuildError()
+# def require(b):
+#     if not b: raise BuildError()
 
-def requires(*args):
-    for arg in args:
-        require(arg())
+# def requires(*args):
+#     for arg in args:
+#         require(arg())
 
 def try_until(*args):
     for arg in args:
-        if arg(): return True
+        try: 
+            arg()
+            return
+        except:
+            pass
     raise BuildError()
 
 def write_to(file, lines):
@@ -133,15 +137,15 @@ def cmd(args, env={}, **kwargs):
     e.update(env)
     child = subprocess.Popen(args, env=e, **kwargs)
     child.communicate()
-    return child.returncode == 0
+    if child.returncode != 0: raise BuildError("Error: " + str(args))
 
 def cmake(args, cwd=None, toolchain=None, env=None):
     if toolchain is not None: args.insert(0, '-DCMAKE_TOOLCHAIN_FILE={0}'.format(toolchain))
-    return cmd([which('cmake')]+args, cwd=cwd, env=env)
+    cmd([which('cmake')]+args, cwd=cwd, env=env)
 
 
 def pkg_config(args, path=None):
     env = {}
     if path is not None: env['PKG_CONFIG_PATH'] = path
-    return cmd([which('pkg-config')]+list(args), env=env)
+    cmd([which('pkg-config')]+list(args), env=env)
 

@@ -24,7 +24,7 @@ class Builder:
 
     def cmake(self, args, cwd=None, toolchain=None):
         self.log("cmake: ", args)
-        return util.cmake(args, cwd=cwd, toolchain=toolchain, env=self.pkg_config_env())
+        util.cmake(args, cwd=cwd, toolchain=toolchain, env=self.pkg_config_env())
 
     def fetch(self, url):
         self.log("fetch:", url)
@@ -37,9 +37,8 @@ class Builder:
         util.mkdir(self.build_dir)
         args = [src_dir]
         if install_prefix is not None: args.insert(0, '-DCMAKE_INSTALL_PREFIX=' + install_prefix)
-        result = self.cmake(args, cwd=self.build_dir, toolchain=self.prefix.toolchain)
+        self.cmake(args, cwd=self.build_dir, toolchain=self.prefix.toolchain)
         if os.path.exists(os.path.join(self.build_dir, 'Makefile')): self.is_make_generator = True
-        return result
 
     def build(self, target=None, config=None, cwd=None, toolchain=None):
         args = ['--build', self.build_dir]
@@ -48,7 +47,7 @@ class Builder:
         if self.is_make_generator: 
             args.extend(['--', '-j', str(multiprocessing.cpu_count())])
             if self.verbose: args.append('VERBOSE=1')
-        return self.cmake(args, cwd=cwd, toolchain=toolchain)
+        self.cmake(args, cwd=cwd, toolchain=toolchain)
 
 def quote(s):
     return s.replace("\\", "\\\\")
@@ -129,16 +128,14 @@ class CGetPrefix:
         if os.path.exists(pkg_dir): return "Package {0} already installed".format(pkg)
         with self.create_builder(name, verbose) as builder:
             src_dir = builder.fetch(url)
-            util.requires(
-                lambda: builder.configure(src_dir, install_prefix=pkg_dir),
-                lambda: builder.build(target='all', config='Release')
-            )
+            builder.configure(src_dir, install_prefix=pkg_dir)
+            builder.build(target='all', config='Release')
             if test: 
                 util.try_until(
                     lambda: builder.build(target='check', config='Release'),
                     lambda: builder.build(target='test', config='Release')
                 )
-            util.require(builder.build(target='install', config='Release'))
+            builder.build(target='install', config='Release')
             util.symlink_dir(pkg_dir, self.prefix)
         return "Successfully installed {0}".format(pkg)
 

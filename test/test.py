@@ -41,7 +41,7 @@ class TestDir:
         shutil.rmtree(self.tmp_dir)
 
     def cmd(self, *args, **kwargs):
-        require(cget.util.cmd(*args, shell=True, cwd=self.tmp_dir, **kwargs))
+        cget.util.cmd(*args, shell=True, cwd=self.tmp_dir, **kwargs)
 
     def cmds(self, g):
         for x in g:
