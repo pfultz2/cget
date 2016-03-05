@@ -55,10 +55,10 @@ def quote(s):
 
 def url_to_pkg(url):
     x = url[url.find('://')+3:]
-    return '_url_' + util.as_string(base64.urlsafe_b64encode(util.as_bytes(x)))
+    return '_url_' + util.as_string(base64.urlsafe_b64encode(util.as_bytes(x))).replace('=', '_')
 
 def pkg_to_name(pkg):
-    if pkg.startswith('_url_'): return base64.urlsafe_b64decode(pkg[5:])
+    if pkg.startswith('_url_'): return base64.urlsafe_b64decode(pkg.replace('_', '=')[5:])
     else: return pkg.replace('__', '/')
 
 def parse_alias(s):
