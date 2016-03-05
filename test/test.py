@@ -46,7 +46,7 @@ class TestDir:
     def cmds(self, g):
         for x in g:
             if x.startswith('cget'):
-                x = __cget_exe__ + x[4:]g
+                x = __cget_exe__ + x[4:]
             print(x)
             self.cmd(x)
 
