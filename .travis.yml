@@ -15,7 +15,9 @@ matrix:
                 - cmake
 
 script:
+    - which cmake
     - cmake --version
+    - which python
     - python --version
     - export PATH="/Users/travis/Library/Python/2.7/bin:$PATH"
     - python setup.py install --user && python ./test/test.py
