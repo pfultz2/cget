@@ -15,7 +15,6 @@ matrix:
                 - cmake
 
 script:
-    - /bin/sh --version
     - cmake --version
     - python --version
     - export PATH="/Users/travis/Library/Python/2.7/bin:$PATH"
