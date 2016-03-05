@@ -123,8 +123,8 @@ def extract_ar(a, d):
 
 def which(p):
     for dirname in os.environ['PATH'].split(os.pathsep):
-        candidate = os.path.join(dirname, p)
-        if os.path.isfile(candidate):
+        candidate = os.path.join(os.path.expanduser(dirname), p)
+        if os.path.exists(candidate):
             return candidate
     raise BuildError("Can't find file %s" % p)
 
