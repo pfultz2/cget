@@ -170,7 +170,7 @@ class CGetPrefix:
         return ':'.join(libs)
 
     def pkg_config(self, args):
-        return util.pkg_config(args, path=self.pkg_config_path())
+        util.pkg_config(args, path=self.pkg_config_path())
 
 
 @click.group(context_settings={'help_option_names': ['-h', '--help']})
