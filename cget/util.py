@@ -128,8 +128,10 @@ def which(p):
             return candidate
     raise BuildError("Can't find file %s" % p)
 
-def cmd(args, **kwargs):
-    child = subprocess.Popen(args, **kwargs)
+def cmd(args, env={}, **kwargs):
+    e = dict(os.environ)
+    e.update(env)
+    child = subprocess.Popen(args, env=e, **kwargs)
     child.communicate()
     return child.returncode == 0
 
