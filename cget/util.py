@@ -126,11 +126,11 @@ def join_args(args):
     else: return ' '.join(args)
 
 def as_shell(args):
-    if os.name == 'posix': return ['/bin/sh', '-c', join_args(args)]
+    if os.name == 'posix': return [join_args(args)]
     else: return args
 
 def cmd(args, **kwargs):
-    child = subprocess.Popen(as_shell(args), **kwargs)
+    child = subprocess.Popen(as_shell(args), shell=True, **kwargs)
     child.communicate()
     return child.returncode == 0
 
