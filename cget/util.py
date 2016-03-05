@@ -121,9 +121,8 @@ def retrieve_url(url, dst):
 def extract_ar(a, d):
     tarfile.open(a).extractall(d)
 
-
 def which(p):
-    for dirname in sys.path:
+    for dirname in os.environ['PATH'].split(os.pathsep):
         candidate = os.path.join(dirname, p)
         if os.path.isfile(candidate):
             return candidate

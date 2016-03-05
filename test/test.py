@@ -6,6 +6,8 @@ def is_string(obj):
 
 __test_dir__ = os.path.dirname(os.path.realpath(__file__))
 
+__cget_exe__ = cget.util.which('cget')
+
 def get_path(p):
     return os.path.join(__test_dir__, p)
 
@@ -43,6 +45,8 @@ class TestDir:
 
     def cmds(self, g):
         for x in g:
+            if x.startswith('cget'):
+                x = __cget_exe__ + x[4:]g
             print(x)
             self.cmd(x)
 
