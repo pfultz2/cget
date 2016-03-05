@@ -121,28 +121,26 @@ def retrieve_url(url, dst):
 def extract_ar(a, d):
     tarfile.open(a).extractall(d)
 
-def join_args(args):
-    if is_string(args): return args
-    else: return ' '.join(args)
 
-def as_shell(args):
-    if os.name == 'posix': return [join_args(args)]
-    else: return args
+def which(p):
+    for dirname in sys.path:
+        candidate = os.path.join(dirname, p)
+        if os.path.isfile(candidate):
+            return candidate
+    raise BuildError("Can't find file %s" % p)
 
 def cmd(args, **kwargs):
-    child = subprocess.Popen(as_shell(args), shell=True, **kwargs)
+    child = subprocess.Popen(args, **kwargs)
     child.communicate()
     return child.returncode == 0
 
 def cmake(args, cwd=None, toolchain=None, env=None):
-    cmake_exe = ['cmake']
-    if toolchain is not None: cmake_exe.append('-DCMAKE_TOOLCHAIN_FILE={0}'.format(toolchain))
-    return cmd(cmake_exe+list(args), cwd=cwd, env=env)
+    if toolchain is not None: args.insert(0, '-DCMAKE_TOOLCHAIN_FILE={0}'.format(toolchain))
+    return cmd([which('cmake')]+args, cwd=cwd, env=env)
 
 
 def pkg_config(args, path=None):
-    pkg_config_exe = ['pkg-config']
     env = {}
     if path is not None: env['PKG_CONFIG_PATH'] = path
-    return cmd(pkg_config_exe+list(args), env=env)
+    return cmd([which('pkg-config')]+list(args), env=env)
 

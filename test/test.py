@@ -39,12 +39,12 @@ class TestDir:
         shutil.rmtree(self.tmp_dir)
 
     def cmd(self, *args, **kwargs):
-        require(cget.util.cmd(*args, cwd=self.tmp_dir, **kwargs))
+        require(cget.util.cmd(*args, shell=True, cwd=self.tmp_dir, **kwargs))
 
     def cmds(self, g):
         for x in g:
             print(x)
-            self.cmd(x)  
+            self.cmd(x)
 
     def get_path(self, p):
         return os.path.join(self.tmp_dir, p)
