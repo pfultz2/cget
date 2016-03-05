@@ -17,5 +17,5 @@ matrix:
 script:
     - cmake --version
     - python --version
-    - export PATH="$PREFIX/bin:$PATH"
+    - export PATH="/Users/travis/Library/Python/2.7/bin:$PATH"
     - python setup.py install --user && python ./test/test.py
