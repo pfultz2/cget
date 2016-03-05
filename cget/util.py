@@ -31,13 +31,6 @@ class BuildError(Exception):
         if None: return "Build failed"
         else: return self.msg
 
-# def require(b):
-#     if not b: raise BuildError()
-
-# def requires(*args):
-#     for arg in args:
-#         require(arg())
-
 def try_until(*args):
     for arg in args:
         try: 

@@ -62,7 +62,7 @@ def test_install(url, lib, alias=None):
     yield 'cget list'
     yield 'cget clean'
     yield 'cget list'
-    yield 'cget install --verbose {0}'.format(url)
+    yield 'cget install --verbose --test {0}'.format(url)
     yield 'cget list'
     yield 'cget pkg-config --list-all'
     yield 'cget pkg-config --exists {0}'.format(lib)
