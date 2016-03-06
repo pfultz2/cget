@@ -119,8 +119,11 @@ class CGetPrefix:
             if name is None: name = url_to_pkg(url)
         return url, name
 
-    def install_all(self, pkgs, test=False):
-        for pkg in pkgs: self.install(pkg, test=test)
+    def from_file(self, file):
+        if file is not None and os.path.exists(file):
+            with open(file) as f:
+                return [x for line in f.readlines() for x in [line.strip()] if len(x) > 0 or not x.startswith('#')]
+        else: return []
 
     def install(self, pkg, test=False, verbose=False):
         url, name = self.parse_pkg(pkg)
@@ -196,15 +199,15 @@ def init_command(prefix, toolchain, cxxflags, ldflags, std):
     """ Initialize install directory """
     prefix.write_cmake(always_write=True, toolchain=toolchain, cxxflags=cxxflags, ldflags=ldflags, std=std)
 
-# TODO: Add a verbose setting
 @cli.command(name='install')
 @use_prefix()
 @click.option('-t', '--test', is_flag=True, help="Test package before installing by running the test or check target")
+@click.option('-f', '--file', default=None, help="Install packages listed in the file")
 @click.option('-v', '--verbose', is_flag=True, envvar='VERBOSE', help="Verbose mode")
 @click.argument('pkgs', nargs=-1)
-def install_command(prefix, pkgs, test, verbose):
+def install_command(prefix, pkgs, file, test, verbose):
     """ Install packages """
-    for pkg in pkgs:
+    for pkg in list(pkgs)+prefix.from_file(file):
         try:
             click.echo(prefix.install(pkg, test=test, verbose=verbose))
         except:

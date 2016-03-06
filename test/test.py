@@ -93,4 +93,28 @@ def test_dir(d):
 def test_dir_alias(d):
     d.cmds(test_install(url='simple:'+get_path('libsimple'), lib='simple', alias='simple'))
 
+@run_test
+def test_reqs_alias_file(d):
+    reqs_file = d.get_path('reqs')
+    cget.util.write_to(reqs_file, ['simple:'+get_path('libsimple')])
+    d.cmds(test_install(url='--file {0}'.format(reqs_file), lib='simple', alias='simple'))
+
+@run_test
+def test_reqs_file(d):
+    reqs_file = d.get_path('reqs')
+    cget.util.write_to(reqs_file, [get_path('libsimple')])
+    d.cmds(test_install(url='--file {0}'.format(reqs_file), lib='simple', alias=get_path('libsimple')))
+
+@run_test
+def test_reqs_alias_f(d):
+    reqs_file = d.get_path('reqs')
+    cget.util.write_to(reqs_file, ['simple:'+get_path('libsimple')])
+    d.cmds(test_install(url='-f {0}'.format(reqs_file), lib='simple', alias='simple'))
+
+@run_test
+def test_reqs_f(d):
+    reqs_file = d.get_path('reqs')
+    cget.util.write_to(reqs_file, [get_path('libsimple')])
+    d.cmds(test_install(url='-f {0}'.format(reqs_file), lib='simple', alias=get_path('libsimple')))
+
 
