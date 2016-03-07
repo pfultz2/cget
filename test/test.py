@@ -41,6 +41,7 @@ class TestDir:
         shutil.rmtree(self.tmp_dir)
 
     def cmd(self, *args, **kwargs):
+        print(args)
         cget.util.cmd(*args, shell=True, cwd=self.tmp_dir, **kwargs)
 
     def cmds(self, g):
@@ -58,7 +59,8 @@ def run_test(f):
     with TestDir(get_path('tmp')) as d:
         f(d)
 
-def test_install(url, lib, alias=None):
+# TODO: Test app by running it
+def test_install(url, lib, alias=None, app=None):
     yield 'cget list'
     yield 'cget clean'
     yield 'cget list'
@@ -116,5 +118,9 @@ def test_reqs_f(d):
     reqs_file = d.get_path('reqs')
     cget.util.write_to(reqs_file, [get_path('libsimple')])
     d.cmds(test_install(url='-f {0}'.format(reqs_file), lib='simple', alias=get_path('libsimple')))
+
+@run_test
+def test_app_dir(d):
+    d.cmds(test_install(url=get_path('basicapp'), lib='simple'))
 
 

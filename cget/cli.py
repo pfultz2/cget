@@ -131,6 +131,8 @@ class CGetPrefix:
         if os.path.exists(pkg_dir): return "Package {0} already installed".format(pkg)
         with self.create_builder(name, verbose) as builder:
             src_dir = builder.fetch(url)
+            for dependent in self.from_file(os.path.join(src_dir, 'requirements.txt')):
+                self.install(dependent, test=test, verbose=verbose)
             builder.configure(src_dir, install_prefix=pkg_dir)
             builder.build(target='all', config='Release')
             if test: 
