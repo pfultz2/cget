@@ -103,6 +103,6 @@ Future work
 -----------
 
 * Windows support - Currently cget uses symlinks to manage installing and removing packages. On windows, an alternative may need to be necessary.
-* When installing a package, automatically install the packages from the requirements.txt file.
+* Automatically remove dependencies when removing a package
 * Channels to better support versioning 
 
