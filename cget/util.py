@@ -105,9 +105,7 @@ def download_to(url, download_dir):
     with click.progressbar(length=100) as bar:
         def hook(count, block_size, total_size):
             percent = int(count*block_size*100/total_size)
-            if percent > 100: percent = 100
-            if percent < 0: percent = 0
-            bar.update(percent)
+            if percent > 0 and percent < 100: bar.update(percent)
         urllib.urlretrieve(url, filename=file, reporthook=hook, data=None)
     return file
 
@@ -115,8 +113,8 @@ def retrieve_url(url, dst):
     if url.startswith('file://'): return copy_to(url[7:], dst)
     else: return download_to(url, dst)
 
-def extract_ar(a, d):
-    tarfile.open(a).extractall(d)
+def extract_ar(archive, dst):
+    tarfile.open(archive).extractall(dst)
 
 def which(p):
     for dirname in os.environ['PATH'].split(os.pathsep):
