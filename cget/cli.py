@@ -109,7 +109,7 @@ class CGetPrefix:
         if '://' not in url:
             f = os.path.expanduser(url)
             if os.path.exists(f):
-                url = 'file://' + f
+                url = 'file://' + os.path.abspath(f)
                 if name is None: name = url_to_pkg(url)
             else:
                 x = url.split('@')
