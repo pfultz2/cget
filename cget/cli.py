@@ -235,6 +235,15 @@ def list_command(prefix):
     for pkg in prefix.list():
         click.echo(pkg)
 
+# TODO: Make this command hidden
+@cli.command(name='size')
+@use_prefix()
+@click.argument('n')
+def size_command(prefix, n):
+    s = len(list(prefix.list()))
+    if s != int(n):
+        raise util.BuildError("Not the correct number of items: {0}".format(s))
+
 @cli.command(name='clean')
 @use_prefix()
 def clean_command(prefix):
