@@ -11,7 +11,6 @@ install(TARGETS basicapp DESTINATION bin)
 
 add_executable (basciapptest main.cpp)
 target_link_libraries(basciapptest ${BASICAPP_PKGS_LDFLAGS})
-target_compile_options(basciapptest PUBLIC ${BASICAPP_PKGS_CFLAGS_OTHER})
 if(WIN32)
     add_test(NAME basicapptest WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH} COMMAND basciapptest${CMAKE_EXECUTABLE_SUFFIX})
 else()
