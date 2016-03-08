@@ -7,7 +7,6 @@ find_package(PkgConfig)
 pkg_check_modules(BASICAPP_PKGS REQUIRED simple)
 include_directories(${BASICAPP_PKGS_INCLUDE_DIRS})
 target_link_libraries(basicapp ${BASICAPP_PKGS_LDFLAGS})
-target_compile_options(basicapp PUBLIC ${BASICAPP_PKGS_CFLAGS_OTHER})
 install(TARGETS basicapp DESTINATION bin)
 
 add_executable (basciapptest main.cpp)
