@@ -176,8 +176,10 @@ class CGetPrefix:
     def remove(self, pkg):
         pkg = self.parse_pkg(pkg)
         pkg_dir = self.get_package_directory(pkg.to_fname())
+        deps_dir = self.get_deps_directory(pkg.to_fname())
         if os.path.exists(pkg_dir):
             shutil.rmtree(pkg_dir)
+            if os.path.exists(deps_dir): shutil.rmtree(deps_dir)
             util.rm_symlink_dir(self.prefix)
             util.rm_empty_dirs(self.prefix)
             return "Removed package {0}".format(pkg.name)
@@ -292,9 +294,12 @@ def list_command(prefix):
 @use_prefix()
 @click.argument('n')
 def size_command(prefix, n):
-    s = len(list(prefix.list()))
-    if s != int(n):
-        raise util.BuildError("Not the correct number of items: {0}".format(s))
+    pkgs = len(list(util.ls(prefix.get_package_directory(), os.path.isdir)))
+    deps = len(list(util.ls(prefix.get_deps_directory(), os.path.isdir)))
+    if deps > pkgs:
+        raise util.BuildError("Extra deps items: {0}".format(deps))
+    if pkgs != int(n):
+        raise util.BuildError("Not the correct number of items: {0}".format(pkgs))
 
 @cli.command(name='clean')
 @use_prefix()
