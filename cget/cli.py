@@ -49,21 +49,43 @@ class Builder:
             if self.verbose: args.append('VERBOSE=1')
         self.cmake(args, cwd=cwd, toolchain=toolchain)
 
-def quote(s):
-    return s.replace("\\", "\\\\")
-
-def url_to_pkg(url):
+def encode_url(url):
     x = url[url.find('://')+3:]
     return '_url_' + util.as_string(base64.urlsafe_b64encode(util.as_bytes(x))).replace('=', '_')
 
-def pkg_to_name(pkg):
-    if pkg.startswith('_url_'): return base64.urlsafe_b64decode(pkg.replace('_', '=')[5:])
-    else: return pkg.replace('__', '/')
+def decode_url(url):
+    return base64.urlsafe_b64decode(util.as_string(url.replace('_', '=')[5:]))
+
+class PackageInfo:
+    def __init__(self, name=None, url=None, fname=None):
+        self.name = name
+        self.url = url
+        self.fname = fname
+
+    def to_fname(self):
+        if self.fname is None: self.fname = self.get_encoded_name_url()
+        return self.fname
+
+    def get_encoded_name_url(self):
+        if self.name is None: return encode_url(self.url)
+        else: return self.name.replace('/', '__')
+
+
+def fname_to_pkg(fname):
+    if fname.startswith('_url_'): return PackageInfo(name=decode_url(fname), fname=fname)
+    else: return PackageInfo(name=fname.replace('__', '/'), fname=fname)
+
+def quote(s):
+    return s.replace("\\", "\\\\")
 
 def parse_alias(s):
     i = s.find(':', 0, s.find('://'))
     if i > 0: return s[0:i], s[i+1:]
     else: return None, s
+
+def push_front(iterable, x):
+    yield x
+    for y in iterable: yield y
 
 
 class CGetPrefix:
@@ -101,23 +123,26 @@ class CGetPrefix:
         if name is None: return pkg_dir
         else: return os.path.join(pkg_dir, name)
 
+    def get_deps_directory(self, name=None):
+        deps_dir = os.path.join(self.prefix, 'deps')
+        if name is None: return deps_dir
+        else: return os.path.join(deps_dir, name)
+
     def parse_pkg(self, pkg):
+        if isinstance(pkg, PackageInfo): return pkg
         name, url = parse_alias(pkg)
         if '://' not in url:
-            f = os.path.expanduser(url)
+            f = os.path.abspath(os.path.expanduser(url))
             if os.path.exists(f):
                 url = 'file://' + f
-                if name is None: name = url_to_pkg(url)
             else:
                 x = url.split('@')
                 p = x[0]
                 v = 'HEAD'
                 if len(x) > 1: v = x[1]
                 url = 'https://github.com/{0}/archive/{1}.tar.gz'.format(p, v)
-                name = p.replace('/', '__')
-        else:
-            if name is None: name = url_to_pkg(url)
-        return url, name
+                if name is None: name = p
+        return PackageInfo(name=name, url=url)
 
     def from_file(self, file):
         if file is not None and os.path.exists(file):
@@ -125,14 +150,16 @@ class CGetPrefix:
                 return [x for line in f.readlines() for x in [line.strip()] if len(x) > 0 or not x.startswith('#')]
         else: return []
 
-    def install(self, pkg, test=False, verbose=False):
-        url, name = self.parse_pkg(pkg)
-        pkg_dir = self.get_package_directory(name)
-        if os.path.exists(pkg_dir): return "Package {0} already installed".format(pkg)
-        with self.create_builder(name, verbose) as builder:
-            src_dir = builder.fetch(url)
+    def install(self, pkg, test=False, verbose=False, parent=None):
+        pkg = self.parse_pkg(pkg)
+        pkg_dir = self.get_package_directory(pkg.to_fname())
+        if os.path.exists(pkg_dir): 
+            if parent is not None: util.mkfile(self.get_deps_directory(pkg.to_fname()), parent, parent)
+            return "Package {0} already installed".format(pkg)
+        with self.create_builder(pkg.to_fname(), verbose) as builder:
+            src_dir = builder.fetch(pkg.url)
             for dependent in self.from_file(os.path.join(src_dir, 'requirements.txt')):
-                self.install(dependent, test=test, verbose=verbose)
+                self.install(dependent, test=test, verbose=verbose, parent=pkg.to_fname())
             builder.configure(src_dir, install_prefix=pkg_dir)
             builder.build(target='all', config='Release')
             if test: 
@@ -142,21 +169,39 @@ class CGetPrefix:
                 )
             builder.build(target='install', config='Release')
             util.symlink_dir(pkg_dir, self.prefix)
+        if parent is not None: 
+            util.mkfile(self.get_deps_directory(pkg.to_fname()), parent, [parent])
         return "Successfully installed {0}".format(pkg)
 
     def remove(self, pkg):
-        url, name = self.parse_pkg(pkg)
-        pkg_dir = self.get_package_directory(name)
+        pkg = self.parse_pkg(pkg)
+        pkg_dir = self.get_package_directory(pkg.to_fname())
         if os.path.exists(pkg_dir):
             shutil.rmtree(pkg_dir)
             util.rm_symlink_dir(self.prefix)
             util.rm_empty_dirs(self.prefix)
-            return "Removed package {0}".format(pkg)
+            return "Removed package {0}".format(pkg.name)
         else:
             return "Package doesn't exists"
 
-    def list(self):
-        return (pkg_to_name(d) for d in util.lsdir(self.get_package_directory()))
+    def _list_files(self, pkg=None, top=True):
+        if pkg is None:
+            return util.ls(self.get_package_directory(), os.path.isdir)
+        else:
+            p = self.parse_pkg(pkg)
+            ls = util.ls(self.get_deps_directory(p.to_fname()), os.path.isfile)
+            if top: return [p.to_fname()]+list(ls)
+            else: return ls
+            # return util.ls(self.get_deps_directory(self.parse_pkg(pkg).to_fname()), os.path.isfile)
+
+    def list(self, pkg=None, recursive=False, top=True):
+        for d in self._list_files(pkg, top):
+            p = fname_to_pkg(d)
+            yield p
+            if recursive:
+                for child in self.list(p, recursive=recursive, top=False):
+                    yield child
+
 
     def delete_dir(self, d):
         path = os.path.join(self.prefix, d)
@@ -220,20 +265,27 @@ def install_command(prefix, pkgs, file, test, verbose):
 @cli.command(name='remove')
 @use_prefix()
 @click.argument('pkgs', nargs=-1)
-def remove_command(prefix, pkgs):
+@click.option('-y', '--yes', is_flag=True, default=False)
+def remove_command(prefix, pkgs, yes):
     """ Remove packages """
-    for pkg in pkgs:
-        try:
-            click.echo(prefix.remove(pkg))
-        except:
-            click.echo("Failed to remove package {0}".format(pkg))
+    pkgs_set = set((dep.name for pkg in pkgs for dep in prefix.list(pkg, recursive=True)))
+    click.echo("The following packages will be deleted:")
+    for pkg in pkgs_set: click.echo(pkg)
+    if not yes: yes = click.confirm("Are you sure you want to remove these packages?")
+    if yes:
+        for pkg in pkgs_set:
+            try:
+                prefix.remove(pkg)
+                click.echo("Removed package {0}".format(pkg))
+            except:
+                click.echo("Failed to remove package {0}".format(pkg))
 
 @cli.command(name='list')
 @use_prefix()
 def list_command(prefix):
     """ List installed packages """
     for pkg in prefix.list():
-        click.echo(pkg)
+        click.echo(pkg.name)
 
 # TODO: Make this command hidden
 @cli.command(name='size')

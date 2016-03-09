@@ -43,7 +43,8 @@ def try_until(*args):
 def write_to(file, lines):
     content = list((line + "\n" for line in lines))
     if (len(content) > 0):
-        open(file, 'w').writelines(content)
+        with open(file, 'w') as f:
+            f.writelines(content)
 
 def mkdir(p):
     if not os.path.exists(p): os.makedirs(p)
@@ -56,9 +57,9 @@ def mkfile(d, file, content, always_write=True):
         write_to(p, content)
     return p
 
-def lsdir(p):
+def ls(p, predicate=lambda x:True):
     if os.path.exists(p):
-        return (d for d in os.listdir(p) if os.path.isdir(os.path.join(p, d)))
+        return (d for d in os.listdir(p) if predicate(os.path.join(p, d)))
     else:
         return []
 

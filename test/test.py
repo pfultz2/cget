@@ -71,9 +71,9 @@ def test_install(url, lib, alias=None, app=None, size=1):
     yield 'cget pkg-config --list-all'
     yield 'cget pkg-config --exists {0}'.format(lib)
     yield 'cget pkg-config --cflags --libs {0}'.format(lib)
-    if alias is None: yield 'cget remove {0}'.format(url)
-    else: yield 'cget remove {0}'.format(alias)
-    # yield 'cget size 0'
+    if alias is None: yield 'cget remove -y {0}'.format(url)
+    else: yield 'cget remove -y {0}'.format(alias)
+    yield 'cget size 0'
     yield 'cget list'
     yield 'cget clean'
     yield 'cget list'
@@ -124,6 +124,6 @@ def test_reqs_f(d):
 
 @run_test
 def test_app_dir(d):
-    d.cmds(test_install(url=get_path('basicapp'), lib='simple', size=2))
+    d.cmds(test_install(url=get_path('basicapp'), lib='simple', alias='simple', size=2))
 
 
