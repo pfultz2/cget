@@ -5,6 +5,7 @@ matrix:
     include:
         # OSX
         - os: osx
+          language: generic
           python: '2.7'
         # Linux
         - env: PYTHONPATH=/home/travis/.local/lib/python2.7/site-packages/
