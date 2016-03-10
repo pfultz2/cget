@@ -33,6 +33,13 @@ class BuildError(Exception):
         if None: return "Build failed"
         else: return self.msg
 
+def can(f):
+    try:
+        f()
+        return True
+    except:
+        return False
+
 def try_until(*args):
     for arg in args[:-1]:
         try: 

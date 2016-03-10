@@ -8,6 +8,8 @@ __test_dir__ = os.path.dirname(os.path.realpath(__file__))
 
 __cget_exe__ = cget.util.which('cget')
 
+__has_pkg_config__ = cget.util.can(cget.util.which('pkg-config'))
+
 def get_path(p):
     return os.path.join(__test_dir__, p)
 
@@ -68,9 +70,10 @@ def test_install(url, lib, alias=None, app=None, size=1):
     yield 'cget install --verbose --test {0}'.format(url)
     yield 'cget size {0}'.format(size)
     yield 'cget list'
-    yield 'cget pkg-config --list-all'
-    yield 'cget pkg-config --exists {0}'.format(lib)
-    yield 'cget pkg-config --cflags --libs {0}'.format(lib)
+    if __has_pkg_config__:
+        yield 'cget pkg-config --list-all'
+        yield 'cget pkg-config --exists {0}'.format(lib)
+        yield 'cget pkg-config --cflags --libs {0}'.format(lib)
     if alias is None: yield 'cget remove -y {0}'.format(url)
     else: yield 'cget remove -y {0}'.format(alias)
     yield 'cget size 0'
