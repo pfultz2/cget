@@ -5,10 +5,10 @@ matrix:
     include:
         # OSX
         - env: PYTHON=python
-        - os: osx
+          os: osx
         # Linux
         - env: PYTHON=python
-        - os: linux
+          os: linux
           addons:
             apt:
               packages:
@@ -16,7 +16,7 @@ matrix:
                 - python
                 - cmake
         - env: PYTHON=python3
-        - os: linux
+          os: linux
           addons:
             apt:
               packages:
