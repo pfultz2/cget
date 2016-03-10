@@ -63,6 +63,11 @@ class PackageInfo:
         self.url = url
         self.fname = fname
 
+    def to_name(self):
+        if self.name is not None: return self.name
+        if self.url is not None: return self.url
+        return None
+
     def to_fname(self):
         if self.fname is None: self.fname = self.get_encoded_name_url()
         return self.fname
@@ -158,23 +163,28 @@ class CGetPrefix:
         pkg_dir = self.get_package_directory(pkg.to_fname())
         if os.path.exists(pkg_dir): 
             if parent is not None: util.mkfile(self.get_deps_directory(pkg.to_fname()), parent, parent)
-            return "Package {0} already installed".format(pkg)
+            return "Package {0} already installed".format(pkg.to_name())
         with self.create_builder(pkg.to_fname(), verbose) as builder:
+            # Fetch package
             src_dir = builder.fetch(pkg.url)
+            # Install any dependencies first
             for dependent in self.from_file(os.path.join(src_dir, 'requirements.txt')):
                 self.install(dependent, test=test, verbose=verbose, parent=pkg.to_fname())
+            # Confirue and build
             builder.configure(src_dir, install_prefix=pkg_dir)
             builder.build(target='all', config='Release')
+            # Run tests if enabled
             if test: 
                 util.try_until(
                     lambda: builder.build(target='check', config='Release'),
                     lambda: builder.build(target='test', config='Release')
                 )
+            # Install
             builder.build(target='install', config='Release')
             util.symlink_dir(pkg_dir, self.prefix)
         if parent is not None: 
             util.mkfile(self.get_deps_directory(pkg.to_fname()), parent, [parent])
-        return "Successfully installed {0}".format(pkg)
+        return "Successfully installed {0}".format(pkg.to_name())
 
     def remove(self, pkg):
         pkg = self.parse_pkg(pkg)
