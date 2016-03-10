@@ -34,13 +34,16 @@ class BuildError(Exception):
         else: return self.msg
 
 def try_until(*args):
-    for arg in args:
+    for arg in args[:-1]:
         try: 
             arg()
             return
         except:
             pass
-    raise BuildError()
+    try:
+        args[-1]()
+    except:
+        raise
 
 def write_to(file, lines):
     content = list((line + "\n" for line in lines))
@@ -130,7 +133,7 @@ def which(p):
 
 def cmd(args, env={}, **kwargs):
     e = dict(os.environ)
-    e.update(env)
+    if env is not None: e.update(env)
     child = subprocess.Popen(args, env=e, **kwargs)
     child.communicate()
     if child.returncode != 0: raise BuildError("Error: " + str(args))
@@ -139,6 +142,11 @@ def cmake(args, cwd=None, toolchain=None, env=None):
     if toolchain is not None: args.insert(0, '-DCMAKE_TOOLCHAIN_FILE={0}'.format(toolchain))
     cmd([which('cmake')]+args, cwd=cwd, env=env)
 
+def ctest(config=None, verbose=False, cwd=None, env=None):
+    args = [which('ctest')]
+    if verbose: args.append('-VV')
+    if config is not None: args.extend(['-C', config])
+    cmd(args, cwd=cwd, env=env)
 
 def pkg_config(args, path=None):
     env = {}

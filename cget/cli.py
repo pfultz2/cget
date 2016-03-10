@@ -50,6 +50,12 @@ class Builder:
             if self.verbose: args.append('VERBOSE=1')
         self.cmake(args, cwd=cwd)
 
+    def test(self, config='Release'):
+        util.try_until(
+            lambda: self.build(target='check', config=config),
+            lambda: util.ctest(config=config, verbose=self.verbose, cwd=self.build_dir)
+        )
+
 def encode_url(url):
     x = url[url.find('://')+3:]
     return '_url_' + util.as_string(base64.urlsafe_b64encode(util.as_bytes(x))).replace('=', '_')
@@ -175,11 +181,7 @@ class CGetPrefix:
             builder.configure(src_dir, install_prefix=pkg_dir)
             builder.build(config='Release')
             # Run tests if enabled
-            if test: 
-                util.try_until(
-                    lambda: builder.build(target='check', config='Release'),
-                    lambda: builder.build(target='test', config='Release')
-                )
+            if test: builder.test(config='Release')
             # Install
             builder.build(target='install', config='Release')
             util.symlink_dir(pkg_dir, self.prefix)
