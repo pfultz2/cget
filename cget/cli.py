@@ -92,7 +92,7 @@ def quote(s):
 
 def parse_alias(x):
     s = util.as_string(x)
-    i = s.find(':', 0, s.find('://'))
+    i = s.find(':', 0, min(s.find('://'), s.find(':\\')))
     if i > 0: return s[0:i], s[i+1:]
     else: return None, s
 
