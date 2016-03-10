@@ -1,15 +1,9 @@
 environment:
-
   matrix:
-
     - PYTHON: "C:\\Python34-x64"
     - PYTHON: "C:\\Python35-x64"
 
-install:
-  - "%PYTHON%\\python.exe -m pip install wheel pykg-config"
-
-build: off
-
-test_script:
-  - "build.cmd %PYTHON%\\python.exe setup.py install"
-  - "build.cmd %PYTHON%\\python.exe test\\test.py"
+build_script:
+  - cmd: "%PYTHON%\\python.exe -m pip install wheel pykg-config"
+  - cmd: "%PYTHON%\\python.exe setup.py install"
+  - cmd: "%PYTHON%\\python.exe test\\test.py"
