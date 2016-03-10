@@ -24,6 +24,14 @@ matrix:
               packages:
                 - util-linux
                 - cmake
+        - env: PYTHONPATH=/home/travis/.local/lib/python3.5/site-packages/
+          os: linux
+          python: '3.5'
+          addons:
+            apt:
+              packages:
+                - util-linux
+                - cmake
 
 script:
     - which cmake
