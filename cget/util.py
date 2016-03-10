@@ -141,6 +141,7 @@ def which(p):
 def cmd(args, env={}, **kwargs):
     e = dict(os.environ)
     if env is not None: e.update(env)
+    print("cmd", args, e)
     child = subprocess.Popen(args, env=e, **kwargs)
     child.communicate()
     if child.returncode != 0: raise BuildError("Error: " + str(args))
