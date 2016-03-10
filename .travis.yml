@@ -4,8 +4,10 @@ script: cmake
 matrix:
     include:
         # OSX
+        - env: PYTHON=python
         - os: osx
         # Linux
+        - env: PYTHON=python
         - os: linux
           addons:
             apt:
@@ -13,11 +15,19 @@ matrix:
                 - util-linux
                 - python
                 - cmake
+        - env: PYTHON=python3
+        - os: linux
+          addons:
+            apt:
+              packages:
+                - util-linux
+                - python3
+                - cmake
 
 script:
     - which cmake
     - cmake --version
-    - which python
-    - python --version
+    - which $PYTHON
+    - $PYTHON --version
     - export PATH="/Users/travis/Library/Python/2.7/bin:$PATH"
-    - python setup.py install --user && python ./test/test.py
+    - $PYTHON setup.py install --user && $PYTHON ./test/test.py
