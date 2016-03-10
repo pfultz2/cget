@@ -173,7 +173,7 @@ class CGetPrefix:
                 self.install(dependent, test=test, verbose=verbose, parent=pkg.to_fname())
             # Confirue and build
             builder.configure(src_dir, install_prefix=pkg_dir)
-            builder.build(target='all', config='Release')
+            builder.build(config='Release')
             # Run tests if enabled
             if test: 
                 util.try_until(
