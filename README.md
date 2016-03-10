@@ -105,9 +105,13 @@ By default, cget creates a cmake toolchain file with the settings necesary to bu
 
     cget init --toolchain my_cmake_toolchain.cmake
 
+Supported platforms
+-------------------
+
+This is supported on python 2.7, 3.4, and 3.5. However, windows is only supported using python 3. 
+
 Future work
 -----------
 
-* Windows support - Currently cget uses symlinks to manage installing and removing packages. On windows, an alternative may need to be necessary.
 * Channels to better support versioning 
 
