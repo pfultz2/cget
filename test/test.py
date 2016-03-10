@@ -125,8 +125,10 @@ def test_reqs_f(d):
     cget.util.write_to(reqs_file, [get_path('libsimple')])
     d.cmds(test_install(url='-f {0}'.format(reqs_file), lib='simple', alias=get_path('libsimple')))
 
-@run_test
-def test_app_dir(d):
-    d.cmds(test_install(url=get_path('basicapp'), lib='simple', alias='simple', size=2))
+# Basic app needs pkg-config
+if __has_pkg_config__:
+    @run_test
+    def test_app_dir(d):
+        d.cmds(test_install(url=get_path('basicapp'), lib='simple', alias='simple', size=2))
 
 
