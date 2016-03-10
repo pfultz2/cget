@@ -235,7 +235,7 @@ class CGetPrefix:
         libs = []
         for p in ['lib', 'lib64', 'share']:
             libs.append(self.get_path(os.path.join(p, 'pkgconfig')))
-        return ':'.join(libs)
+        return os.pathsep.join(libs)
 
     def pkg_config(self, args):
         util.pkg_config(args, path=self.pkg_config_path())
