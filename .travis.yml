@@ -7,14 +7,16 @@ matrix:
         - os: osx
           python: '2.7'
         # Linux
-        - os: linux
+        - env: PYTHONPATH=/home/travis/.local/lib/python2.7/site-packages/
+          os: linux
           python: '2.7'
           addons:
             apt:
               packages:
                 - util-linux
                 - cmake 
-        - os: linux
+        - env: PYTHONPATH=/home/travis/.local/lib/python3.4/site-packages/
+          os: linux
           python: '3.4'
           addons:
             apt:
