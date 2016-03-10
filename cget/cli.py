@@ -84,7 +84,8 @@ def fname_to_pkg(fname):
 def quote(s):
     return s.replace("\\", "\\\\")
 
-def parse_alias(s):
+def parse_alias(x):
+    s = util.as_string(x)
     i = s.find(':', 0, s.find('://'))
     if i > 0: return s[0:i], s[i+1:]
     else: return None, s
@@ -294,6 +295,7 @@ def remove_command(prefix, pkgs, yes):
                 click.echo("Removed package {0}".format(pkg))
             except:
                 click.echo("Failed to remove package {0}".format(pkg))
+                raise
 
 @cli.command(name='list')
 @use_prefix()

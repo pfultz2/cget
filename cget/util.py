@@ -13,16 +13,18 @@ else:
     import urllib.request as urllib
 
 def is_string(obj):
-    return isinstance(obj, basestring)
+    if sys.version_info[0] < 3: return isinstance(obj, basestring)
+    else: return isinstance(obj, str)
 
 def as_bytes(s):
     if sys.version_info[0] < 3: return bytes(s)
-    else: return bytes(s, "UTF-8")
+    else: return bytes(s, "utf-8")
 
 def as_string(x):
     if x is None: return ''
     elif sys.version_info[0] < 3: return str(x)
-    else: return str(x, encoding="UTF-8")
+    elif is_string(x): return x
+    else: return str(x, encoding="utf-8")
 
 class BuildError(Exception):
     def __init__(self, msg=None):
