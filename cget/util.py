@@ -159,5 +159,6 @@ def ctest(config=None, verbose=False, cwd=None, env=None):
 def pkg_config(args, path=None):
     env = {}
     if path is not None: env['PKG_CONFIG_PATH'] = path
+    print('pkg_config', env)
     cmd([which('pkg-config')]+list(args), env=env)
 
