@@ -120,10 +120,12 @@ def extract_ar(archive, dst):
     tarfile.open(archive).extractall(dst)
 
 def which(p):
+    exes = [p+x for x in ['', '.exe', '.bat']]
     for dirname in os.environ['PATH'].split(os.pathsep):
-        candidate = os.path.join(os.path.expanduser(dirname), p)
-        if os.path.exists(candidate):
-            return candidate
+        for exe in exes:
+            candidate = os.path.join(os.path.expanduser(dirname), exe)
+            if os.path.exists(candidate):
+                return candidate
     raise BuildError("Can't find file %s" % p)
 
 def cmd(args, env={}, **kwargs):
