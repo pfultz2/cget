@@ -21,7 +21,7 @@ matrix:
             apt:
               packages:
                 - util-linux
-                - python3
+                - python3.4
                 - cmake
 
 script:
