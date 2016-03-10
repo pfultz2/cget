@@ -8,7 +8,7 @@ __test_dir__ = os.path.dirname(os.path.realpath(__file__))
 
 __cget_exe__ = cget.util.which('cget')
 
-__has_pkg_config__ = cget.util.can(cget.util.which('pkg-config'))
+__has_pkg_config__ = cget.util.can(lambda: cget.util.which('pkg-config'))
 
 def get_path(p):
     return os.path.join(__test_dir__, p)
