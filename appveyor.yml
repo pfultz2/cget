@@ -3,12 +3,12 @@ environment:
     - PYTHON: "C:\\Python34-x64"
     - PYTHON: "C:\\Python35-x64"
 
-# install:
-#   # Install pkg-config from chocolatey
-#   - cinst pkgconfiglite
+install:
+  # Install pkg-config from chocolatey
+  - cinst pkgconfiglite
 
 build_script:
   - cmd: "set PATH=%PYTHON%\\Scripts;%PATH%"
-  - cmd: "%PYTHON%\\python.exe -m pip install wheel https://github.com/pfultz2/pykg-config/archive/master.tar.gz" # pykg-config
+  - cmd: "%PYTHON%\\python.exe -m pip install wheel" # https://github.com/pfultz2/pykg-config/archive/master.tar.gz pykg-config
   - cmd: "%PYTHON%\\python.exe setup.py install"
   - cmd: "%PYTHON%\\python.exe test\\test.py"
