@@ -53,6 +53,12 @@ A tag or branch can specified using the `@` symbol:
 
     cget install jgm/cmark@0.24.1
 
+Installing dependencies
+-----------------------
+
+All dependencies listed in the `requirements.txt` will be installed with the package as well.
+
+
 Aliasing
 --------
 
@@ -103,6 +109,5 @@ Future work
 -----------
 
 * Windows support - Currently cget uses symlinks to manage installing and removing packages. On windows, an alternative may need to be necessary.
-* Automatically remove dependencies when removing a package
 * Channels to better support versioning 
 
