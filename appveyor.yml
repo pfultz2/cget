@@ -2,9 +2,13 @@ environment:
   matrix:
     - PYTHON: "C:\\Python34-x64"
     - PYTHON: "C:\\Python35-x64"
-# C:\Python34-x64\Scripts
+
+install:
+  # Install pkg-config from chocolatey
+  - cinst pkgconfiglite
+
 build_script:
   - cmd: "set PATH=%PYTHON%\\Scripts;%PATH%"
-  - cmd: "%PYTHON%\\python.exe -m pip install wheel pykg-config"
+  - cmd: "%PYTHON%\\python.exe -m pip install wheel" # pykg-config
   - cmd: "%PYTHON%\\python.exe setup.py install"
   - cmd: "%PYTHON%\\python.exe test\\test.py"
