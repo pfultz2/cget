@@ -1,7 +1,11 @@
 cget
 ====
 
-Cmake package retrieval. This can be used to download and install cmake packages.
+Cmake package retrieval. This can be used to download and install cmake packages. The advantages of using `cget` are:
+
+* Non-intrusive: There is no need to write special hooks in cmake to use `cget`. One cmake file is written and can be used to install a package with `cget` or standalone.
+* Works out of the box: Since it uses the standard build and install of cmake, it already works with almost all cmake packages. There is no need to wait for packages to convert over to support `cget`. Standard cmake packages can be already installed immediately.
+* Decentralized: Packages can be installed from anywhere, from github, urls, or local files.
 
 Getting cget
 ------------
@@ -19,7 +23,7 @@ On windows, you may want to install pkgconfig-lite to support packages that use 
 Installing packages
 -------------------
 
-Package can be installed using the `install` command. There are several different sources packages can be installed from. When a packages is installed it configures a build directoy with cmake, and then builds the `all` target and the `install` target.
+A Package can be installed using the `install` command. There are several different sources packages can be installed from. When a packages is installed it configures a build directory with cmake, and then builds the `all` target and the `install` target.
 
 ### Directory
 
@@ -103,7 +107,7 @@ The prefix can also be set with the `CGET_PREFIX` environment variable.
 Integration with cmake
 ----------------------
 
-By default, cget creates a cmake toolchain file with the settings necesary to build and find the libraries in the cget prefix. The toolchain file is at `$CGET_PREFIX/cget.cmake`. If another toolchain needs to be used, it can be specified with the `init` command:
+By default, cget creates a cmake toolchain file with the settings necessary to build and find the libraries in the cget prefix. The toolchain file is at `$CGET_PREFIX/cget.cmake`. If another toolchain needs to be used, it can be specified with the `init` command:
 
     cget init --toolchain my_cmake_toolchain.cmake
 
