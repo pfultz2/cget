@@ -14,6 +14,8 @@ Or installed directly with python:
 
     python setup.py install
 
+On windows, you may want to install pkgconfig-lite to support packages that use pkgconfig.
+
 Installing packages
 -------------------
 
@@ -84,7 +86,7 @@ If an alias was specified, then that name needs to be used instead:
 Testing packages
 ----------------
 
-The test suite for a package can be ran by using the `--test` flag. This will either build the `check` target or the `test` target. So if we want to run the tests for zlib we can do this:
+The test suite for a package can be ran by using the `--test` flag. This will either build the `check` target or run `ctest`. So if we want to run the tests for zlib we can do this:
 
     cget install --test http://zlib.net/zlib-1.2.8.tar.gz
 
