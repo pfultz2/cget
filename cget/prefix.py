@@ -18,8 +18,9 @@ def push_front(iterable, x):
 
 
 class CGetPrefix:
-    def __init__(self, prefix):
+    def __init__(self, prefix, verbose=False):
         self.prefix = prefix
+        self.verbose = verbose
         self.toolchain = self.write_cmake()
 
     def write_cmake(self, always_write=False, **kwargs):
@@ -47,7 +48,7 @@ class CGetPrefix:
         return os.path.join(self.prefix, path)
 
     def create_builder(self, name, verbose=False):
-        return Builder(self, os.path.join(self.prefix, 'tmp-' + name), verbose)
+        return Builder(self, os.path.join(self.prefix, 'tmp-' + name), self.verbose)
 
     def get_package_directory(self, name=None):
         pkg_dir = os.path.join(self.prefix, 'pkg')
@@ -81,18 +82,18 @@ class CGetPrefix:
                 return [x for line in f.readlines() for x in [line.strip()] if len(x) > 0 or not x.startswith('#')]
         else: return []
 
-    def install(self, pkg, test=False, verbose=False, parent=None):
+    def install(self, pkg, test=False, parent=None):
         pkg = self.parse_pkg(pkg)
         pkg_dir = self.get_package_directory(pkg.to_fname())
         if os.path.exists(pkg_dir): 
             if parent is not None: util.mkfile(self.get_deps_directory(pkg.to_fname()), parent, parent)
             return "Package {0} already installed".format(pkg.to_name())
-        with self.create_builder(pkg.to_fname(), verbose) as builder:
+        with self.create_builder(pkg.to_fname()) as builder:
             # Fetch package
             src_dir = builder.fetch(pkg.url)
             # Install any dependencies first
             for dependent in self.from_file(os.path.join(src_dir, 'requirements.txt')):
-                self.install(dependent, test=test, verbose=verbose, parent=pkg.to_fname())
+                self.install(dependent, test=test, parent=pkg.to_fname())
             # Confirue and build
             builder.configure(src_dir, install_prefix=pkg_dir)
             builder.build(config='Release')

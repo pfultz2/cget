@@ -1,4 +1,4 @@
-import click, os
+import click, os, functools
 
 from cget import __version__
 from cget.prefix import CGetPrefix
@@ -24,15 +24,24 @@ def cli():
     pass
 
 
-def use_prefix():
-    def callback(ctx, param, value):
-        prefix = value
+# def use_prefix():
+#     def callback(ctx, param, value):
+#         prefix = value
+#         if prefix is None: prefix = os.path.join(os.getcwd(), 'cget')
+#         return CGetPrefix(prefix)
+#     return click.option('-p', '--prefix', envvar='CGET_PREFIX', callback=callback, help='Set prefix used to install packages')
+
+def use_prefix(f):
+    @click.option('-p', '--prefix', envvar='CGET_PREFIX', help='Set prefix used to install packages')
+    @click.option('-v', '--verbose', is_flag=True, envvar='VERBOSE', help="Enable verbose mode")
+    @functools.wraps(f)
+    def w(prefix, verbose, *args, **kwargs):
         if prefix is None: prefix = os.path.join(os.getcwd(), 'cget')
-        return CGetPrefix(prefix)
-    return click.option('-p', '--prefix', envvar='CGET_PREFIX', callback=callback, help='Set prefix used to install packages')
+        f(CGetPrefix(prefix, verbose), *args, **kwargs)
+    return w
 
 @cli.command(name='init')
-@use_prefix()
+@use_prefix
 @click.option('-t', '--toolchain', required=False, help="Set cmake toolchain file to use")
 @click.option('--cxxflags', required=False, help="Set additional c++ flags")
 @click.option('--ldflags', required=False, help="Set additional linker flags")
@@ -42,23 +51,22 @@ def init_command(prefix, toolchain, cxxflags, ldflags, std):
     prefix.write_cmake(always_write=True, toolchain=os.path.abspath(toolchain), cxxflags=cxxflags, ldflags=ldflags, std=std)
 
 @cli.command(name='install')
-@use_prefix()
+@use_prefix
 @click.option('-t', '--test', is_flag=True, help="Test package before installing by running the test or check target")
 @click.option('-f', '--file', default=None, help="Install packages listed in the file")
-@click.option('-v', '--verbose', is_flag=True, envvar='VERBOSE', help="Verbose mode")
 @click.argument('pkgs', nargs=-1)
-def install_command(prefix, pkgs, file, test, verbose):
+def install_command(prefix, pkgs, file, test):
     """ Install packages """
     for pkg in list(pkgs)+prefix.from_file(file):
         try:
-            click.echo(prefix.install(pkg, test=test, verbose=verbose))
+            click.echo(prefix.install(pkg, test=test))
         except:
             click.echo("Failed to build package {0}".format(pkg))
             prefix.remove(pkg)
-            if verbose: raise
+            if prefix.verbose: raise
 
 @cli.command(name='remove')
-@use_prefix()
+@use_prefix
 @click.argument('pkgs', nargs=-1)
 @click.option('-y', '--yes', is_flag=True, default=False)
 def remove_command(prefix, pkgs, yes):
@@ -74,10 +82,10 @@ def remove_command(prefix, pkgs, yes):
                 click.echo("Removed package {0}".format(pkg))
             except:
                 click.echo("Failed to remove package {0}".format(pkg))
-                raise
+                if prefix.verbose: raise
 
 @cli.command(name='list')
-@use_prefix()
+@use_prefix
 def list_command(prefix):
     """ List installed packages """
     for pkg in prefix.list():
@@ -85,7 +93,7 @@ def list_command(prefix):
 
 # TODO: Make this command hidden
 @cli.command(name='size')
-@use_prefix()
+@use_prefix
 @click.argument('n')
 def size_command(prefix, n):
     pkgs = len(list(util.ls(prefix.get_package_directory(), os.path.isdir)))
@@ -96,7 +104,7 @@ def size_command(prefix, n):
         raise util.BuildError("Not the correct number of items: {0}".format(pkgs))
 
 @cli.command(name='clean')
-@use_prefix()
+@use_prefix
 def clean_command(prefix):
     """ Clear directory """
     prefix.clean()
@@ -104,7 +112,7 @@ def clean_command(prefix):
 @cli.command(name='pkg-config', context_settings=dict(
     ignore_unknown_options=True,
 ))
-@use_prefix()
+@use_prefix
 @click.argument('args', nargs=-1, type=click.UNPROCESSED)
 def pkg_config_command(prefix, args):
     """ Pkg config """
