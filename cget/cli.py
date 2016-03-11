@@ -10,7 +10,6 @@ aliases = {
 }
 
 class AliasedGroup(click.Group):
-
     def get_command(self, ctx, cmd_name):
         rv = click.Group.get_command(self, ctx, cmd_name)
         if rv is not None:
@@ -22,14 +21,6 @@ class AliasedGroup(click.Group):
 @click.version_option(version=__version__, prog_name='cget')
 def cli():
     pass
-
-
-# def use_prefix():
-#     def callback(ctx, param, value):
-#         prefix = value
-#         if prefix is None: prefix = os.path.join(os.getcwd(), 'cget')
-#         return CGetPrefix(prefix)
-#     return click.option('-p', '--prefix', envvar='CGET_PREFIX', callback=callback, help='Set prefix used to install packages')
 
 def use_prefix(f):
     @click.option('-p', '--prefix', envvar='CGET_PREFIX', help='Set prefix used to install packages')
