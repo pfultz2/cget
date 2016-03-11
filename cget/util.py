@@ -26,6 +26,9 @@ def as_string(x):
     elif is_string(x): return x
     else: return str(x, encoding="utf-8")
 
+def quote(s):
+    return s.replace("\\", "\\\\")
+
 class BuildError(Exception):
     def __init__(self, msg=None):
         self.msg = msg
