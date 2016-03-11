@@ -23,6 +23,13 @@ class TestError(Exception):
 def require(b):
     if not b: raise TestError()
 
+def should_fail(b):
+    try:
+        b()
+        raise TestError()
+    except:
+        pass
+
 def basename(p):
     d, b = os.path.split(p)
     if len(b) > 0: return b
@@ -129,10 +136,35 @@ def test_reqs_f(d):
     cget.util.write_to(reqs_file, [get_path('libsimple')])
     d.cmds(test_install(url='-f {0}'.format(reqs_file), lib='simple', alias=get_path('libsimple')))
 
+
 # Basic app needs pkg-config
 if __has_pkg_config__:
     @run_test
     def test_app_dir(d):
         d.cmds(test_install(url=get_path('basicapp'), lib='simple', alias='simple', size=2))
+
+@run_test
+def test_flags_fail(d):
+    should_fail(lambda: d.cmds(['cget install --verbose --test -DCGET_FLAG=Off {0}'.format(get_path('libsimpleflag'))]))
+
+@run_test
+def test_flags(d):
+    d.cmds(['cget install --verbose --test -DCGET_FLAG=On {0}'.format(get_path('libsimpleflag'))])
+
+@run_test
+def test_flags_fail_int(d):
+    should_fail(lambda: d.cmds(['cget install --verbose --test -DCGET_FLAG=0 {0}'.format(get_path('libsimpleflag'))]))
+
+@run_test
+def test_flags_int(d):
+    d.cmds(['cget install --verbose --test -DCGET_FLAG=1 {0}'.format(get_path('libsimpleflag'))])
+
+@run_test
+def test_flags_fail_define(d):
+    should_fail(lambda: d.cmds(['cget install --verbose --test --define CGET_FLAG=Off {0}'.format(get_path('libsimpleflag'))]))
+
+@run_test
+def test_flags_define(d):
+    d.cmds(['cget install --verbose --test --define CGET_FLAG=On {0}'.format(get_path('libsimpleflag'))])
 
 

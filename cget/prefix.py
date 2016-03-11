@@ -82,7 +82,7 @@ class CGetPrefix:
                 return [x for line in f.readlines() for x in [line.strip()] if len(x) > 0 or not x.startswith('#')]
         else: return []
 
-    def install(self, pkg, test=False, parent=None):
+    def install(self, pkg, defines=[], test=False, parent=None):
         pkg = self.parse_pkg(pkg)
         pkg_dir = self.get_package_directory(pkg.to_fname())
         if os.path.exists(pkg_dir): 
@@ -93,9 +93,9 @@ class CGetPrefix:
             src_dir = builder.fetch(pkg.url)
             # Install any dependencies first
             for dependent in self.from_file(os.path.join(src_dir, 'requirements.txt')):
-                self.install(dependent, test=test, parent=pkg.to_fname())
+                self.install(dependent, defines=defines, test=test, parent=pkg.to_fname())
             # Confirue and build
-            builder.configure(src_dir, install_prefix=pkg_dir)
+            builder.configure(src_dir, defines=defines, install_prefix=pkg_dir)
             builder.build(config='Release')
             # Run tests if enabled
             if test: builder.test(config='Release')

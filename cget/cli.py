@@ -45,12 +45,13 @@ def init_command(prefix, toolchain, cxxflags, ldflags, std):
 @use_prefix
 @click.option('-t', '--test', is_flag=True, help="Test package before installing by running the test or check target")
 @click.option('-f', '--file', default=None, help="Install packages listed in the file")
+@click.option('-D', '--define', multiple=True, help="Extra configuration variables to pass to CMake")
 @click.argument('pkgs', nargs=-1)
-def install_command(prefix, pkgs, file, test):
+def install_command(prefix, pkgs, define, file, test):
     """ Install packages """
     for pkg in list(pkgs)+prefix.from_file(file):
         try:
-            click.echo(prefix.install(pkg, test=test))
+            click.echo(prefix.install(pkg, defines=define, test=test))
         except:
             click.echo("Failed to build package {0}".format(pkg))
             prefix.remove(pkg)
