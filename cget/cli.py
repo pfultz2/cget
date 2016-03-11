@@ -241,7 +241,20 @@ class CGetPrefix:
         util.pkg_config(args, path=self.pkg_config_path())
 
 
-@click.group(context_settings={'help_option_names': ['-h', '--help']})
+aliases = {
+    'rm': 'remove'
+}
+
+class AliasedGroup(click.Group):
+
+    def get_command(self, ctx, cmd_name):
+        rv = click.Group.get_command(self, ctx, cmd_name)
+        if rv is not None:
+            return rv
+        return click.Group.get_command(self, ctx, aliases[cmd_name])
+
+
+@click.group(cls=AliasedGroup, context_settings={'help_option_names': ['-h', '--help']})
 @click.version_option(version=__version__, prog_name='cget')
 def cli():
     pass

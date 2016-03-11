@@ -62,7 +62,7 @@ def run_test(f):
         f(d)
 
 # TODO: Test app by running it
-def test_install(url, lib, alias=None, app=None, size=1):
+def test_install(url, lib, alias=None, remove='remove', size=1):
     yield 'cget list'
     yield 'cget clean'
     yield 'cget list'
@@ -74,8 +74,8 @@ def test_install(url, lib, alias=None, app=None, size=1):
         yield 'cget pkg-config --list-all'
         yield 'cget pkg-config --exists {0}'.format(lib)
         yield 'cget pkg-config --cflags --libs {0}'.format(lib)
-    if alias is None: yield 'cget remove -y {0}'.format(url)
-    else: yield 'cget remove -y {0}'.format(alias)
+    if alias is None: yield 'cget {1} -y {0}'.format(url, remove)
+    else: yield 'cget {1} -y {0}'.format(alias, remove)
     yield 'cget size 0'
     yield 'cget list'
     yield 'cget clean'
@@ -96,6 +96,10 @@ def test_tar_alias(d):
 @run_test
 def test_dir(d):
     d.cmds(test_install(url=get_path('libsimple'), lib='simple'))
+
+@run_test
+def test_rm(d):
+    d.cmds(test_install(url=get_path('libsimple'), lib='simple', remove='rm'))
 
 @run_test
 def test_dir_alias(d):
