@@ -15,4 +15,6 @@ endif()
 
 include_directories(include)
 endif()
+else()
+    message("CGET_FLAG not defined")
 endif()
