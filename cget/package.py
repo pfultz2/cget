@@ -1,4 +1,4 @@
-import base64
+import base64, copy, argparse
 
 import cget.util as util
 
@@ -10,7 +10,7 @@ def encode_url(url):
 def decode_url(url):
     return base64.urlsafe_b64decode(util.as_string(url.replace('_', '=')[5:]))
 
-class PackageInfo:
+class PackageSource:
     def __init__(self, name=None, url=None, fname=None):
         self.name = name
         self.url = url
@@ -19,7 +19,7 @@ class PackageInfo:
     def to_name(self):
         if self.name is not None: return self.name
         if self.url is not None: return self.url
-        return None
+        return self.to_fname()
 
     def to_fname(self):
         if self.fname is None: self.fname = self.get_encoded_name_url()
@@ -31,6 +31,37 @@ class PackageInfo:
 
 
 def fname_to_pkg(fname):
-    if fname.startswith('_url_'): return PackageInfo(name=decode_url(fname), fname=fname)
-    else: return PackageInfo(name=fname.replace('__', '/'), fname=fname)
+    if fname.startswith('_url_'): return PackageSource(name=decode_url(fname), fname=fname)
+    else: return PackageSource(name=fname.replace('__', '/'), fname=fname)
+
+class PackageBuild:
+    def __init__(self, pkg_src=None, define=[], parent=None):
+        self.pkg_src = pkg_src
+        self.define = define
+        self.parent = parent
+
+    def merge(self, define):
+        result = copy.copy(self)
+        result.define.extend(define)
+        return result
+
+    def of(self, parent):
+        result = copy.copy(self)
+        result.parent = parent.to_fname()
+        result.define.extend(parent.define)
+        return result
+
+    def to_fname(self):
+        if isinstance(self.pkg_src, PackageSource): return self.pkg_src.to_fname()
+        else: return self.pkg_src
+
+    def to_name(self):
+        if isinstance(self.pkg_src, PackageSource): return self.pkg_src.to_name()
+        else: return self.pkg_src
+
+def parse_pkg_build(args):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('pkg_src')
+    parser.add_argument('-D', '--define', nargs='+')
+    return parser.parse_args(args=args, namespace=PackageBuild())
 
