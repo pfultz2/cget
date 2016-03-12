@@ -106,6 +106,7 @@ class CGetPrefix:
                 p = x[0]
                 v = 'HEAD'
                 if len(x) > 1: v = x[1]
+                if '/' not in p: raise util.BuildError("Bad repo url {0}".format(p)) 
                 url = 'https://github.com/{0}/archive/{1}.tar.gz'.format(p, v)
                 if name is None: name = p
         return PackageInfo(name=name, url=url)
