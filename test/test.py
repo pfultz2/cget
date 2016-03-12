@@ -5,9 +5,6 @@ try:
 except ImportError:
     from pipes import quote as quote
 
-def is_string(obj):
-    return isinstance(obj, basestring)
-
 __test_dir__ = os.path.dirname(os.path.realpath(__file__))
 
 __cget_exe__ = cget.util.which('cget')

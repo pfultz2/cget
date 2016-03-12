@@ -13,7 +13,7 @@ else:
     import urllib.request as urllib
 
 def is_string(obj):
-    if sys.version_info[0] < 3: return isinstance(obj, basestring)
+    if sys.version_info[0] < 3: return isinstance(obj, 'basestring')
     else: return isinstance(obj, str)
 
 def as_bytes(s):
