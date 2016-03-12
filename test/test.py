@@ -70,8 +70,14 @@ class TestDir:
 
 def run_test(f):
     # TODO: Use test name
+    print('*****************************************')
+    print('* Running test: {0}'.format(f.__name__))
+    print('*****************************************')
     with TestDir(get_path('tmp')) as d:
         f(d)
+    print('*****************************************')
+    print('* Completed test: {0}'.format(f.__name__))
+    print('*****************************************')
 
 # TODO: Test app by running it
 def test_install(url, lib=None, alias=None, remove='remove', size=1):
