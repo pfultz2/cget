@@ -60,6 +60,11 @@ class TestDir:
             print(x)
             self.cmd(x)
 
+    def write_to(self, f, content):
+        p = self.get_path(f)
+        cget.util.write_to(p, content)
+        return p
+
     def get_path(self, p):
         return os.path.join(self.tmp_dir, p)
 
@@ -69,7 +74,7 @@ def run_test(f):
         f(d)
 
 # TODO: Test app by running it
-def test_install(url, lib, alias=None, remove='remove', size=1):
+def test_install(url, lib=None, alias=None, remove='remove', size=1):
     yield 'cget list'
     yield 'cget clean'
     yield 'cget list'
@@ -77,12 +82,12 @@ def test_install(url, lib, alias=None, remove='remove', size=1):
     yield 'cget install --verbose --test {0}'.format(url)
     yield 'cget size {0}'.format(size)
     yield 'cget list'
-    if __has_pkg_config__:
+    if __has_pkg_config__ and lib is not None:
         yield 'cget pkg-config --list-all'
         yield 'cget pkg-config --exists {0}'.format(lib)
         yield 'cget pkg-config --cflags --libs {0}'.format(lib)
-    if alias is None: yield 'cget {1} -y {0}'.format(url, remove)
-    else: yield 'cget {1} -y {0}'.format(alias, remove)
+    if alias is None: yield 'cget {1} --verbose -y {0}'.format(url, remove)
+    else: yield 'cget {1} --verbose -y {0}'.format(alias, remove)
     yield 'cget size 0'
     yield 'cget list'
     yield 'cget clean'
@@ -114,26 +119,22 @@ def test_dir_alias(d):
 
 @run_test
 def test_reqs_alias_file(d):
-    reqs_file = d.get_path('reqs')
-    cget.util.write_to(reqs_file, ['simple:'+get_path('libsimple')])
+    reqs_file = d.write_to('reqs', ['simple:'+get_path('libsimple')])
     d.cmds(test_install(url='--file {0}'.format(reqs_file), lib='simple', alias='simple'))
 
 @run_test
 def test_reqs_file(d):
-    reqs_file = d.get_path('reqs')
-    cget.util.write_to(reqs_file, [get_path('libsimple')])
+    reqs_file = d.write_to('reqs', [get_path('libsimple')])
     d.cmds(test_install(url='--file {0}'.format(reqs_file), lib='simple', alias=get_path('libsimple')))
 
 @run_test
 def test_reqs_alias_f(d):
-    reqs_file = d.get_path('reqs')
-    cget.util.write_to(reqs_file, ['simple:'+get_path('libsimple')])
+    reqs_file = d.write_to('reqs', ['simple:'+get_path('libsimple')])
     d.cmds(test_install(url='-f {0}'.format(reqs_file), lib='simple', alias='simple'))
 
 @run_test
 def test_reqs_f(d):
-    reqs_file = d.get_path('reqs')
-    cget.util.write_to(reqs_file, [get_path('libsimple')])
+    reqs_file = d.write_to('reqs', [get_path('libsimple')])
     d.cmds(test_install(url='-f {0}'.format(reqs_file), lib='simple', alias=get_path('libsimple')))
 
 
@@ -149,7 +150,8 @@ def test_flags_fail(d):
 
 @run_test
 def test_flags(d):
-    d.cmds(['cget install --verbose --test -DCGET_FLAG=On {0}'.format(get_path('libsimpleflag'))])
+    p = get_path('libsimpleflag')
+    d.cmds(test_install(url='-DCGET_FLAG=On {0}'.format(p), alias=p))
 
 @run_test
 def test_flags_fail_int(d):
@@ -157,7 +159,8 @@ def test_flags_fail_int(d):
 
 @run_test
 def test_flags_int(d):
-    d.cmds(['cget install --verbose --test -DCGET_FLAG=1 {0}'.format(get_path('libsimpleflag'))])
+    p = get_path('libsimpleflag')
+    d.cmds(test_install(url='-DCGET_FLAG=1 {0}'.format(p), alias=p))
 
 @run_test
 def test_flags_fail_define(d):
@@ -166,5 +169,11 @@ def test_flags_fail_define(d):
 @run_test
 def test_flags_define(d):
     d.cmds(['cget install --verbose --test --define CGET_FLAG=On {0}'.format(get_path('libsimpleflag'))])
+
+@run_test
+def test_flags_reqs_f(d):
+    p = get_path('libsimpleflag')
+    reqs_file = d.write_to('reqs', [p + ' -DCGET_FLAG=On'])
+    d.cmds(test_install(url='-f {0}'.format(reqs_file), alias=p))
 
 

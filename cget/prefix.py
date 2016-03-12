@@ -1,4 +1,4 @@
-import os, shutil
+import os, shutil, itertools, shlex, argparse, copy
 
 from cget.builder import Builder
 from cget.package import fname_to_pkg
@@ -16,6 +16,40 @@ def push_front(iterable, x):
     yield x
     for y in iterable: yield y
 
+class PackageBuild:
+    def __init__(self, pkg=None, define=[], parent=None):
+        self.pkg = pkg
+        self.define = define
+        self.parent = parent
+
+    def merge(self, define):
+        result = copy.copy(self)
+        result.define.extend(define)
+        return result
+
+    def of(self, parent):
+        result = copy.copy(self)
+        result.parent = parent.to_fname()
+        result.define.extend(parent.define)
+        return result
+
+    def to_fname(self):
+        if isinstance(self.pkg, PackageInfo): return self.pkg.to_fname()
+        else: return self.pkg
+
+def tokenize_reqs_args(s):
+    return list(itertools.takewhile(lambda x:not x.startswith('#'), shlex.split(s)))
+
+def parse_req_args(args):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('pkg')
+    parser.add_argument('-D', '--define', nargs='+')
+    return parser.parse_args(args=args, namespace=PackageBuild())
+
+def parse_reqs(lines):
+    for line in lines:
+        tokens = tokenize_reqs_args(line)
+        if len(tokens) > 0: yield parse_req_args(tokens)
 
 class CGetPrefix:
     def __init__(self, prefix, verbose=False):
@@ -79,32 +113,35 @@ class CGetPrefix:
     def from_file(self, file):
         if file is not None and os.path.exists(file):
             with open(file) as f:
-                return [x for line in f.readlines() for x in [line.strip()] if len(x) > 0 or not x.startswith('#')]
+                # return [x for line in f.readlines() for x in [line.strip()] if len(x) > 0 or not x.startswith('#')]
+                return parse_reqs(f.readlines())
         else: return []
 
-    def install(self, pkg, defines=[], test=False, parent=None):
-        pkg = self.parse_pkg(pkg)
-        pkg_dir = self.get_package_directory(pkg.to_fname())
+    def write_parent(self, pb):
+        if pb.parent is not None: util.mkfile(self.get_deps_directory(pb.to_fname()), pb.parent, pb.parent)
+
+    def install(self, pb, test=False):
+        pb.pkg = self.parse_pkg(pb.pkg)
+        pkg_dir = self.get_package_directory(pb.pkg.to_fname())
         if os.path.exists(pkg_dir): 
-            if parent is not None: util.mkfile(self.get_deps_directory(pkg.to_fname()), parent, parent)
-            return "Package {0} already installed".format(pkg.to_name())
-        with self.create_builder(pkg.to_fname()) as builder:
+            self.write_parent(pb)
+            return "Package {0} already installed".format(pb.pkg.to_name())
+        with self.create_builder(pb.pkg.to_fname()) as builder:
             # Fetch package
-            src_dir = builder.fetch(pkg.url)
+            src_dir = builder.fetch(pb.pkg.url)
             # Install any dependencies first
             for dependent in self.from_file(os.path.join(src_dir, 'requirements.txt')):
-                self.install(dependent, defines=defines, test=test, parent=pkg.to_fname())
+                self.install(dependent.of(pb), test=test)
             # Confirue and build
-            builder.configure(src_dir, defines=defines, install_prefix=pkg_dir)
+            builder.configure(src_dir, defines=pb.define, install_prefix=pkg_dir)
             builder.build(config='Release')
             # Run tests if enabled
             if test: builder.test(config='Release')
             # Install
             builder.build(target='install', config='Release')
             util.symlink_dir(pkg_dir, self.prefix)
-        if parent is not None: 
-            util.mkfile(self.get_deps_directory(pkg.to_fname()), parent, [parent])
-        return "Successfully installed {0}".format(pkg.to_name())
+        self.write_parent(pb)
+        return "Successfully installed {0}".format(pb.pkg.to_name())
 
     def remove(self, pkg):
         pkg = self.parse_pkg(pkg)

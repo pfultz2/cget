@@ -2,6 +2,7 @@ import click, os, functools
 
 from cget import __version__
 from cget.prefix import CGetPrefix
+from cget.prefix import PackageBuild
 import cget.util as util
 
 
@@ -49,12 +50,13 @@ def init_command(prefix, toolchain, cxxflags, ldflags, std):
 @click.argument('pkgs', nargs=-1)
 def install_command(prefix, pkgs, define, file, test):
     """ Install packages """
-    for pkg in list(pkgs)+prefix.from_file(file):
+    pbs = [PackageBuild(pkg) for pkg in pkgs]
+    for pb in pbs+list(prefix.from_file(file)):
         try:
-            click.echo(prefix.install(pkg, defines=define, test=test))
+            click.echo(prefix.install(pb.merge(define), test=test))
         except:
-            click.echo("Failed to build package {0}".format(pkg))
-            prefix.remove(pkg)
+            click.echo("Failed to build package {0}".format(pb.pkg))
+            prefix.remove(pb.pkg)
             if prefix.verbose: raise
 
 @cli.command(name='remove')
