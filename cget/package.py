@@ -35,10 +35,11 @@ def fname_to_pkg(fname):
     else: return PackageSource(name=fname.replace('__', '/'), fname=fname)
 
 class PackageBuild:
-    def __init__(self, pkg_src=None, define=[], parent=None):
+    def __init__(self, pkg_src=None, define=[], parent=None, test=False):
         self.pkg_src = pkg_src
         self.define = define
         self.parent = parent
+        self.test = test
 
     def merge(self, define):
         result = copy.copy(self)
@@ -63,5 +64,6 @@ def parse_pkg_build(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('pkg_src')
     parser.add_argument('-D', '--define', nargs='+')
+    parser.add_argument('-t', '--test', action='store_true')
     return parser.parse_args(args=args, namespace=PackageBuild())
 

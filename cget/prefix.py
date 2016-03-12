@@ -92,6 +92,8 @@ class CGetPrefix:
 
     def install(self, pb, test=False, test_all=False):
         pb = self.parse_pkg_build(pb)
+        # Only install test packages if we are testing
+        if pb.test != test and pb.test != test_all: return
         pkg_dir = self.get_package_directory(pb.to_fname())
         if os.path.exists(pkg_dir): 
             self.write_parent(pb)
