@@ -1,5 +1,9 @@
 import os, tarfile, shutil, cget.util
 
+try:
+    from shlex import quote as quote
+except ImportError:
+    from pipes import quote as quote
 
 def is_string(obj):
     return isinstance(obj, basestring)
@@ -125,22 +129,22 @@ def test_dir_alias(d):
 
 @run_test
 def test_reqs_alias_file(d):
-    reqs_file = d.write_to('reqs', ['simple:'+get_path('libsimple')])
+    reqs_file = d.write_to('reqs', [quote('simple:'+get_path('libsimple'))])
     d.cmds(test_install(url='--file {0}'.format(reqs_file), lib='simple', alias='simple'))
 
 @run_test
 def test_reqs_file(d):
-    reqs_file = d.write_to('reqs', [get_path('libsimple')])
+    reqs_file = d.write_to('reqs', [quote(get_path('libsimple'))])
     d.cmds(test_install(url='--file {0}'.format(reqs_file), lib='simple', alias=get_path('libsimple')))
 
 @run_test
 def test_reqs_alias_f(d):
-    reqs_file = d.write_to('reqs', ['simple:'+get_path('libsimple')])
+    reqs_file = d.write_to('reqs', [quote('simple:'+get_path('libsimple'))])
     d.cmds(test_install(url='-f {0}'.format(reqs_file), lib='simple', alias='simple'))
 
 @run_test
 def test_reqs_f(d):
-    reqs_file = d.write_to('reqs', [get_path('libsimple')])
+    reqs_file = d.write_to('reqs', [quote(get_path('libsimple'))])
     d.cmds(test_install(url='-f {0}'.format(reqs_file), lib='simple', alias=get_path('libsimple')))
 
 
@@ -179,7 +183,7 @@ def test_flags_define(d):
 @run_test
 def test_flags_reqs_f(d):
     p = get_path('libsimpleflag')
-    reqs_file = d.write_to('reqs', [p + ' -DCGET_FLAG=On'])
+    reqs_file = d.write_to('reqs', [quote(p) + ' -DCGET_FLAG=On'])
     d.cmds(test_install(url='-f {0}'.format(reqs_file), alias=p))
 
 

@@ -38,7 +38,7 @@ class PackageBuild:
         else: return self.pkg
 
 def tokenize_reqs_args(s):
-    return list(itertools.takewhile(lambda x:not x.startswith('#'), shlex.split(s)))
+    return list(itertools.takewhile(lambda x:not x.startswith('#'), shlex.split(s, comments=True)))
 
 def parse_req_args(args):
     parser = argparse.ArgumentParser()
