@@ -45,15 +45,16 @@ def init_command(prefix, toolchain, cxxflags, ldflags, std):
 @cli.command(name='install')
 @use_prefix
 @click.option('-t', '--test', is_flag=True, help="Test package before installing by running ctest or check target")
+@click.option('-t', '--test-all', is_flag=True, help="Test all packages including its dependencies before installing by running ctest or check target")
 @click.option('-f', '--file', default=None, help="Install packages listed in the file")
 @click.option('-D', '--define', multiple=True, help="Extra configuration variables to pass to CMake")
 @click.argument('pkgs', nargs=-1)
-def install_command(prefix, pkgs, define, file, test):
+def install_command(prefix, pkgs, define, file, test, test_all):
     """ Install packages """
     pbs = [PackageBuild(pkg) for pkg in pkgs]
     for pb in pbs+list(prefix.from_file(file)):
         try:
-            click.echo(prefix.install(pb.merge(define), test=test))
+            click.echo(prefix.install(pb.merge(define), test=test, test_all=test_all))
         except:
             click.echo("Failed to build package {0}".format(pb.to_name()))
             prefix.remove(pb)

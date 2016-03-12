@@ -90,7 +90,7 @@ class CGetPrefix:
     def write_parent(self, pb):
         if pb.parent is not None: util.mkfile(self.get_deps_directory(pb.to_fname()), pb.parent, pb.parent)
 
-    def install(self, pb, test=False):
+    def install(self, pb, test=False, test_all=False):
         pb = self.parse_pkg_build(pb)
         pkg_dir = self.get_package_directory(pb.to_fname())
         if os.path.exists(pkg_dir): 
@@ -101,12 +101,12 @@ class CGetPrefix:
             src_dir = builder.fetch(pb.pkg_src.url)
             # Install any dependencies first
             for dependent in self.from_file(os.path.join(src_dir, 'requirements.txt')):
-                self.install(dependent.of(pb), test=test)
+                self.install(dependent.of(pb), test_all=test_all)
             # Confirue and build
             builder.configure(src_dir, defines=pb.define, install_prefix=pkg_dir)
             builder.build(config='Release')
             # Run tests if enabled
-            if test: builder.test(config='Release')
+            if test or test_all: builder.test(config='Release')
             # Install
             builder.build(target='install', config='Release')
             util.symlink_dir(pkg_dir, self.prefix)
