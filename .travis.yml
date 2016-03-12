@@ -39,6 +39,7 @@ script:
     - which python
     - python --version
     - export PATH="/Users/travis/Library/Python/2.7/bin:$PATH"
-    - pip install --user pyflakes
+    - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then pip install pyflakes; fi
+    - if [[ "${TRAVIS_OS_NAME}" != "linux" ]]; then pip install --user pyflakes; fi
     - pyflakes .
     - python setup.py install --user && python ./test/test.py
