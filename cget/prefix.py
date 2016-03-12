@@ -106,15 +106,13 @@ class CGetPrefix:
                 p = x[0]
                 v = 'HEAD'
                 if len(x) > 1: v = x[1]
-                if '/' not in p: raise util.BuildError("Bad repo url {0}".format(p)) 
-                url = 'https://github.com/{0}/archive/{1}.tar.gz'.format(p, v)
+                if '/' in p: url = 'https://github.com/{0}/archive/{1}.tar.gz'.format(p, v)
                 if name is None: name = p
         return PackageInfo(name=name, url=url)
 
     def from_file(self, file):
         if file is not None and os.path.exists(file):
             with open(file) as f:
-                # return [x for line in f.readlines() for x in [line.strip()] if len(x) > 0 or not x.startswith('#')]
                 return parse_reqs(f.readlines())
         else: return []
 
