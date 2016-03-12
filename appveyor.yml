@@ -9,6 +9,7 @@ install:
 
 build_script:
   - cmd: "set PATH=%PYTHON%\\Scripts;%PATH%"
-  - cmd: "%PYTHON%\\python.exe -m pip install wheel" # https://github.com/pfultz2/pykg-config/archive/master.tar.gz pykg-config
+  - cmd: "%PYTHON%\\python.exe -m pip install wheel pyflakes" # https://github.com/pfultz2/pykg-config/archive/master.tar.gz pykg-config
+  - cmd: "pyflakes ."
   - cmd: "%PYTHON%\\python.exe setup.py install"
   - cmd: "%PYTHON%\\python.exe test\\test.py"
