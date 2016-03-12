@@ -186,4 +186,10 @@ def test_flags_reqs_f(d):
     reqs_file = d.write_to('reqs', [quote(p) + ' -DCGET_FLAG=On'])
     d.cmds(test_install(url='-f {0}'.format(reqs_file), alias=p))
 
+@run_test
+def test_comments_reqs_f(d):
+    p = get_path('libsimple')
+    reqs_file = d.write_to('reqs', [quote(p) + ' #A comment', '# Another comment'])
+    d.cmds(test_install(url='-f {0}'.format(reqs_file), alias=p))
+
 

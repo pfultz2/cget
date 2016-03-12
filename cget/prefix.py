@@ -1,4 +1,4 @@
-import os, shutil, itertools, shlex, argparse, copy
+import os, shutil, shlex, argparse, copy
 
 from cget.builder import Builder
 from cget.package import fname_to_pkg
@@ -37,9 +37,6 @@ class PackageBuild:
         if isinstance(self.pkg, PackageInfo): return self.pkg.to_fname()
         else: return self.pkg
 
-def tokenize_reqs_args(s):
-    return list(itertools.takewhile(lambda x:not x.startswith('#'), shlex.split(s, comments=True)))
-
 def parse_req_args(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('pkg')
@@ -48,7 +45,7 @@ def parse_req_args(args):
 
 def parse_reqs(lines):
     for line in lines:
-        tokens = tokenize_reqs_args(line)
+        tokens = shlex.split(line, comments=True)
         if len(tokens) > 0: yield parse_req_args(tokens)
 
 class CGetPrefix:
