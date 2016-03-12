@@ -17,6 +17,9 @@ __has_pkg_config__ = cget.util.can(lambda: cget.util.which('pkg-config'))
 def get_path(p):
     return os.path.join(__test_dir__, p)
 
+def get_toolchain(p):
+    return os.path.join(get_path('toolchains'), p)
+
 class TestError(Exception):
     def __init__(self, msg=None):
         self.msg = msg
@@ -179,6 +182,13 @@ def test_flags_fail_define(d):
 @run_test
 def test_flags_define(d):
     d.cmds(['cget install --verbose --test --define CGET_FLAG=On {0}'.format(get_path('libsimpleflag'))])
+
+@run_test
+def test_flags_toolchain(d):
+    d.cmds([
+        'cget init --toolchain {0}'.format(get_toolchain('toolchainflag.cmake')), 
+        'cget install --verbose --test {0}'.format(get_path('libsimpleflag'))
+    ])
 
 @run_test
 def test_flags_reqs_f(d):

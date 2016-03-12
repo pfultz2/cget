@@ -23,7 +23,7 @@ On windows, you may want to install pkgconfig-lite to support packages that use 
 Installing packages
 -------------------
 
-A package can be installed using the `install` command. When a packages is installed `cget` configures a build directory with cmake, and then builds the `all` target and the `install` target. So, essentially, `cget` will run the equivalent of these commands on the package to install it:
+A package can be installed using the `install` command. When a package is installed, `cget` configures a build directory with cmake, and then builds the `all` target and the `install` target. So, essentially, `cget` will run the equivalent of these commands on the package to install it:
 
     mkdir build
     cd build
