@@ -24,22 +24,22 @@ class CGetPrefix:
         return util.mkfile(self.prefix, 'cget.cmake', self.generate_cmake_toolchain(**kwargs), always_write=always_write)
 
     def generate_cmake_toolchain(self, toolchain=None, cxxflags=None, ldflags=None, std=None):
-        yield 'set(CGET_PREFIX "{0}")'.format(util.quote(self.prefix))
-        yield 'set(CMAKE_PREFIX_PATH "{0}")'.format(util.quote(self.prefix))
-        if toolchain is not None: yield 'include("{0}")'.format(toolchain)
+        yield 'set(CGET_PREFIX {})'.format(util.quote(self.prefix))
+        yield 'set(CMAKE_PREFIX_PATH {})'.format(util.quote(self.prefix))
+        if toolchain is not None: yield 'include({})'.format(util.quote(toolchain))
         yield 'if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)'
-        yield '    set(CMAKE_INSTALL_PREFIX "{0}")'.format(util.quote(self.prefix))
+        yield '    set(CMAKE_INSTALL_PREFIX {})'.format(util.quote(self.prefix))
         yield 'endif()'
         # yield 'set(CMAKE_MODULE_PATH  ${CMAKE_PREFIX_PATH}/lib/cmake)'
         if std is not None:
             yield 'if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")'
-            yield '    set(CMAKE_CXX_STD_FLAG "-std={0}")'.format(std)
+            yield '    set(CMAKE_CXX_STD_FLAG "-std={}")'.format(std)
             yield 'endif()'
         if cxxflags is not None or std is not None:
-            yield 'set(CMAKE_CXX_FLAGS "$ENV{{CXXFLAGS}} ${{CMAKE_CXX_FLAGS_INIT}} ${{CMAKE_CXX_STD_FLAG}} {0}" CACHE STRING "")'.format(util.as_string(cxxflags))
+            yield 'set(CMAKE_CXX_FLAGS "$ENV{{CXXFLAGS}} ${{CMAKE_CXX_FLAGS_INIT}} ${{CMAKE_CXX_STD_FLAG}} {}" CACHE STRING "")'.format(util.as_string(cxxflags))
         if ldflags is not None:
             for link_type in ['SHARED', 'MODULE', 'EXE']:
-                yield 'set(CMAKE_{1}_LINKER_FLAGS "$ENV{{LDFLAGS}} {0}" CACHE STRING "")'.format(ldflags, link_type)
+                yield 'set(CMAKE_{1}_LINKER_FLAGS "$ENV{{LDFLAGS}} {}" CACHE STRING "")'.format(ldflags, link_type)
 
     def get_path(self, path):
         return os.path.join(self.prefix, path)
@@ -70,7 +70,7 @@ class CGetPrefix:
                 p = x[0]
                 v = 'HEAD'
                 if len(x) > 1: v = x[1]
-                if '/' in p: url = 'https://github.com/{0}/archive/{1}.tar.gz'.format(p, v)
+                if '/' in p: url = 'https://github.com/{}/archive/{1}.tar.gz'.format(p, v)
                 if name is None: name = p
         return PackageSource(name=name, url=url)
 
@@ -95,7 +95,7 @@ class CGetPrefix:
         pkg_dir = self.get_package_directory(pb.to_fname())
         if os.path.exists(pkg_dir): 
             self.write_parent(pb)
-            return "Package {0} already installed".format(pb.to_name())
+            return "Package {} already installed".format(pb.to_name())
         with self.create_builder(pb.to_fname()) as builder:
             # Fetch package
             src_dir = builder.fetch(pb.pkg_src.url)
@@ -111,7 +111,7 @@ class CGetPrefix:
             builder.build(target='install', config='Release')
             util.symlink_dir(pkg_dir, self.prefix)
         self.write_parent(pb)
-        return "Successfully installed {0}".format(pb.to_name())
+        return "Successfully installed {}".format(pb.to_name())
 
     def remove(self, pkg):
         pkg = self.parse_pkg_src(pkg)
@@ -122,7 +122,7 @@ class CGetPrefix:
             if os.path.exists(deps_dir): shutil.rmtree(deps_dir)
             util.rm_symlink_dir(self.prefix)
             util.rm_empty_dirs(self.prefix)
-            return "Removed package {0}".format(pkg.name)
+            return "Removed package {}".format(pkg.name)
         else:
             return "Package doesn't exists"
 

@@ -1,4 +1,4 @@
-import click, os, sys, shutil
+import click, os, sys, shutil, json
 
 import tarfile
 
@@ -27,7 +27,7 @@ def as_string(x):
     else: return str(x, encoding="utf-8")
 
 def quote(s):
-    return s.replace("\\", "\\\\")
+    return json.dumps(s)
 
 class BuildError(Exception):
     def __init__(self, msg=None):

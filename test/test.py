@@ -78,12 +78,12 @@ class TestDir:
 def run_test(f):
     # TODO: Use test name
     print('*****************************************')
-    print('* Running test: {0}'.format(f.__name__))
+    print('* Running test: {}'.format(f.__name__))
     print('*****************************************')
     with TestDir(get_path('tmp')) as d:
         f(d)
     print('*****************************************')
-    print('* Completed test: {0}'.format(f.__name__))
+    print('* Completed test: {}'.format(f.__name__))
     print('*****************************************')
 
 # TODO: Test app by running it
@@ -92,13 +92,13 @@ def test_install(url, lib=None, alias=None, remove='remove', size=1):
     yield 'cget clean'
     yield 'cget list'
     yield 'cget size 0'
-    yield 'cget install --verbose --test {0}'.format(url)
-    yield 'cget size {0}'.format(size)
+    yield 'cget install --verbose --test {}'.format(url)
+    yield 'cget size {}'.format(size)
     yield 'cget list'
     if __has_pkg_config__ and lib is not None:
         yield 'cget pkg-config --list-all'
-        yield 'cget pkg-config --exists {0}'.format(lib)
-        yield 'cget pkg-config --cflags --libs {0}'.format(lib)
+        yield 'cget pkg-config --exists {}'.format(lib)
+        yield 'cget pkg-config --cflags --libs {}'.format(lib)
     if alias is None: yield 'cget {1} --verbose -y {0}'.format(url, remove)
     else: yield 'cget {1} --verbose -y {0}'.format(alias, remove)
     yield 'cget size 0'
@@ -133,22 +133,22 @@ def test_dir_alias(d):
 @run_test
 def test_reqs_alias_file(d):
     reqs_file = d.write_to('reqs', [quote('simple:'+get_path('libsimple'))])
-    d.cmds(test_install(url='--file {0}'.format(reqs_file), lib='simple', alias='simple'))
+    d.cmds(test_install(url='--file {}'.format(reqs_file), lib='simple', alias='simple'))
 
 @run_test
 def test_reqs_file(d):
     reqs_file = d.write_to('reqs', [quote(get_path('libsimple'))])
-    d.cmds(test_install(url='--file {0}'.format(reqs_file), lib='simple', alias=get_path('libsimple')))
+    d.cmds(test_install(url='--file {}'.format(reqs_file), lib='simple', alias=get_path('libsimple')))
 
 @run_test
 def test_reqs_alias_f(d):
     reqs_file = d.write_to('reqs', [quote('simple:'+get_path('libsimple'))])
-    d.cmds(test_install(url='-f {0}'.format(reqs_file), lib='simple', alias='simple'))
+    d.cmds(test_install(url='-f {}'.format(reqs_file), lib='simple', alias='simple'))
 
 @run_test
 def test_reqs_f(d):
     reqs_file = d.write_to('reqs', [quote(get_path('libsimple'))])
-    d.cmds(test_install(url='-f {0}'.format(reqs_file), lib='simple', alias=get_path('libsimple')))
+    d.cmds(test_install(url='-f {}'.format(reqs_file), lib='simple', alias=get_path('libsimple')))
 
 
 # Basic app needs pkg-config
@@ -159,47 +159,47 @@ if __has_pkg_config__:
 
 @run_test
 def test_flags_fail(d):
-    should_fail(lambda: d.cmds(['cget install --verbose --test -DCGET_FLAG=Off {0}'.format(get_path('libsimpleflag'))]))
+    should_fail(lambda: d.cmds(['cget install --verbose --test -DCGET_FLAG=Off {}'.format(get_path('libsimpleflag'))]))
 
 @run_test
 def test_flags(d):
     p = get_path('libsimpleflag')
-    d.cmds(test_install(url='-DCGET_FLAG=On {0}'.format(p), alias=p))
+    d.cmds(test_install(url='-DCGET_FLAG=On {}'.format(p), alias=p))
 
 @run_test
 def test_flags_fail_int(d):
-    should_fail(lambda: d.cmds(['cget install --verbose --test -DCGET_FLAG=0 {0}'.format(get_path('libsimpleflag'))]))
+    should_fail(lambda: d.cmds(['cget install --verbose --test -DCGET_FLAG=0 {}'.format(get_path('libsimpleflag'))]))
 
 @run_test
 def test_flags_int(d):
     p = get_path('libsimpleflag')
-    d.cmds(test_install(url='-DCGET_FLAG=1 {0}'.format(p), alias=p))
+    d.cmds(test_install(url='-DCGET_FLAG=1 {}'.format(p), alias=p))
 
 @run_test
 def test_flags_fail_define(d):
-    should_fail(lambda: d.cmds(['cget install --verbose --test --define CGET_FLAG=Off {0}'.format(get_path('libsimpleflag'))]))
+    should_fail(lambda: d.cmds(['cget install --verbose --test --define CGET_FLAG=Off {}'.format(get_path('libsimpleflag'))]))
 
 @run_test
 def test_flags_define(d):
-    d.cmds(['cget install --verbose --test --define CGET_FLAG=On {0}'.format(get_path('libsimpleflag'))])
+    d.cmds(['cget install --verbose --test --define CGET_FLAG=On {}'.format(get_path('libsimpleflag'))])
 
 @run_test
 def test_flags_toolchain(d):
     d.cmds([
-        'cget init --toolchain {0}'.format(get_toolchain('toolchainflag.cmake')), 
-        'cget install --verbose --test {0}'.format(get_path('libsimpleflag'))
+        'cget init --toolchain {}'.format(get_toolchain('toolchainflag.cmake')), 
+        'cget install --verbose --test {}'.format(get_path('libsimpleflag'))
     ])
 
 @run_test
 def test_flags_reqs_f(d):
     p = get_path('libsimpleflag')
     reqs_file = d.write_to('reqs', [quote(p) + ' -DCGET_FLAG=On'])
-    d.cmds(test_install(url='-f {0}'.format(reqs_file), alias=p))
+    d.cmds(test_install(url='-f {}'.format(reqs_file), alias=p))
 
 @run_test
 def test_comments_reqs_f(d):
     p = get_path('libsimple')
     reqs_file = d.write_to('reqs', [quote(p) + ' #A comment', '# Another comment'])
-    d.cmds(test_install(url='-f {0}'.format(reqs_file), alias=p))
+    d.cmds(test_install(url='-f {}'.format(reqs_file), alias=p))
 
 

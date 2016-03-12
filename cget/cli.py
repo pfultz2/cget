@@ -56,7 +56,7 @@ def install_command(prefix, pkgs, define, file, test, test_all):
         try:
             click.echo(prefix.install(pb.merge(define), test=test, test_all=test_all))
         except:
-            click.echo("Failed to build package {0}".format(pb.to_name()))
+            click.echo("Failed to build package {}".format(pb.to_name()))
             prefix.remove(pb)
             if prefix.verbose: raise
 
@@ -74,9 +74,9 @@ def remove_command(prefix, pkgs, yes):
         for pkg in pkgs_set:
             try:
                 prefix.remove(pkg)
-                click.echo("Removed package {0}".format(pkg))
+                click.echo("Removed package {}".format(pkg))
             except:
-                click.echo("Failed to remove package {0}".format(pkg))
+                click.echo("Failed to remove package {}".format(pkg))
                 if prefix.verbose: raise
 
 @cli.command(name='list')
@@ -94,9 +94,9 @@ def size_command(prefix, n):
     pkgs = len(list(util.ls(prefix.get_package_directory(), os.path.isdir)))
     deps = len(list(util.ls(prefix.get_deps_directory(), os.path.isdir)))
     if deps > pkgs:
-        raise util.BuildError("Extra deps items: {0}".format(deps))
+        raise util.BuildError("Extra deps items: {}".format(deps))
     if pkgs != int(n):
-        raise util.BuildError("Not the correct number of items: {0}".format(pkgs))
+        raise util.BuildError("Not the correct number of items: {}".format(pkgs))
 
 @cli.command(name='clean')
 @use_prefix
