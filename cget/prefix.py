@@ -59,7 +59,7 @@ class CGetPrefix:
 
     def parse_pkg_src(self, pkg):
         if isinstance(pkg, PackageSource): return pkg
-        if isinstance(pkg, PackageBuild): return pkg.pkg_src
+        if isinstance(pkg, PackageBuild): return self.parse_pkg_src(pkg.pkg_src)
         name, url = parse_alias(pkg)
         if '://' not in url:
             f = os.path.abspath(os.path.expanduser(url))
@@ -70,7 +70,7 @@ class CGetPrefix:
                 p = x[0]
                 v = 'HEAD'
                 if len(x) > 1: v = x[1]
-                if '/' in p: url = 'https://github.com/{}/archive/{1}.tar.gz'.format(p, v)
+                if '/' in p: url = 'https://github.com/{0}/archive/{1}.tar.gz'.format(p, v)
                 if name is None: name = p
         return PackageSource(name=name, url=url)
 
