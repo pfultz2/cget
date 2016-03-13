@@ -89,7 +89,7 @@ class CGetCmd:
 
     def __call__(self, arg, *args):
         p = [__cget_exe__, arg]
-        if self.prefix is not None: p.extend('--prefix {}'.format(self.prefix))
+        if self.prefix is not None: p.append('--prefix {}'.format(self.prefix))
         return ' '.join(p+list(args))
 
 def cget_cmd(*args):
@@ -132,6 +132,10 @@ def test_tar_alias(d):
 @run_test
 def test_dir(d):
     d.cmds(test_install(url=get_path('libsimple'), lib='simple'))
+
+@run_test
+def test_prefix(d):
+    d.cmds(test_install(url=get_path('libsimple'), lib='simple', prefix=d.get_path('usr')))
 
 @run_test
 def test_rm(d):
