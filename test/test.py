@@ -59,8 +59,8 @@ class TestDir:
 
     def cmds(self, g):
         for x in g:
-            if x.startswith('cget'):
-                x = __cget_exe__ + x[4:]
+            # if x.startswith('cget'):
+            #     x = __cget_exe__ + x[4:]
             print(x)
             self.cmd(x)
 
@@ -83,25 +83,39 @@ def run_test(f):
     print('* Completed test: {}'.format(f.__name__))
     print('*****************************************')
 
+class CGetCmd:
+    def __init__(self, prefix=None):
+        self.prefix = prefix
+
+    def __call__(self, arg, *args):
+        p = [__cget_exe__, arg]
+        if self.prefix is not None: p.extend('--prefix {}'.format(self.prefix))
+        return ' '.join(p+list(args))
+
+def cget_cmd(*args):
+    return CGetCmd()(*args)
+
 # TODO: Test app by running it
-def test_install(url, lib=None, alias=None, remove='remove', size=1):
-    yield 'cget list'
-    yield 'cget clean'
-    yield 'cget list'
-    yield 'cget size 0'
-    yield 'cget install --verbose --test {}'.format(url)
-    yield 'cget size {}'.format(size)
-    yield 'cget list'
+def test_install(url, lib=None, alias=None, remove='remove', size=1, prefix=None):
+    cg = CGetCmd(prefix=prefix)
+    yield cg('list')
+    yield cg('clean')
+    yield cg('list')
+    yield cg('size', '0')
+    yield cg('install', '--verbose --test', url)
+    yield cg('size', str(size))
+    yield cg('list')
     if __has_pkg_config__ and lib is not None:
-        yield 'cget pkg-config --list-all'
-        yield 'cget pkg-config --exists {}'.format(lib)
-        yield 'cget pkg-config --cflags --libs {}'.format(lib)
-    if alias is None: yield 'cget {1} --verbose -y {0}'.format(url, remove)
-    else: yield 'cget {1} --verbose -y {0}'.format(alias, remove)
+        yield cg('pkg-config', '--list-all')
+        yield cg('pkg-config', '--exists', lib)
+        yield cg('pkg-config', '--cflags --libs', lib)
+    if alias is None: yield cg(remove, '--verbose -y', url)
+    else: yield cg(remove, '--verbose -y', alias)
+    yield cg('size', '0')
     yield 'cget size 0'
-    yield 'cget list'
-    yield 'cget clean'
-    yield 'cget list'
+    yield cg('list')
+    yield cg('clean')
+    yield cg('list')
 
 @run_test
 def test_tar(d):
@@ -156,7 +170,7 @@ if __has_pkg_config__:
 
 @run_test
 def test_flags_fail(d):
-    should_fail(lambda: d.cmds(['cget install --verbose --test -DCGET_FLAG=Off {}'.format(get_path('libsimpleflag'))]))
+    should_fail(lambda: d.cmds([cget_cmd('install', '--verbose --test -DCGET_FLAG=Off', get_path('libsimpleflag'))]))
 
 @run_test
 def test_flags(d):
@@ -165,7 +179,7 @@ def test_flags(d):
 
 @run_test
 def test_flags_fail_int(d):
-    should_fail(lambda: d.cmds(['cget install --verbose --test -DCGET_FLAG=0 {}'.format(get_path('libsimpleflag'))]))
+    should_fail(lambda: d.cmds([cget_cmd('install --verbose --test -DCGET_FLAG=0', get_path('libsimpleflag'))]))
 
 @run_test
 def test_flags_int(d):
@@ -174,17 +188,17 @@ def test_flags_int(d):
 
 @run_test
 def test_flags_fail_define(d):
-    should_fail(lambda: d.cmds(['cget install --verbose --test --define CGET_FLAG=Off {}'.format(get_path('libsimpleflag'))]))
+    should_fail(lambda: d.cmds([cget_cmd('install', '--verbose --test --define CGET_FLAG=Off', get_path('libsimpleflag'))]))
 
 @run_test
 def test_flags_define(d):
-    d.cmds(['cget install --verbose --test --define CGET_FLAG=On {}'.format(get_path('libsimpleflag'))])
+    d.cmds([cget_cmd('install', '--verbose --test --define CGET_FLAG=On', get_path('libsimpleflag'))])
 
 @run_test
 def test_flags_toolchain(d):
     d.cmds([
-        'cget init --toolchain {}'.format(get_toolchain('toolchainflag.cmake')), 
-        'cget install --verbose --test {}'.format(get_path('libsimpleflag'))
+        cget_cmd('init', '--toolchain', get_toolchain('toolchainflag.cmake')),
+        cget_cmd('install', '--verbose --test', get_path('libsimpleflag'))
     ])
 
 @run_test
