@@ -26,7 +26,7 @@ class CGetPrefix:
     def generate_cmake_toolchain(self, toolchain=None, cxxflags=None, ldflags=None, std=None):
         yield 'set(CGET_PREFIX {})'.format(util.quote(self.prefix))
         yield 'set(CMAKE_PREFIX_PATH {})'.format(util.quote(self.prefix))
-        if toolchain is not None: yield 'include({})'.format(util.quote(toolchain))
+        if toolchain is not None: yield 'include({})'.format(util.quote(os.path.abspath(toolchain)))
         yield 'if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)'
         yield '    set(CMAKE_INSTALL_PREFIX {})'.format(util.quote(self.prefix))
         yield 'endif()'

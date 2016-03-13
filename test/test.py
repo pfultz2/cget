@@ -98,6 +98,7 @@ def cget_cmd(*args):
 # TODO: Test app by running it
 def test_install(url, lib=None, alias=None, remove='remove', size=1, prefix=None):
     cg = CGetCmd(prefix=prefix)
+    yield cg('init')
     yield cg('list')
     yield cg('clean')
     yield cg('list')
@@ -203,6 +204,14 @@ def test_flags_toolchain(d):
     d.cmds([
         cget_cmd('init', '--toolchain', get_toolchain('toolchainflag.cmake')),
         cget_cmd('install', '--verbose --test', get_path('libsimpleflag'))
+    ])
+
+@run_test
+def test_flags_toolchain_prefix(d):
+    cg = CGetCmd(d.get_path('usr'))
+    d.cmds([
+        cg('init', '--toolchain', get_toolchain('toolchainflag.cmake')),
+        cg('install', '--verbose --test', get_path('libsimpleflag'))
     ])
 
 @run_test

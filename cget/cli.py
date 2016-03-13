@@ -40,7 +40,7 @@ def use_prefix(f):
 @click.option('--std', required=False, help="Set C++ standard if available")
 def init_command(prefix, toolchain, cxxflags, ldflags, std):
     """ Initialize install directory """
-    prefix.write_cmake(always_write=True, toolchain=os.path.abspath(toolchain), cxxflags=cxxflags, ldflags=ldflags, std=std)
+    prefix.write_cmake(always_write=True, toolchain=toolchain, cxxflags=cxxflags, ldflags=ldflags, std=std)
 
 @cli.command(name='install')
 @use_prefix
