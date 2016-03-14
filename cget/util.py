@@ -1,4 +1,4 @@
-import click, os, sys, shutil, json
+import click, os, sys, shutil, json, six
 
 import tarfile
 
@@ -10,8 +10,7 @@ else:
 from six.moves.urllib import request
 
 def is_string(obj):
-    if sys.version_info[0] < 3: return isinstance(obj, 'basestring')
-    else: return isinstance(obj, str)
+    return isinstance(obj, six.string_types)
 
 def as_bytes(s):
     if sys.version_info[0] < 3: return bytes(s)
