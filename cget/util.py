@@ -7,10 +7,7 @@ if os.name == 'posix' and sys.version_info[0] < 3:
 else:
     import subprocess
 
-if os.name == 'posix' and sys.version_info[0] < 3:
-    import urllib
-else:
-    import urllib.request as urllib
+from six.moves.urllib import request
 
 def is_string(obj):
     if sys.version_info[0] < 3: return isinstance(obj, 'basestring')
@@ -122,7 +119,7 @@ def download_to(url, download_dir):
         def hook(count, block_size, total_size):
             percent = int(count*block_size*100/total_size)
             if percent > 0 and percent < 100: bar.update(percent)
-        urllib.urlretrieve(url, filename=file, reporthook=hook, data=None)
+        request.urlretrieve(url, filename=file, reporthook=hook, data=None)
     return file
 
 def retrieve_url(url, dst):
