@@ -52,7 +52,7 @@ def init_command(prefix, toolchain, cxxflags, ldflags, std):
 def install_command(prefix, pkgs, define, file, test, test_all):
     """ Install packages """
     pbs = [PackageBuild(pkg) for pkg in pkgs]
-    for pb in pbs+list(prefix.from_file(file)):
+    for pb in list(prefix.from_file(file))+pbs:
         try:
             click.echo(prefix.install(pb.merge(define), test=test, test_all=test_all))
         except:

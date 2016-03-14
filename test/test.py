@@ -113,7 +113,6 @@ def test_install(url, lib=None, alias=None, remove='remove', size=1, prefix=None
     if alias is None: yield cg(remove, '--verbose -y', url)
     else: yield cg(remove, '--verbose -y', alias)
     yield cg('size', '0')
-    yield 'cget size 0'
     yield cg('list')
     yield cg('clean')
     yield cg('list')
