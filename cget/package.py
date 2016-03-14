@@ -1,14 +1,12 @@
-import base64, copy, argparse
-
-import cget.util as util
-
+import base64, copy, argparse, six
 
 def encode_url(url):
-    x = url[url.find('://')+3:]
-    return '_url_' + util.as_string(base64.urlsafe_b64encode(util.as_bytes(x))).replace('=', '_')
+    x = six.b(url[url.find('://')+3:])
+    return '_url_' + base64.urlsafe_b64encode(x).decode('utf-8').replace('=', '_')
 
 def decode_url(url):
-    return base64.urlsafe_b64decode(util.as_string(url.replace('_', '=')[5:]))
+    s = url.replace('_', '=')[5:]
+    return base64.urlsafe_b64decode(str(s)).decode('utf-8')
 
 class PackageSource:
     def __init__(self, name=None, url=None, fname=None):

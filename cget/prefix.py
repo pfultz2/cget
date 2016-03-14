@@ -1,4 +1,4 @@
-import os, shutil, shlex
+import os, shutil, shlex, six
 
 from cget.builder import Builder
 from cget.package import fname_to_pkg
@@ -9,7 +9,7 @@ import cget.util as util
 
 
 def parse_alias(x):
-    s = util.as_string(x)
+    s = six.u(x)
     i = s.find(':', 0, max(s.find('://'), s.find(':\\')))
     if i > 0: return s[0:i], s[i+1:]
     else: return None, s

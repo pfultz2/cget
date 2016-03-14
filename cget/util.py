@@ -18,9 +18,7 @@ def as_bytes(s):
 
 def as_string(x):
     if x is None: return ''
-    elif sys.version_info[0] < 3: return str(x)
-    elif is_string(x): return x
-    else: return str(x, encoding="utf-8")
+    return str(x)
 
 def quote(s):
     return json.dumps(s)

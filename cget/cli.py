@@ -48,7 +48,7 @@ def init_command(prefix, toolchain, cxxflags, ldflags, std):
 @click.option('-t', '--test-all', is_flag=True, help="Test all packages including its dependencies before installing by running ctest or check target")
 @click.option('-f', '--file', default=None, help="Install packages listed in the file")
 @click.option('-D', '--define', multiple=True, help="Extra configuration variables to pass to CMake")
-@click.argument('pkgs', nargs=-1)
+@click.argument('pkgs', nargs=-1, type=click.STRING)
 def install_command(prefix, pkgs, define, file, test, test_all):
     """ Install packages """
     pbs = [PackageBuild(pkg) for pkg in pkgs]
@@ -62,7 +62,7 @@ def install_command(prefix, pkgs, define, file, test, test_all):
 
 @cli.command(name='remove')
 @use_prefix
-@click.argument('pkgs', nargs=-1)
+@click.argument('pkgs', nargs=-1, type=click.STRING)
 @click.option('-y', '--yes', is_flag=True, default=False)
 def remove_command(prefix, pkgs, yes):
     """ Remove packages """
