@@ -12,14 +12,6 @@ from six.moves.urllib import request
 def is_string(obj):
     return isinstance(obj, six.string_types)
 
-def as_bytes(s):
-    if sys.version_info[0] < 3: return bytes(s)
-    else: return bytes(s, "utf-8")
-
-def as_string(x):
-    if x is None: return ''
-    return str(x)
-
 def quote(s):
     return json.dumps(s)
 

@@ -40,7 +40,7 @@ class CGetPrefix:
             yield '    set(CMAKE_CXX_STD_FLAG "-std={}")'.format(std)
             yield 'endif()'
         if cxxflags is not None or std is not None:
-            yield 'set(CMAKE_CXX_FLAGS "$ENV{{CXXFLAGS}} ${{CMAKE_CXX_FLAGS_INIT}} ${{CMAKE_CXX_STD_FLAG}} {}" CACHE STRING "")'.format(util.as_string(cxxflags))
+            yield 'set(CMAKE_CXX_FLAGS "$ENV{{CXXFLAGS}} ${{CMAKE_CXX_FLAGS_INIT}} ${{CMAKE_CXX_STD_FLAG}} {}" CACHE STRING "")'.format(cxxflags or '')
         if ldflags is not None:
             for link_type in ['SHARED', 'MODULE', 'EXE']:
                 yield 'set(CMAKE_{1}_LINKER_FLAGS "$ENV{{LDFLAGS}} {}" CACHE STRING "")'.format(ldflags, link_type)
