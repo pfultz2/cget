@@ -1,9 +1,6 @@
 import os, tarfile, shutil, cget.util
 
-try:
-    from shlex import quote as quote
-except ImportError:
-    from pipes import quote as quote
+from six.moves import shlex_quote
 
 __test_dir__ = os.path.dirname(os.path.realpath(__file__))
 
@@ -59,8 +56,6 @@ class TestDir:
 
     def cmds(self, g):
         for x in g:
-            # if x.startswith('cget'):
-            #     x = __cget_exe__ + x[4:]
             print(x)
             self.cmd(x)
 
@@ -73,7 +68,6 @@ class TestDir:
         return os.path.join(self.tmp_dir, p)
 
 def run_test(f):
-    # TODO: Use test name
     print('*****************************************')
     print('* Running test: {}'.format(f.__name__))
     print('*****************************************')
@@ -95,7 +89,6 @@ class CGetCmd:
 def cget_cmd(*args):
     return CGetCmd()(*args)
 
-# TODO: Test app by running it
 def test_install(url, lib=None, alias=None, remove='remove', size=1, prefix=None):
     cg = CGetCmd(prefix=prefix)
     yield cg('init')
@@ -147,22 +140,22 @@ def test_dir_alias(d):
 
 @run_test
 def test_reqs_alias_file(d):
-    reqs_file = d.write_to('reqs', [quote('simple:'+get_path('libsimple'))])
+    reqs_file = d.write_to('reqs', [shlex_quote('simple:'+get_path('libsimple'))])
     d.cmds(test_install(url='--file {}'.format(reqs_file), lib='simple', alias='simple'))
 
 @run_test
 def test_reqs_file(d):
-    reqs_file = d.write_to('reqs', [quote(get_path('libsimple'))])
+    reqs_file = d.write_to('reqs', [shlex_quote(get_path('libsimple'))])
     d.cmds(test_install(url='--file {}'.format(reqs_file), lib='simple', alias=get_path('libsimple')))
 
 @run_test
 def test_reqs_alias_f(d):
-    reqs_file = d.write_to('reqs', [quote('simple:'+get_path('libsimple'))])
+    reqs_file = d.write_to('reqs', [shlex_quote('simple:'+get_path('libsimple'))])
     d.cmds(test_install(url='-f {}'.format(reqs_file), lib='simple', alias='simple'))
 
 @run_test
 def test_reqs_f(d):
-    reqs_file = d.write_to('reqs', [quote(get_path('libsimple'))])
+    reqs_file = d.write_to('reqs', [shlex_quote(get_path('libsimple'))])
     d.cmds(test_install(url='-f {}'.format(reqs_file), lib='simple', alias=get_path('libsimple')))
 
 
@@ -216,13 +209,13 @@ def test_flags_toolchain_prefix(d):
 @run_test
 def test_flags_reqs_f(d):
     p = get_path('libsimpleflag')
-    reqs_file = d.write_to('reqs', [quote(p) + ' -DCGET_FLAG=On'])
+    reqs_file = d.write_to('reqs', [shlex_quote(p) + ' -DCGET_FLAG=On'])
     d.cmds(test_install(url='-f {}'.format(reqs_file), alias=p))
 
 @run_test
 def test_comments_reqs_f(d):
     p = get_path('libsimple')
-    reqs_file = d.write_to('reqs', [quote(p) + ' #A comment', '# Another comment'])
+    reqs_file = d.write_to('reqs', [shlex_quote(p) + ' #A comment', '# Another comment'])
     d.cmds(test_install(url='-f {}'.format(reqs_file), alias=p))
 
 
