@@ -38,6 +38,7 @@ script:
     - cmake --version
     - which python
     - python --version
+    - export DEBUG=1
     - export PATH="/Users/travis/Library/Python/2.7/bin:$PATH"
     - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then pip install pyflakes; fi
     - if [[ "${TRAVIS_OS_NAME}" != "linux" ]]; then pip install --user pyflakes; fi

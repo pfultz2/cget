@@ -1,10 +1,13 @@
-import six, inspect
+import six, inspect, os
 
 def decorator_with_args(decorator):
     def f(*args, **kwargs):
         def g(func):
             return decorator(func, *args, **kwargs)
         return g
+    return f
+
+def identity_decorator(f):
     return f
 
 def is_iterable(obj):
@@ -41,19 +44,28 @@ def require_type(obj, _type_, fname, name=None):
         raise TypeError("{0} should be {1} but found type '{2}' instead for {3}".format(s, msg, type(obj), fname))
     return obj
 
-@decorator_with_args
-def params(f, **argument_types):
-    @six.wraps(f)
-    def check_call(*args, **kwargs):
-        callargs = inspect.getcallargs(f, *args, **kwargs)
-        for name, _type_ in six.iteritems(argument_types):
-            require_type(callargs[name], _type_, f.__name__, name)
-        return f(*args, **kwargs)
-    return check_call
+DEBUG='DEBUG' in os.environ and len(os.environ['DEBUG']) > 0
 
-@decorator_with_args
-def returns(f, _type_):
-    @six.wraps(f)
-    def check_call(*args, **kwargs):
-        return require_type(f(*args, **kwargs), _type_, f.__name__)
-    return check_call
+if DEBUG:
+    @decorator_with_args
+    def params(f, **argument_types):
+        @six.wraps(f)
+        def check_call(*args, **kwargs):
+            callargs = inspect.getcallargs(f, *args, **kwargs)
+            for name, _type_ in six.iteritems(argument_types):
+                require_type(callargs[name], _type_, f.__name__, name)
+            return f(*args, **kwargs)
+        return check_call
+
+    @decorator_with_args
+    def returns(f, _type_):
+        @six.wraps(f)
+        def check_call(*args, **kwargs):
+            return require_type(f(*args, **kwargs), _type_, f.__name__)
+        return check_call
+
+else:
+    def params(*arg, **kwargs):
+        return identity_decorator
+    def returns(*arg, **kwargs):
+        return identity_decorator
