@@ -1,4 +1,4 @@
-import os, shutil, shlex, six
+import os, shutil, shlex, six, inspect
 
 from cget.builder import Builder
 from cget.package import fname_to_pkg
@@ -6,7 +6,8 @@ from cget.package import PackageSource
 from cget.package import PackageBuild
 from cget.package import parse_pkg_build
 import cget.util as util
-from cget.types import check
+from cget.types import returns
+from cget.types import params
 
 
 def parse_alias(x):
@@ -14,6 +15,8 @@ def parse_alias(x):
     i = s.find(':', 0, max(s.find('://'), s.find(':\\')))
     if i > 0: return s[0:i], s[i+1:]
     else: return None, s
+
+PACKAGE_SOURCE_TYPES = (six.text_type, PackageSource, PackageBuild)
 
 class CGetPrefix:
     def __init__(self, prefix, verbose=False):
@@ -24,6 +27,7 @@ class CGetPrefix:
     def write_cmake(self, always_write=False, **kwargs):
         return util.mkfile(self.prefix, 'cget.cmake', self.generate_cmake_toolchain(**kwargs), always_write=always_write)
 
+    @returns(inspect.isgenerator)
     def generate_cmake_toolchain(self, toolchain=None, cxxflags=None, ldflags=None, std=None):
         yield 'set(CGET_PREFIX {})'.format(util.quote(self.prefix))
         yield 'set(CMAKE_PREFIX_PATH {})'.format(util.quote(self.prefix))
@@ -58,7 +62,8 @@ class CGetPrefix:
         if name is None: return deps_dir
         else: return os.path.join(deps_dir, name)
 
-    @check(PackageSource)
+    @returns(PackageSource)
+    @params(pkg=PACKAGE_SOURCE_TYPES)
     def parse_pkg_src(self, pkg):
         if isinstance(pkg, PackageSource): return pkg
         if isinstance(pkg, PackageBuild): return self.parse_pkg_src(pkg.pkg_src)
@@ -76,7 +81,8 @@ class CGetPrefix:
                 if name is None: name = p
         return PackageSource(name=name, url=url)
 
-    @check(PackageBuild)
+    @returns(PackageBuild)
+    @params(pkg=PACKAGE_SOURCE_TYPES)
     def parse_pkg_build(self, pkg):
         if isinstance(pkg, PackageBuild): 
             pkg.pkg_src = self.parse_pkg_src(pkg.pkg_src)
@@ -93,10 +99,12 @@ class CGetPrefix:
     def write_parent(self, pb):
         if pb.parent is not None: util.mkfile(self.get_deps_directory(pb.to_fname()), pb.parent, pb.parent)
 
+    @returns(six.text_type)
+    @params(pb=PACKAGE_SOURCE_TYPES, test=bool, test_all=bool)
     def install(self, pb, test=False, test_all=False):
         pb = self.parse_pkg_build(pb)
         # Only install test packages if we are testing
-        if pb.test != test and pb.test != test_all: return
+        if pb.test != test and pb.test != test_all: return ""
         pkg_dir = self.get_package_directory(pb.to_fname())
         if os.path.exists(pkg_dir): 
             self.write_parent(pb)
