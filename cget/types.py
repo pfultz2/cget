@@ -20,7 +20,7 @@ def any_checkers(checkers):
     return any(map(lambda e:e[0], checkers))
 
 def format_checkers(checkers):
-    failed_checkers = filter(lambda e:e[0], checkers)
+    failed_checkers = filter(lambda e:not e[0], checkers)
     s_checkers = list(map(lambda e:e[1], failed_checkers))
     return "({})".format(','.join(s_checkers))
 
@@ -33,12 +33,12 @@ def get_checker(x):
             return any_checkers(checkers), format_checkers(checkers)
         return checker
 
-def require_type(obj, _type_, name=None):
+def require_type(obj, _type_, fname, name=None):
     b, msg = get_checker(_type_)(obj, _type_)
     if not b:
         s = 'Return'
         if name is not None: s = "Parameter '{0}'".format(name)
-        raise TypeError("{0} should be {1} but found type '{2}' instead".format(s, b, type(obj)))
+        raise TypeError("{0} should be {1} but found type '{2}' instead for {3}".format(s, msg, type(obj), fname))
     return obj
 
 @decorator_with_args
@@ -47,7 +47,7 @@ def params(f, **argument_types):
     def check_call(*args, **kwargs):
         callargs = inspect.getcallargs(f, *args, **kwargs)
         for name, _type_ in six.iteritems(argument_types):
-            require_type(callargs[name], _type_, name)
+            require_type(callargs[name], _type_, f.__name__, name)
         return f(*args, **kwargs)
     return check_call
 
@@ -55,5 +55,5 @@ def params(f, **argument_types):
 def returns(f, _type_):
     @six.wraps(f)
     def check_call(*args, **kwargs):
-        return require_type(f(*args, **kwargs), _type_)
+        return require_type(f(*args, **kwargs), _type_, f.__name__)
     return check_call

@@ -9,14 +9,13 @@ import cget.util as util
 from cget.types import returns
 from cget.types import params
 
-
-def parse_alias(x):
-    s = six.u(x)
+@params(s=six.string_types)
+def parse_alias(s):
     i = s.find(':', 0, max(s.find('://'), s.find(':\\')))
     if i > 0: return s[0:i], s[i+1:]
     else: return None, s
 
-PACKAGE_SOURCE_TYPES = (six.text_type, PackageSource, PackageBuild)
+PACKAGE_SOURCE_TYPES = (six.string_types, PackageSource, PackageBuild)
 
 class CGetPrefix:
     def __init__(self, prefix, verbose=False):
@@ -99,7 +98,7 @@ class CGetPrefix:
     def write_parent(self, pb):
         if pb.parent is not None: util.mkfile(self.get_deps_directory(pb.to_fname()), pb.parent, pb.parent)
 
-    @returns(six.text_type)
+    @returns(six.string_types)
     @params(pb=PACKAGE_SOURCE_TYPES, test=bool, test_all=bool)
     def install(self, pb, test=False, test_all=False):
         pb = self.parse_pkg_build(pb)
