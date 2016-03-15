@@ -6,6 +6,7 @@ from cget.package import PackageSource
 from cget.package import PackageBuild
 from cget.package import parse_pkg_build
 import cget.util as util
+from cget.types import check
 
 
 def parse_alias(x):
@@ -57,6 +58,7 @@ class CGetPrefix:
         if name is None: return deps_dir
         else: return os.path.join(deps_dir, name)
 
+    @check(PackageSource)
     def parse_pkg_src(self, pkg):
         if isinstance(pkg, PackageSource): return pkg
         if isinstance(pkg, PackageBuild): return self.parse_pkg_src(pkg.pkg_src)
@@ -74,6 +76,7 @@ class CGetPrefix:
                 if name is None: name = p
         return PackageSource(name=name, url=url)
 
+    @check(PackageBuild)
     def parse_pkg_build(self, pkg):
         if isinstance(pkg, PackageBuild): 
             pkg.pkg_src = self.parse_pkg_src(pkg.pkg_src)
