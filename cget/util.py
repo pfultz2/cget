@@ -118,21 +118,46 @@ def retrieve_url(url, dst):
 def extract_ar(archive, dst):
     tarfile.open(archive).extractall(dst)
 
-def which(p):
+def which(p, paths=None):
     exes = [p+x for x in ['', '.exe', '.bat']]
-    for dirname in os.environ['PATH'].split(os.pathsep):
+    for dirname in list(paths or [])+os.environ['PATH'].split(os.pathsep):
         for exe in exes:
             candidate = os.path.join(os.path.expanduser(dirname), exe)
             if os.path.exists(candidate):
                 return candidate
     raise BuildError("Can't find file %s" % p)
 
-def cmd(args, env={}, **kwargs):
-    e = dict(os.environ)
-    if env is not None: e.update(env)
-    child = subprocess.Popen(args, env=e, **kwargs)
+def merge(*args):
+    result = {}
+    for d in args:
+        result.update(dict(d or {}))
+    return result
+
+def cmd(args, env=None, **kwargs):
+    child = subprocess.Popen(args, env=merge(os.environ, env), **kwargs)
     child.communicate()
     if child.returncode != 0: raise BuildError("Error: " + str(args))
+
+class Commander:
+    def __init__(self, paths=None, env=None):
+        self.paths = paths
+        self.env = env
+
+    def _get_paths_env(self):
+        if self.paths is not None:
+            return { 'PATH': os.pathsep.join(list(self.paths)+[os.environ['PATH']]) }
+        else: return None
+
+    def _cmd(self, name, args=None, options=None, env=None, **kwargs):
+        exe = which(name, self.paths)
+        option_args = ["{0}={1}".format(key, value) for key, value in six.iteritems(options or {})]
+        cmd([exe] + list(args or []) + option_args, env=merge(self.env, self._get_paths_env(), env))
+
+    def __getattr__(self, name):
+        c = name.replace('_', '-')
+        def f(*args, **kwargs):
+            self._cmd(c, *args, **kwargs)
+        return f
 
 def cmake(args, cwd=None, toolchain=None, env=None):
     if toolchain is not None: args.insert(0, '-DCMAKE_TOOLCHAIN_FILE={0}'.format(toolchain))

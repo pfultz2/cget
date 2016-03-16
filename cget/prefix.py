@@ -21,7 +21,13 @@ class CGetPrefix:
     def __init__(self, prefix, verbose=False):
         self.prefix = prefix
         self.verbose = verbose
+        self.cmd = util.Commander(paths=[self.get_path('bin')], env=self.get_env())
         self.toolchain = self.write_cmake()
+
+    def get_env(self):
+        return {
+            'PKG_CONFIG_PATH': self.pkg_config_path()
+        }
 
     def write_cmake(self, always_write=False, **kwargs):
         return util.mkfile(self.prefix, 'cget.cmake', self.generate_cmake_toolchain(**kwargs), always_write=always_write)
@@ -173,4 +179,4 @@ class CGetPrefix:
         return os.pathsep.join(libs)
 
     def pkg_config(self, args):
-        util.pkg_config(args, path=self.pkg_config_path())
+        self.cmd.pkg_config(args)
