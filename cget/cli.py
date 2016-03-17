@@ -60,6 +60,16 @@ def install_command(prefix, pkgs, define, file, test, test_all):
             prefix.remove(pb)
             if prefix.verbose: raise
 
+@cli.command(name='build')
+@use_prefix
+@click.option('-t', '--test', is_flag=True, help="Test package by running ctest or check target")
+@click.option('-C', '--clean', is_flag=True, help="Clean build directory before building")
+@click.option('-D', '--define', multiple=True, help="Extra configuration variables to pass to CMake")
+@click.argument('pkg', nargs=1, type=click.STRING)
+def build_command(prefix, pkg, define, test, clean):
+    """ Build package """
+    prefix.build(PackageBuild(pkg).merge(define), test=test, clean=clean)
+
 @cli.command(name='remove')
 @use_prefix
 @click.argument('pkgs', nargs=-1, type=click.STRING)

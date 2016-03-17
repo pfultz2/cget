@@ -1,4 +1,4 @@
-import os, shutil, shlex, six, inspect, click
+import os, shutil, shlex, six, inspect, click, contextlib
 
 from cget.builder import Builder
 from cget.package import fname_to_pkg
@@ -57,8 +57,16 @@ class CGetPrefix:
     def get_path(self, path):
         return os.path.join(self.prefix, path)
 
-    def create_builder(self, name):
-        return Builder(self, os.path.join(self.prefix, 'tmp-' + name))
+    @contextlib.contextmanager
+    def create_builder(self, name, tmp=True, clean=False):
+        pre = 'build-'
+        if tmp: pre = 'tmp-'
+        d = os.path.join(self.prefix, pre + name)
+        if clean: shutil.rmtree(d)
+        exists = os.path.exists(d)
+        util.mkdir(d)
+        yield Builder(self, d, exists)
+        if tmp: shutil.rmtree(d)
 
     def get_package_directory(self, name=None):
         pkg_dir = os.path.join(self.prefix, 'pkg')
@@ -107,6 +115,10 @@ class CGetPrefix:
     def write_parent(self, pb):
         if pb.parent is not None: util.mkfile(self.get_deps_directory(pb.to_fname()), pb.parent, pb.parent)
 
+    def install_deps(self, pb, d, test_all=False):
+        for dependent in self.from_file(os.path.join(d, 'requirements.txt')):
+            self.install(dependent.of(pb), test_all=test_all)
+
     @returns(six.string_types)
     @params(pb=PACKAGE_SOURCE_TYPES, test=bool, test_all=bool)
     def install(self, pb, test=False, test_all=False):
@@ -121,8 +133,7 @@ class CGetPrefix:
             # Fetch package
             src_dir = builder.fetch(pb.pkg_src.url)
             # Install any dependencies first
-            for dependent in self.from_file(os.path.join(src_dir, 'requirements.txt')):
-                self.install(dependent.of(pb), test_all=test_all)
+            self.install_deps(pb, src_dir, test_all=test_all)
             # Confirue and build
             builder.configure(src_dir, defines=pb.define, install_prefix=pkg_dir)
             builder.build(config='Release')
@@ -133,6 +144,22 @@ class CGetPrefix:
             util.symlink_dir(pkg_dir, self.prefix)
         self.write_parent(pb)
         return "Successfully installed {}".format(pb.to_name())
+
+    @returns(six.string_types)
+    @params(pb=PACKAGE_SOURCE_TYPES, test=bool)
+    def build(self, pb, test=False, clean=False):
+        pb = self.parse_pkg_build(pb)
+        src_dir = pb.pkg_src.url[7:] # Remove "file://"
+        with self.create_builder(pb.to_fname(), tmp=False, clean=clean) as builder:
+            # Install any dependencies first
+            self.install_deps(pb, src_dir)
+            # Confirue and build
+            if not builder.exists: builder.configure(src_dir, defines=pb.define)
+            builder.build(config='Release')
+            # Run tests if enabled
+            if test: builder.test(config='Release')
+
+
 
     def remove(self, pkg):
         pkg = self.parse_pkg_src(pkg)

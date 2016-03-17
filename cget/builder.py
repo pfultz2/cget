@@ -1,18 +1,14 @@
-import click, os, shutil, multiprocessing
+import click, os, multiprocessing
 
 import cget.util as util
 
 class Builder:
-    def __init__(self, prefix, tmp_dir):
+    def __init__(self, prefix, tmp_dir, exists=False):
         self.prefix = prefix
         self.tmp_dir = tmp_dir
         self.build_dir = os.path.join(tmp_dir, 'build')
+        self.exists = exists
         self.is_make_generator = False
-    def __enter__(self):
-        util.mkdir(self.tmp_dir)
-        return self
-    def __exit__(self, type, value, traceback):
-        shutil.rmtree(self.tmp_dir)
 
     def cmake(self, options=None, use_toolchain=False, **kwargs):
         if use_toolchain: self.prefix.cmd.cmake(options=util.merge({'-DCMAKE_TOOLCHAIN_FILE': self.prefix.toolchain}, options), **kwargs)

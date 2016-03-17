@@ -145,6 +145,17 @@ def test_rm(d):
     d.cmds(test_install(url=get_path('libsimple'), lib='simple', remove='rm'))
 
 @test
+def test_build_dir(d):
+    d.cmds([
+        cget_cmd('build', '--verbose --test', get_path('libsimple')),
+        cget_cmd('size', '0'),
+        cget_cmd('build', '--verbose --test', get_path('libsimple')),
+        cget_cmd('size', '0'),
+        cget_cmd('build', '--verbose --test -C', get_path('libsimple')),
+        cget_cmd('size', '0')
+    ])
+
+@test
 def test_dir_alias(d):
     d.cmds(test_install(url='simple:'+get_path('libsimple'), lib='simple', alias='simple'))
 
@@ -175,6 +186,18 @@ if __has_pkg_config__:
     def test_app_dir(d):
         d.cmds(test_install(url=get_path('basicapp'), lib='simple', alias='simple', size=2))
 
+    @test
+    def test_build_app_dir(d):
+        d.cmds([
+            cget_cmd('size', '0'),
+            cget_cmd('build', '--verbose --test', get_path('basicapp')),
+            cget_cmd('size', '1'),
+            cget_cmd('build', '--verbose --test', get_path('basicapp')),
+            cget_cmd('size', '1'),
+            cget_cmd('build', '--verbose --test -C', get_path('basicapp')),
+            cget_cmd('size', '1')
+        ])
+
 @test
 def test_flags_fail(d):
     should_fail(lambda: d.cmds([cget_cmd('install', '--verbose --test -DCGET_FLAG=Off', get_path('libsimpleflag'))]))
@@ -183,6 +206,17 @@ def test_flags_fail(d):
 def test_flags(d):
     p = get_path('libsimpleflag')
     d.cmds(test_install(url='-DCGET_FLAG=On {}'.format(p), alias=p))
+
+@test
+def test_build_flags(d):
+    d.cmds([
+        cget_cmd('build', '--verbose --test -DCGET_FLAG=On', get_path('libsimpleflag')),
+        cget_cmd('size', '0'),
+        cget_cmd('build', '--verbose --test -DCGET_FLAG=On', get_path('libsimpleflag')),
+        cget_cmd('size', '0'),
+        cget_cmd('build', '--verbose --test -C -DCGET_FLAG=On', get_path('libsimpleflag')),
+        cget_cmd('size', '0')
+    ])
 
 @test
 def test_flags_fail_int(d):
