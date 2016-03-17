@@ -145,7 +145,6 @@ class CGetPrefix:
         self.write_parent(pb)
         return "Successfully installed {}".format(pb.to_name())
 
-    @returns(six.string_types)
     @params(pb=PACKAGE_SOURCE_TYPES, test=bool)
     def build(self, pb, test=False, clean=False):
         pb = self.parse_pkg_build(pb)
