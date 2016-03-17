@@ -50,5 +50,5 @@ class Builder:
         self.prefix.log("test")
         util.try_until(
             lambda: self.build(target='check', config=config),
-            lambda: util.ctest(config=config, verbose=self.prefix.verbose, cwd=self.build_dir)
+            lambda: self.prefix.cmd.ctest((self.prefix.verbose and ['-VV'] or []) + ['-C', config])
         )

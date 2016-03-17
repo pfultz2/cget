@@ -166,9 +166,3 @@ class Commander:
             self._cmd(c, *args, **kwargs)
         return f
 
-def ctest(config=None, verbose=False, cwd=None, env=None):
-    args = [which('ctest')]
-    if verbose: args.append('-VV')
-    if config is not None: args.extend(['-C', config])
-    cmd(args, cwd=cwd, env=env)
-
