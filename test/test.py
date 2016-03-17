@@ -52,12 +52,13 @@ class TestDir:
 
     def cmd(self, *args, **kwargs):
         print(args)
-        cget.util.cmd(*args, shell=True, cwd=self.tmp_dir, **kwargs)
+        if 'cwd' not in kwargs: kwargs['cwd'] = self.tmp_dir
+        cget.util.cmd(*args, shell=True, **kwargs)
 
-    def cmds(self, g):
+    def cmds(self, g, **kwargs):
         for x in g:
             print(x)
-            self.cmd(x)
+            self.cmd(x, **kwargs)
 
     def write_to(self, f, content):
         p = self.get_path(f)
@@ -154,6 +155,18 @@ def test_build_dir(d):
         cget_cmd('build', '--verbose --test -C', get_path('libsimple')),
         cget_cmd('size', '0')
     ])
+
+@test
+def test_build_current_dir(d):
+    cwd = get_path('libsimple')
+    d.cmds([
+        cget_cmd('build', '--verbose --test'),
+        cget_cmd('size', '0'),
+        cget_cmd('build', '--verbose --test'),
+        cget_cmd('size', '0'),
+        cget_cmd('build', '--verbose --test -C'),
+        cget_cmd('size', '0')
+    ], cwd=cwd)
 
 @test
 def test_dir_alias(d):
