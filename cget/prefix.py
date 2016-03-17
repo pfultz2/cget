@@ -178,5 +178,3 @@ class CGetPrefix:
             libs.append(self.get_path(os.path.join(p, 'pkgconfig')))
         return os.pathsep.join(libs)
 
-    def pkg_config(self, args):
-        self.cmd.pkg_config(args)

@@ -111,7 +111,7 @@ def clean_command(prefix):
 @click.argument('args', nargs=-1, type=click.UNPROCESSED)
 def pkg_config_command(prefix, args):
     """ Pkg config """
-    prefix.pkg_config(args)
+    prefix.cmd.pkg_config(args)
 
 
 if __name__ == '__main__':
