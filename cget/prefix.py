@@ -1,4 +1,4 @@
-import os, shutil, shlex, six, inspect
+import os, shutil, shlex, six, inspect, click
 
 from cget.builder import Builder
 from cget.package import fname_to_pkg
@@ -21,8 +21,11 @@ class CGetPrefix:
     def __init__(self, prefix, verbose=False):
         self.prefix = prefix
         self.verbose = verbose
-        self.cmd = util.Commander(paths=[self.get_path('bin')], env=self.get_env())
+        self.cmd = util.Commander(paths=[self.get_path('bin')], env=self.get_env(), verbose=self.verbose)
         self.toolchain = self.write_cmake()
+
+    def log(self, *args):
+        if self.verbose: click.secho(' '.join([str(arg) for arg in args]), bold=True)
 
     def get_env(self):
         return {
@@ -54,8 +57,8 @@ class CGetPrefix:
     def get_path(self, path):
         return os.path.join(self.prefix, path)
 
-    def create_builder(self, name, verbose=False):
-        return Builder(self, os.path.join(self.prefix, 'tmp-' + name), self.verbose)
+    def create_builder(self, name):
+        return Builder(self, os.path.join(self.prefix, 'tmp-' + name))
 
     def get_package_directory(self, name=None):
         pkg_dir = os.path.join(self.prefix, 'pkg')

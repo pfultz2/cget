@@ -138,10 +138,15 @@ def cmd(args, env=None, **kwargs):
     child.communicate()
     if child.returncode != 0: raise BuildError("Error: " + str(args))
 
+def as_list(x):
+    if is_string(x): return [x]
+    else: return list(x)
+
 class Commander:
-    def __init__(self, paths=None, env=None):
+    def __init__(self, paths=None, env=None, verbose=False):
         self.paths = paths
         self.env = env
+        self.verbose = verbose
 
     def _get_paths_env(self):
         if self.paths is not None:
@@ -151,7 +156,9 @@ class Commander:
     def _cmd(self, name, args=None, options=None, env=None, **kwargs):
         exe = which(name, self.paths)
         option_args = ["{0}={1}".format(key, value) for key, value in six.iteritems(options or {})]
-        cmd([exe] + list(args or []) + option_args, env=merge(self.env, self._get_paths_env(), env))
+        c = [exe] + option_args + as_list(args or [])
+        if self.verbose: click.secho(' '.join(c), bold=True)
+        cmd(c, env=merge(self.env, self._get_paths_env(), env), **kwargs)
 
     def __getattr__(self, name):
         c = name.replace('_', '-')
@@ -159,18 +166,9 @@ class Commander:
             self._cmd(c, *args, **kwargs)
         return f
 
-def cmake(args, cwd=None, toolchain=None, env=None):
-    if toolchain is not None: args.insert(0, '-DCMAKE_TOOLCHAIN_FILE={0}'.format(toolchain))
-    cmd([which('cmake')]+args, cwd=cwd, env=env)
-
 def ctest(config=None, verbose=False, cwd=None, env=None):
     args = [which('ctest')]
     if verbose: args.append('-VV')
     if config is not None: args.extend(['-C', config])
     cmd(args, cwd=cwd, env=env)
-
-def pkg_config(args, path=None):
-    env = {}
-    if path is not None: env['PKG_CONFIG_PATH'] = path
-    cmd([which('pkg-config')]+list(args), env=env)
 
