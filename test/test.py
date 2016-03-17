@@ -1,4 +1,4 @@
-import os, tarfile, shutil, cget.util
+import os, tarfile, shutil, cget.util, multiprocessing
 
 from six.moves import shlex_quote
 
@@ -71,11 +71,21 @@ def run_test(f):
     print('*****************************************')
     print('* Running test: {}'.format(f.__name__))
     print('*****************************************')
-    with TestDir(get_path('tmp')) as d:
+    with TestDir(get_path('tmp-' + f.__name__)) as d:
         f(d)
     print('*****************************************')
     print('* Completed test: {}'.format(f.__name__))
     print('*****************************************')
+
+tests = []
+
+def test(f):
+    tests.append(f)
+    return f
+
+def run_tests():
+    p = multiprocessing.Pool()
+    p.map(run_test, tests)
 
 class CGetCmd:
     def __init__(self, prefix=None):
@@ -110,50 +120,50 @@ def test_install(url, lib=None, alias=None, remove='remove', size=1, prefix=None
     yield cg('clean')
     yield cg('list')
 
-@run_test
+@test
 def test_tar(d):
     ar = d.get_path('libsimple.tar.gz')
     create_ar(archive=ar, src=get_path('libsimple'))
     d.cmds(test_install(url=ar, lib='simple'))
 
-@run_test
+@test
 def test_tar_alias(d):
     ar = d.get_path('libsimple.tar.gz')
     create_ar(archive=ar, src=get_path('libsimple'))
     d.cmds(test_install(url='simple:'+ar, lib='simple', alias='simple'))
 
-@run_test
+@test
 def test_dir(d):
     d.cmds(test_install(url=get_path('libsimple'), lib='simple'))
 
-@run_test
+@test
 def test_prefix(d):
     d.cmds(test_install(url=get_path('libsimple'), lib='simple', prefix=d.get_path('usr')))
 
-@run_test
+@test
 def test_rm(d):
     d.cmds(test_install(url=get_path('libsimple'), lib='simple', remove='rm'))
 
-@run_test
+@test
 def test_dir_alias(d):
     d.cmds(test_install(url='simple:'+get_path('libsimple'), lib='simple', alias='simple'))
 
-@run_test
+@test
 def test_reqs_alias_file(d):
     reqs_file = d.write_to('reqs', [shlex_quote('simple:'+get_path('libsimple'))])
     d.cmds(test_install(url='--file {}'.format(reqs_file), lib='simple', alias='simple'))
 
-@run_test
+@test
 def test_reqs_file(d):
     reqs_file = d.write_to('reqs', [shlex_quote(get_path('libsimple'))])
     d.cmds(test_install(url='--file {}'.format(reqs_file), lib='simple', alias=get_path('libsimple')))
 
-@run_test
+@test
 def test_reqs_alias_f(d):
     reqs_file = d.write_to('reqs', [shlex_quote('simple:'+get_path('libsimple'))])
     d.cmds(test_install(url='-f {}'.format(reqs_file), lib='simple', alias='simple'))
 
-@run_test
+@test
 def test_reqs_f(d):
     reqs_file = d.write_to('reqs', [shlex_quote(get_path('libsimple'))])
     d.cmds(test_install(url='-f {}'.format(reqs_file), lib='simple', alias=get_path('libsimple')))
@@ -161,44 +171,44 @@ def test_reqs_f(d):
 
 # Basic app needs pkg-config
 if __has_pkg_config__:
-    @run_test
+    @test
     def test_app_dir(d):
         d.cmds(test_install(url=get_path('basicapp'), lib='simple', alias='simple', size=2))
 
-@run_test
+@test
 def test_flags_fail(d):
     should_fail(lambda: d.cmds([cget_cmd('install', '--verbose --test -DCGET_FLAG=Off', get_path('libsimpleflag'))]))
 
-@run_test
+@test
 def test_flags(d):
     p = get_path('libsimpleflag')
     d.cmds(test_install(url='-DCGET_FLAG=On {}'.format(p), alias=p))
 
-@run_test
+@test
 def test_flags_fail_int(d):
     should_fail(lambda: d.cmds([cget_cmd('install --verbose --test -DCGET_FLAG=0', get_path('libsimpleflag'))]))
 
-@run_test
+@test
 def test_flags_int(d):
     p = get_path('libsimpleflag')
     d.cmds(test_install(url='-DCGET_FLAG=1 {}'.format(p), alias=p))
 
-@run_test
+@test
 def test_flags_fail_define(d):
     should_fail(lambda: d.cmds([cget_cmd('install', '--verbose --test --define CGET_FLAG=Off', get_path('libsimpleflag'))]))
 
-@run_test
+@test
 def test_flags_define(d):
     d.cmds([cget_cmd('install', '--verbose --test --define CGET_FLAG=On', get_path('libsimpleflag'))])
 
-@run_test
+@test
 def test_flags_toolchain(d):
     d.cmds([
         cget_cmd('init', '--toolchain', get_toolchain('toolchainflag.cmake')),
         cget_cmd('install', '--verbose --test', get_path('libsimpleflag'))
     ])
 
-@run_test
+@test
 def test_flags_toolchain_prefix(d):
     cg = CGetCmd(d.get_path('usr'))
     d.cmds([
@@ -206,16 +216,17 @@ def test_flags_toolchain_prefix(d):
         cg('install', '--verbose --test', get_path('libsimpleflag'))
     ])
 
-@run_test
+@test
 def test_flags_reqs_f(d):
     p = get_path('libsimpleflag')
     reqs_file = d.write_to('reqs', [shlex_quote(p) + ' -DCGET_FLAG=On'])
     d.cmds(test_install(url='-f {}'.format(reqs_file), alias=p))
 
-@run_test
+@test
 def test_comments_reqs_f(d):
     p = get_path('libsimple')
     reqs_file = d.write_to('reqs', [shlex_quote(p) + ' #A comment', '# Another comment'])
     d.cmds(test_install(url='-f {}'.format(reqs_file), alias=p))
 
 
+if __name__ == '__main__': run_tests()
