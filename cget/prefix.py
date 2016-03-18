@@ -127,15 +127,16 @@ class CGetPrefix:
             self.install(dependent.of(pb), test_all=test_all)
 
     @returns(six.string_types)
-    @params(pb=PACKAGE_SOURCE_TYPES, test=bool, test_all=bool)
-    def install(self, pb, test=False, test_all=False):
+    @params(pb=PACKAGE_SOURCE_TYPES, test=bool, test_all=bool, update=bool)
+    def install(self, pb, test=False, test_all=False, update=False):
         pb = self.parse_pkg_build(pb)
         # Only install test packages if we are testing
         if pb.test != test and pb.test != test_all: return ""
         pkg_dir = self.get_package_directory(pb.to_fname())
         if os.path.exists(pkg_dir): 
             self.write_parent(pb)
-            return "Package {} already installed".format(pb.to_name())
+            if update: self.remove(pb)
+            else: return "Package {} already installed".format(pb.to_name())
         with self.create_builder(pb.to_fname()) as builder:
             # Fetch package
             src_dir = builder.fetch(pb.pkg_src.url)
@@ -170,6 +171,7 @@ class CGetPrefix:
         pb = self.parse_pkg_build(pb)
         shutil.rmtree(self.get_builder_path(pb.to_fname()))
 
+    @params(pkg=PACKAGE_SOURCE_TYPES)
     def remove(self, pkg):
         pkg = self.parse_pkg_src(pkg)
         pkg_dir = self.get_package_directory(pkg.to_fname())

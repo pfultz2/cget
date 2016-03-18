@@ -152,6 +152,28 @@ def test_rm(d):
     d.cmds(test_install(url=get_path('libsimple'), lib='simple', remove='rm'))
 
 @test
+def test_update(d):
+    d.cmds([
+        cget_cmd('install', '--verbose --test', 'app:'+get_path('simpleapp')),
+        cget_cmd('size', '1'),
+        cget_cmd('install', '--verbose --test --update', 'app:'+get_path('simpleapp')),
+        cget_cmd('size', '1'),
+        cget_cmd('rm', '--verbose -y', 'app'),
+        cget_cmd('size', '0')
+    ])
+
+@test
+def test_update_reqs(d):
+    d.cmds([
+        cget_cmd('install', '--verbose --test', 'app:'+get_path('simpleapp')),
+        cget_cmd('size', '1'),
+        cget_cmd('install', '--verbose --test --update', 'app:'+get_path('basicapp')),
+        cget_cmd('size', '2'),
+        cget_cmd('rm', '--verbose -y', 'app'),
+        cget_cmd('size', '1')
+    ])
+
+@test
 def test_build_dir(d):
     d.cmds([
         cget_cmd('build', '--verbose --test', get_path('libsimple')),
