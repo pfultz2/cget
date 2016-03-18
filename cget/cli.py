@@ -112,9 +112,11 @@ def size_command(prefix, n):
 
 @cli.command(name='clean')
 @use_prefix
-def clean_command(prefix):
+@click.option('-y', '--yes', is_flag=True, default=False)
+def clean_command(prefix, yes):
     """ Clear directory """
-    prefix.clean()
+    if not yes: yes = click.confirm("Are you sure you want to delete all cget packages in {}?".format(prefix.prefix))
+    if yes: prefix.clean()
 
 @cli.command(name='pkg-config', context_settings=dict(
     ignore_unknown_options=True,

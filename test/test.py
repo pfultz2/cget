@@ -106,7 +106,7 @@ def test_install(url, lib=None, alias=None, remove='remove', size=1, prefix=None
     cg = CGetCmd(prefix=prefix)
     yield cg('init')
     yield cg('list')
-    yield cg('clean')
+    yield cg('clean', '-y')
     yield cg('list')
     yield cg('size', '0')
     yield cg('install', '--verbose --test', url)
@@ -123,7 +123,7 @@ def test_install(url, lib=None, alias=None, remove='remove', size=1, prefix=None
     yield cg('install', '--verbose --test', url)
     yield cg('list')
     yield cg('size', str(size))
-    yield cg('clean')
+    yield cg('clean', '-y')
     yield cg('list')
     yield cg('size', '0')
 
