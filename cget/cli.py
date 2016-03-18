@@ -63,12 +63,14 @@ def install_command(prefix, pkgs, define, file, test, test_all):
 @cli.command(name='build')
 @use_prefix
 @click.option('-t', '--test', is_flag=True, help="Test package by running ctest or check target")
-@click.option('-C', '--clean', is_flag=True, help="Clean build directory before building")
+@click.option('-C', '--clean', is_flag=True, help="Remove build directory")
 @click.option('-D', '--define', multiple=True, help="Extra configuration variables to pass to CMake")
 @click.argument('pkg', nargs=1, default='.', type=click.STRING)
 def build_command(prefix, pkg, define, test, clean):
     """ Build package """
-    prefix.build(PackageBuild(pkg).merge(define), test=test, clean=clean)
+    pb = PackageBuild(pkg).merge(define)
+    if clean: prefix.build(pb, test=test)
+    else: prefix.build(pb, test=test)
 
 @cli.command(name='remove')
 @use_prefix

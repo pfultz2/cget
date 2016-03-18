@@ -87,6 +87,8 @@ def test(f):
 def run_tests():
     p = multiprocessing.Pool()
     p.map(run_test, tests)
+    p.close()
+    p.join()
 
 class CGetCmd:
     def __init__(self, prefix=None):

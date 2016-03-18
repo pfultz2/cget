@@ -57,12 +57,14 @@ class CGetPrefix:
     def get_path(self, path):
         return os.path.join(self.prefix, path)
 
-    @contextlib.contextmanager
-    def create_builder(self, name, tmp=True, clean=False):
+    def get_builder_path(self, name, tmp=True):
         pre = 'build-'
         if tmp: pre = 'tmp-'
-        d = os.path.join(self.prefix, pre + name)
-        if clean: shutil.rmtree(d)
+        return os.path.join(self.prefix, pre + name)
+
+    @contextlib.contextmanager
+    def create_builder(self, name, tmp=True):
+        d = self.get_builder_path(name, tmp)
         exists = os.path.exists(d)
         util.mkdir(d)
         yield Builder(self, d, exists)
@@ -146,10 +148,10 @@ class CGetPrefix:
         return "Successfully installed {}".format(pb.to_name())
 
     @params(pb=PACKAGE_SOURCE_TYPES, test=bool)
-    def build(self, pb, test=False, clean=False):
+    def build(self, pb, test=False):
         pb = self.parse_pkg_build(pb)
         src_dir = pb.pkg_src.url[7:] # Remove "file://"
-        with self.create_builder(pb.to_fname(), tmp=False, clean=clean) as builder:
+        with self.create_builder(pb.to_fname(), tmp=False) as builder:
             # Install any dependencies first
             self.install_deps(pb, src_dir)
             # Confirue and build
@@ -158,7 +160,10 @@ class CGetPrefix:
             # Run tests if enabled
             if test: builder.test(config='Release')
 
-
+    @params(pb=PACKAGE_SOURCE_TYPES)
+    def clean_build(self, pb):
+        pb = self.parse_pkg_build(pb)
+        shutil.rmtree(self.get_builder_path(pb.to_fname()))
 
     def remove(self, pkg):
         pkg = self.parse_pkg_src(pkg)
