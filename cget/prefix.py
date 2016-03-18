@@ -201,9 +201,8 @@ class CGetPrefix:
                     yield child
 
     def clean(self):
-        util.delete_dir(self.get_package_directory())
+        util.delete_dir(self.get_private_path())
         util.rm_symlink_dir(self.prefix)
-        os.remove(self.toolchain)
         util.rm_empty_dirs(self.prefix)
 
     def pkg_config_path(self):
