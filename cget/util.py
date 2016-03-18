@@ -64,6 +64,9 @@ def ls(p, predicate=lambda x:True):
     else:
         return []
 
+def delete_dir(path):
+    if path is not None and os.path.exists(path): shutil.rmtree(path)
+
 def symlink_dir(src, dst):
     for root, dirs, files in os.walk(src):
         for file in files:

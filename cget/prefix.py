@@ -33,7 +33,7 @@ class CGetPrefix:
         }
 
     def write_cmake(self, always_write=False, **kwargs):
-        return util.mkfile(self.prefix, 'cget.cmake', self.generate_cmake_toolchain(**kwargs), always_write=always_write)
+        return util.mkfile(self.get_private_path(), 'cget.cmake', self.generate_cmake_toolchain(**kwargs), always_write=always_write)
 
     @returns(inspect.isgenerator)
     def generate_cmake_toolchain(self, toolchain=None, cxxflags=None, ldflags=None, std=None):
@@ -57,10 +57,15 @@ class CGetPrefix:
     def get_path(self, path):
         return os.path.join(self.prefix, path)
 
+    def get_private_path(self, path=None):
+        p = self.get_path('cget')
+        if path is None: return p
+        else: return os.path.join(p, path)
+
     def get_builder_path(self, name, tmp=True):
         pre = 'build-'
         if tmp: pre = 'tmp-'
-        return os.path.join(self.prefix, pre + name)
+        return self.get_private_path(pre + name)
 
     @contextlib.contextmanager
     def create_builder(self, name, tmp=True):
@@ -71,12 +76,12 @@ class CGetPrefix:
         if tmp: shutil.rmtree(d)
 
     def get_package_directory(self, name=None):
-        pkg_dir = os.path.join(self.prefix, 'pkg')
+        pkg_dir = self.get_private_path('pkg')
         if name is None: return pkg_dir
         else: return os.path.join(pkg_dir, name)
 
     def get_deps_directory(self, name=None):
-        deps_dir = os.path.join(self.prefix, 'deps')
+        deps_dir = self.get_private_path('deps')
         if name is None: return deps_dir
         else: return os.path.join(deps_dir, name)
 
@@ -195,13 +200,8 @@ class CGetPrefix:
                 for child in self.list(p, recursive=recursive, top=False):
                     yield child
 
-
-    def delete_dir(self, d):
-        path = os.path.join(self.prefix, d)
-        if os.path.exists(path): shutil.rmtree(path)
-
     def clean(self):
-        self.delete_dir('pkg')
+        util.delete_dir(self.get_package_directory())
         util.rm_symlink_dir(self.prefix)
         os.remove(self.toolchain)
         util.rm_empty_dirs(self.prefix)

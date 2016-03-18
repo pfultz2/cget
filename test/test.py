@@ -120,8 +120,12 @@ def test_install(url, lib=None, alias=None, remove='remove', size=1, prefix=None
     else: yield cg(remove, '--verbose -y', alias)
     yield cg('size', '0')
     yield cg('list')
+    yield cg('install', '--verbose --test', url)
+    yield cg('list')
+    yield cg('size', str(size))
     yield cg('clean')
     yield cg('list')
+    yield cg('size', '0')
 
 @test
 def test_tar(d):
