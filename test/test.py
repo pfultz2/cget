@@ -158,14 +158,15 @@ def test_build_dir(d):
 
 @test
 def test_build_current_dir(d):
+    cg = CGetCmd(prefix=d.get_path('cget'))
     cwd = get_path('libsimple')
     d.cmds([
-        cget_cmd('build', '--verbose --test'),
-        cget_cmd('size', '0'),
-        cget_cmd('build', '--verbose --test'),
-        cget_cmd('size', '0'),
-        cget_cmd('build', '--verbose --test -C'),
-        cget_cmd('size', '0')
+        cg('build', '--verbose --test'),
+        cg('size', '0'),
+        cg('build', '--verbose --test'),
+        cg('size', '0'),
+        cg('build', '--verbose --test -C'),
+        cg('size', '0')
     ], cwd=cwd)
 
 @test
