@@ -85,6 +85,7 @@ def test(f):
     return f
 
 def run_tests():
+    # for t in tests: run_test(t)
     p = multiprocessing.Pool()
     p.map(run_test, tests)
     p.close()
