@@ -202,6 +202,13 @@ def test_dir_alias(d):
     d.cmds(test_install(url='simple:'+get_path('libsimple'), lib='simple', alias='simple'))
 
 @test
+def test_init_cpp11(d):
+    d.cmds([
+        cget_cmd('init', '--std=c++0x'),
+        cget_cmd('install', '--verbose --test', get_path('libsimple11'))
+    ])
+
+@test
 def test_reqs_alias_file(d):
     reqs_file = d.write_to('reqs', [shlex_quote('simple:'+get_path('libsimple'))])
     d.cmds(test_install(url='--file {}'.format(reqs_file), lib='simple', alias='simple'))
