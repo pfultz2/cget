@@ -15,6 +15,22 @@ def parse_alias(s):
     if i > 0: return s[0:i], s[i+1:]
     else: return None, s
 
+def cmake_set(var, val, quote=True, cache=None, description=None):
+    x = val
+    if quote: x = util.quote(val)
+    if cache is None:
+        yield "set({0} {1})".format(var, x)
+    else:
+        yield 'set({0} {1} CACHE {2} "{3}")'.format(var, x, cache, description or '')
+
+def cmake_if(cond, *args):
+    yield 'if ({})'.format(cond)
+    for arg in args:
+        for line in arg:
+            yield '    ' + line
+    yield 'endif()'
+
+
 PACKAGE_SOURCE_TYPES = (six.string_types, PackageSource, PackageBuild)
 
 class CGetPrefix:
@@ -33,26 +49,27 @@ class CGetPrefix:
         }
 
     def write_cmake(self, always_write=False, **kwargs):
-        return util.mkfile(self.get_private_path(), 'cget.cmake', self.generate_cmake_toolchain(**kwargs), always_write=always_write)
+        return util.mkfile(self.get_private_path(), 'cget.cmake', util.flat(self.generate_cmake_toolchain(**kwargs)), always_write=always_write)
 
     @returns(inspect.isgenerator)
     def generate_cmake_toolchain(self, toolchain=None, cxxflags=None, ldflags=None, std=None):
-        yield 'set(CGET_PREFIX {})'.format(util.quote(self.prefix))
-        yield 'set(CMAKE_PREFIX_PATH {})'.format(util.quote(self.prefix))
-        if toolchain is not None: yield 'include({})'.format(util.quote(os.path.abspath(toolchain)))
-        yield 'if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)'
-        yield '    set(CMAKE_INSTALL_PREFIX {})'.format(util.quote(self.prefix))
-        yield 'endif()'
-        # yield 'set(CMAKE_MODULE_PATH  ${CMAKE_PREFIX_PATH}/lib/cmake)'
+        set_ = cmake_set
+        if_ = cmake_if
+        yield set_('CGET_PREFIX', self.prefix)
+        yield set_('CMAKE_PREFIX_PATH', self.prefix)
+        if toolchain is not None: yield ['include({})'.format(util.quote(os.path.abspath(toolchain)))]
+        yield if_('CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT',
+            set_('CMAKE_INSTALL_PREFIX', self.prefix)
+        )
         if std is not None:
-            yield 'if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")'
-            yield '    set(CMAKE_CXX_STD_FLAG "-std={}")'.format(std)
-            yield 'endif()'
+            yield if_('NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC"',
+                set_('CMAKE_CXX_STD_FLAG', "-std={}".format(std))
+            )
         if cxxflags is not None or std is not None:
-            yield 'set(CMAKE_CXX_FLAGS "$ENV{{CXXFLAGS}} ${{CMAKE_CXX_FLAGS_INIT}} ${{CMAKE_CXX_STD_FLAG}} {}" CACHE STRING "")'.format(cxxflags or '')
+            yield set_('CMAKE_CXX_FLAGS', "$ENV{{CXXFLAGS}} ${{CMAKE_CXX_FLAGS_INIT}} ${{CMAKE_CXX_STD_FLAG}} {}".format(cxxflags or ''), cache='STRING')
         if ldflags is not None:
             for link_type in ['SHARED', 'MODULE', 'EXE']:
-                yield 'set(CMAKE_{1}_LINKER_FLAGS "$ENV{{LDFLAGS}} {}" CACHE STRING "")'.format(ldflags, link_type)
+                yield set_('CMAKE_{}_LINKER_FLAGS'.format(link_type), "$ENV{{LDFLAGS}} {0}".format(ldflags), cache='STRING')
 
     def get_path(self, *paths):
         return os.path.join(self.prefix, *paths)

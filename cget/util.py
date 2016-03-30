@@ -136,6 +136,11 @@ def merge(*args):
         result.update(dict(d or {}))
     return result
 
+def flat(*args):
+    for arg in args:
+        for x in arg:
+            for y in x: yield y
+
 def cmd(args, env=None, **kwargs):
     child = subprocess.Popen(args, env=merge(os.environ, env), **kwargs)
     child.communicate()
