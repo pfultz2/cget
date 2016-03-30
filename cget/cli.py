@@ -70,7 +70,7 @@ def install_command(prefix, pkgs, define, file, test, test_all, update):
 def build_command(prefix, pkg, define, test, clean):
     """ Build package """
     pb = PackageBuild(pkg).merge(define)
-    if clean: prefix.build(pb, test=test)
+    if clean: prefix.clean_build(pb)
     else: prefix.build(pb, test=test)
 
 @cli.command(name='remove')

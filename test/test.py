@@ -68,15 +68,21 @@ class TestDir:
     def get_path(self, p):
         return os.path.join(self.tmp_dir, p)
 
+def print_banner(s):
+    print('********************************************************************************')
+    print('* {}'.format(s))
+    print('********************************************************************************')
+
 def run_test(f):
-    print('*****************************************')
-    print('* Running test: {}'.format(f.__name__))
-    print('*****************************************')
-    with TestDir(get_path('tmp-' + f.__name__)) as d:
-        f(d)
-    print('*****************************************')
-    print('* Completed test: {}'.format(f.__name__))
-    print('*****************************************')
+    print_banner('Running test: {}'.format(f.__name__))
+    try:
+        with TestDir(get_path('tmp-' + f.__name__)) as d:
+            f(d)
+    except:
+        print_banner('Failed test: {}'.format(f.__name__))
+        raise
+    print_banner('Completed test: {}'.format(f.__name__))
+
 
 tests = []
 

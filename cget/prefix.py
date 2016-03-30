@@ -78,13 +78,13 @@ class CGetPrefix:
     def get_private_path(self, *paths):
         return self.get_path('cget', *paths)
 
-    def get_builder_path(self, name, tmp=True):
+    def get_builder_path(self, name, tmp=False):
         pre = ''
         if tmp: pre = 'tmp-'
         return self.get_private_path('build', pre + name)
 
     @contextlib.contextmanager
-    def create_builder(self, name, tmp=True):
+    def create_builder(self, name, tmp=False):
         d = self.get_builder_path(name, tmp)
         exists = os.path.exists(d)
         util.mkdir(d)
@@ -149,7 +149,7 @@ class CGetPrefix:
             self.write_parent(pb)
             if update: self.remove(pb)
             else: return "Package {} already installed".format(pb.to_name())
-        with self.create_builder(pb.to_fname()) as builder:
+        with self.create_builder(pb.to_fname(), tmp=True) as builder:
             # Fetch package
             src_dir = builder.fetch(pb.pkg_src.url)
             # Install any dependencies first
@@ -169,7 +169,7 @@ class CGetPrefix:
     def build(self, pb, test=False):
         pb = self.parse_pkg_build(pb)
         src_dir = pb.pkg_src.url[7:] # Remove "file://"
-        with self.create_builder(pb.to_fname(), tmp=False) as builder:
+        with self.create_builder(pb.to_fname()) as builder:
             # Install any dependencies first
             self.install_deps(pb, src_dir)
             # Configure and build
