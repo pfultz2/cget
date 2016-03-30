@@ -87,9 +87,11 @@ def test(f):
 def run_tests():
     # for t in tests: run_test(t)
     p = multiprocessing.Pool()
-    p.map(run_test, tests)
+    r = p.map_async(run_test, tests)
+    r.wait()
     p.close()
     p.join()
+    if not r.successful(): raise TestError()
 
 class CGetCmd:
     def __init__(self, prefix=None):
@@ -229,6 +231,9 @@ def test_reqs_f(d):
     reqs_file = d.write_to('reqs', [shlex_quote(get_path('libsimple'))])
     d.cmds(test_install(url='-f {}'.format(reqs_file), lib='simple', alias=get_path('libsimple')))
 
+@test
+def test_app_include_dir(d):
+    d.cmds(test_install(url=get_path('basicapp-include'), lib='simple', alias='simple', size=2))
 
 # Basic app needs pkg-config
 if __has_pkg_config__:
