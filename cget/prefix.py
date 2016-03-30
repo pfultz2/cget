@@ -54,18 +54,16 @@ class CGetPrefix:
             for link_type in ['SHARED', 'MODULE', 'EXE']:
                 yield 'set(CMAKE_{1}_LINKER_FLAGS "$ENV{{LDFLAGS}} {}" CACHE STRING "")'.format(ldflags, link_type)
 
-    def get_path(self, path):
-        return os.path.join(self.prefix, path)
+    def get_path(self, *paths):
+        return os.path.join(self.prefix, *paths)
 
-    def get_private_path(self, path=None):
-        p = self.get_path('cget')
-        if path is None: return p
-        else: return os.path.join(p, path)
+    def get_private_path(self, *paths):
+        return self.get_path('cget', *paths)
 
     def get_builder_path(self, name, tmp=True):
-        pre = 'build-'
+        pre = ''
         if tmp: pre = 'tmp-'
-        return self.get_private_path(pre + name)
+        return self.get_private_path('build', pre + name)
 
     @contextlib.contextmanager
     def create_builder(self, name, tmp=True):
@@ -75,15 +73,11 @@ class CGetPrefix:
         yield Builder(self, d, exists)
         if tmp: shutil.rmtree(d)
 
-    def get_package_directory(self, name=None):
-        pkg_dir = self.get_private_path('pkg')
-        if name is None: return pkg_dir
-        else: return os.path.join(pkg_dir, name)
+    def get_package_directory(self, *name):
+        return self.get_private_path('pkg', *name)
 
-    def get_deps_directory(self, name=None):
-        deps_dir = self.get_private_path('deps')
-        if name is None: return deps_dir
-        else: return os.path.join(deps_dir, name)
+    def get_deps_directory(self, *name):
+        return self.get_private_path('deps', *name)
 
     @returns(PackageSource)
     @params(pkg=PACKAGE_SOURCE_TYPES)
@@ -160,7 +154,7 @@ class CGetPrefix:
         with self.create_builder(pb.to_fname(), tmp=False) as builder:
             # Install any dependencies first
             self.install_deps(pb, src_dir)
-            # Confirue and build
+            # Configure and build
             if not builder.exists: builder.configure(src_dir, defines=pb.define)
             builder.build(config='Release')
             # Run tests if enabled
@@ -210,6 +204,6 @@ class CGetPrefix:
     def pkg_config_path(self):
         libs = []
         for p in ['lib', 'lib64', 'share']:
-            libs.append(self.get_path(os.path.join(p, 'pkgconfig')))
+            libs.append(self.get_path(p, 'pkgconfig'))
         return os.pathsep.join(libs)
 
