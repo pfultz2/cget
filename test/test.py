@@ -146,14 +146,14 @@ def test_build(url=None, size=0, defines=None, prefix=None):
     cg = CGetCmd(prefix=prefix)
     yield cg('init')
     yield cg('size', '0')
-    yield cg('build', '--verbose -C', url)
+    yield cg('build', '--verbose -C -y', url)
     yield cg('size', '0')
     yield cg('build', '--verbose --test', defines, url)
     yield cg('size', str(size))
     yield cg('build', '--verbose --test', defines, url)
     yield cg('size', str(size))
     yield cg('build', '--verbose --path', url)
-    yield cg('build', '--verbose --test -C', defines, url)
+    yield cg('build', '--verbose --test -C -y', defines, url)
     yield cg('size', str(size))
 
 @test
