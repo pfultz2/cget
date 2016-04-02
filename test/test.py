@@ -99,6 +99,12 @@ def run_tests():
     p.join()
     if not r.successful(): raise TestError()
 
+def remove_empty_elements(xs):
+    for x in xs:
+        if x is not None:
+            s = str(x)
+            if len(s) > 0: yield s
+
 class CGetCmd:
     def __init__(self, prefix=None):
         self.prefix = prefix
@@ -106,7 +112,7 @@ class CGetCmd:
     def __call__(self, arg, *args):
         p = [__cget_exe__, arg]
         if self.prefix is not None: p.append('--prefix {}'.format(self.prefix))
-        return ' '.join(p+list(args))
+        return ' '.join(p+list(remove_empty_elements(args)))
 
 def cget_cmd(*args):
     return CGetCmd()(*args)
@@ -135,6 +141,20 @@ def test_install(url, lib=None, alias=None, remove='remove', size=1, prefix=None
     yield cg('clean', '-y')
     yield cg('list')
     yield cg('size', '0')
+
+def test_build(url=None, size=0, defines=None, prefix=None):
+    cg = CGetCmd(prefix=prefix)
+    yield cg('init')
+    yield cg('size', '0')
+    yield cg('build', '--verbose -C', url)
+    yield cg('size', '0')
+    yield cg('build', '--verbose --test', defines, url)
+    yield cg('size', str(size))
+    yield cg('build', '--verbose --test', defines, url)
+    yield cg('size', str(size))
+    yield cg('build', '--verbose --path', url)
+    yield cg('build', '--verbose --test -C', defines, url)
+    yield cg('size', str(size))
 
 @test
 def test_tar(d):
@@ -184,27 +204,12 @@ def test_update_reqs(d):
 
 @test
 def test_build_dir(d):
-    d.cmds([
-        cget_cmd('build', '--verbose --test', get_path('libsimple')),
-        cget_cmd('size', '0'),
-        cget_cmd('build', '--verbose --test', get_path('libsimple')),
-        cget_cmd('size', '0'),
-        cget_cmd('build', '--verbose --test -C', get_path('libsimple')),
-        cget_cmd('size', '0')
-    ])
+    d.cmds(test_build(get_path('libsimple')))
 
 @test
 def test_build_current_dir(d):
-    cg = CGetCmd(prefix=d.get_path('cget'))
     cwd = get_path('libsimple')
-    d.cmds([
-        cg('build', '--verbose --test'),
-        cg('size', '0'),
-        cg('build', '--verbose --test'),
-        cg('size', '0'),
-        cg('build', '--verbose --test -C'),
-        cg('size', '0')
-    ], cwd=cwd)
+    d.cmds(test_build(prefix=d.get_path('cget')), cwd=cwd)
 
 @test
 def test_dir_alias(d):
@@ -249,15 +254,7 @@ if __has_pkg_config__:
 
     @test
     def test_build_app_dir(d):
-        d.cmds([
-            cget_cmd('size', '0'),
-            cget_cmd('build', '--verbose --test', get_path('basicapp')),
-            cget_cmd('size', '1'),
-            cget_cmd('build', '--verbose --test', get_path('basicapp')),
-            cget_cmd('size', '1'),
-            cget_cmd('build', '--verbose --test -C', get_path('basicapp')),
-            cget_cmd('size', '1')
-        ])
+        d.cmds(test_build(get_path('basicapp'), size=1))
 
 @test
 def test_flags_fail(d):
@@ -270,14 +267,7 @@ def test_flags(d):
 
 @test
 def test_build_flags(d):
-    d.cmds([
-        cget_cmd('build', '--verbose --test -DCGET_FLAG=On', get_path('libsimpleflag')),
-        cget_cmd('size', '0'),
-        cget_cmd('build', '--verbose --test -DCGET_FLAG=On', get_path('libsimpleflag')),
-        cget_cmd('size', '0'),
-        cget_cmd('build', '--verbose --test -C -DCGET_FLAG=On', get_path('libsimpleflag')),
-        cget_cmd('size', '0')
-    ])
+    d.cmds(test_build(get_path('libsimpleflag'), defines='-DCGET_FLAG=On'))
 
 @test
 def test_flags_fail_int(d):

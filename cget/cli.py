@@ -65,12 +65,14 @@ def install_command(prefix, pkgs, define, file, test, test_all, update):
 @use_prefix
 @click.option('-t', '--test', is_flag=True, help="Test package by running ctest or check target")
 @click.option('-C', '--clean', is_flag=True, help="Remove build directory")
+@click.option('-P', '--path', is_flag=True, help="Show path to build directory")
 @click.option('-D', '--define', multiple=True, help="Extra configuration variables to pass to CMake")
 @click.argument('pkg', nargs=1, default='.', type=click.STRING)
-def build_command(prefix, pkg, define, test, clean):
+def build_command(prefix, pkg, define, test, clean, path):
     """ Build package """
     pb = PackageBuild(pkg).merge(define)
-    if clean: prefix.clean_build(pb)
+    if path: click.echo(prefix.build_path(pb))
+    elif clean: prefix.build_clean(pb)
     else: prefix.build(pb, test=test)
 
 @cli.command(name='remove')

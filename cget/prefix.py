@@ -179,9 +179,14 @@ class CGetPrefix:
             if test: builder.test(config='Release')
 
     @params(pb=PACKAGE_SOURCE_TYPES)
-    def clean_build(self, pb):
+    def build_path(self, pb):
         pb = self.parse_pkg_build(pb)
-        shutil.rmtree(self.get_builder_path(pb.to_fname()))
+        return self.get_builder_path(pb.to_fname())
+
+    @params(pb=PACKAGE_SOURCE_TYPES)
+    def build_clean(self, pb):
+        p = self.build_path(pb)
+        if os.path.exists(p): shutil.rmtree(p)
 
     @params(pkg=PACKAGE_SOURCE_TYPES)
     def remove(self, pkg):
