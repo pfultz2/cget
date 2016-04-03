@@ -188,6 +188,15 @@ class CGetPrefix:
         p = self.build_path(pb)
         if os.path.exists(p): shutil.rmtree(p)
 
+    @params(pb=PACKAGE_SOURCE_TYPES)
+    def build_configure(self, pb):
+        pb = self.parse_pkg_build(pb)
+        src_dir = pb.pkg_src.url[7:] # Remove "file://"
+        if 'ccmake' in self.cmd:
+            self.cmd.ccmake([src_dir], cwd=self.build_path(pb))
+        elif 'cmake-gui' in self.cmd:
+            self.cmd.cmake_gui([src_dir], cwd=self.build_path(pb))
+
     @params(pkg=PACKAGE_SOURCE_TYPES)
     def remove(self, pkg):
         pkg = self.parse_pkg_src(pkg)

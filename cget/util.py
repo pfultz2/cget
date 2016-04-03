@@ -121,14 +121,15 @@ def retrieve_url(url, dst):
 def extract_ar(archive, dst):
     tarfile.open(archive).extractall(dst)
 
-def which(p, paths=None):
+def which(p, paths=None, throws=True):
     exes = [p+x for x in ['', '.exe', '.bat']]
     for dirname in list(paths or [])+os.environ['PATH'].split(os.pathsep):
         for exe in exes:
             candidate = os.path.join(os.path.expanduser(dirname), exe)
             if os.path.exists(candidate):
                 return candidate
-    raise BuildError("Can't find file %s" % p)
+    if throws: raise BuildError("Can't find file %s" % p)
+    else: return None
 
 def merge(*args):
     result = {}
@@ -174,3 +175,11 @@ class Commander:
             self._cmd(c, *args, **kwargs)
         return f
 
+    def __getitem__(self, name):
+        def f(*args, **kwargs):
+            self._cmd(name, *args, **kwargs)
+        return f
+
+    def __contains__(self, name):
+        exe = which(name, self.paths, throws=False)
+        return exe is not None
