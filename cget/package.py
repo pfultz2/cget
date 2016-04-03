@@ -27,6 +27,11 @@ class PackageSource:
         if self.name is None: return encode_url(self.url)
         else: return self.name.replace('/', '__')
 
+    def get_src_dir(self):
+        if self.url.startswith('file://'):
+            return self.url[7:] # Remove "file://"
+        raise TypeError()
+
 
 def fname_to_pkg(fname):
     if fname.startswith('_url_'): return PackageSource(name=decode_url(fname), fname=fname)

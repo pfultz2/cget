@@ -168,7 +168,7 @@ class CGetPrefix:
     @params(pb=PACKAGE_SOURCE_TYPES, test=bool)
     def build(self, pb, test=False):
         pb = self.parse_pkg_build(pb)
-        src_dir = pb.pkg_src.url[7:] # Remove "file://"
+        src_dir = pb.pkg_src.get_src_dir()
         with self.create_builder(pb.to_fname()) as builder:
             # Install any dependencies first
             self.install_deps(pb, src_dir)
@@ -191,7 +191,7 @@ class CGetPrefix:
     @params(pb=PACKAGE_SOURCE_TYPES)
     def build_configure(self, pb):
         pb = self.parse_pkg_build(pb)
-        src_dir = pb.pkg_src.url[7:] # Remove "file://"
+        src_dir = pb.pkg_src.get_src_dir()
         if 'ccmake' in self.cmd:
             self.cmd.ccmake([src_dir], cwd=self.build_path(pb))
         elif 'cmake-gui' in self.cmd:
