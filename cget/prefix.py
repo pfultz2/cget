@@ -181,7 +181,7 @@ class CGetPrefix:
     @params(pb=PACKAGE_SOURCE_TYPES)
     def build_path(self, pb):
         pb = self.parse_pkg_build(pb)
-        return self.get_builder_path(pb.to_fname())
+        return os.path.join(self.get_builder_path(pb.to_fname()), 'build')
 
     @params(pb=PACKAGE_SOURCE_TYPES)
     def build_clean(self, pb):
