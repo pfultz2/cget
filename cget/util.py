@@ -151,6 +151,17 @@ def as_list(x):
     if is_string(x): return [x]
     else: return list(x)
 
+def to_define_dict(xs):
+    result = {}
+    for x in xs:
+        if '=' in x:
+            p = x.split('=')
+            result[p[0]] = p[1]
+        else:
+            result[x] = ''
+    return result
+
+
 class Commander:
     def __init__(self, paths=None, env=None, verbose=False):
         self.paths = paths
