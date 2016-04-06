@@ -105,11 +105,11 @@ class CGetPrefix:
         yield Builder(self, d, exists)
         if tmp: shutil.rmtree(d)
 
-    def get_package_directory(self, *name):
-        return self.get_private_path('pkg', *name)
+    def get_package_directory(self, *dirs):
+        return self.get_private_path('pkg', *dirs)
 
-    def get_deps_directory(self, *name):
-        return self.get_private_path('deps', *name)
+    def get_deps_directory(self, name, *dirs):
+        return self.get_package_directory(name, 'deps', *dirs)
 
     @returns(PackageSource)
     @params(pkg=PACKAGE_SOURCE_TYPES)
@@ -159,6 +159,7 @@ class CGetPrefix:
         # Only install test packages if we are testing
         if pb.test != test and pb.test != test_all: return ""
         pkg_dir = self.get_package_directory(pb.to_fname())
+        install_dir = self.get_package_directory(pb.to_fname(), 'install')
         if os.path.exists(pkg_dir): 
             self.write_parent(pb)
             if update: self.remove(pb)
@@ -169,13 +170,13 @@ class CGetPrefix:
             # Install any dependencies first
             self.install_deps(pb, src_dir, test_all=test_all)
             # Confirue and build
-            builder.configure(src_dir, defines=pb.define, install_prefix=pkg_dir)
+            builder.configure(src_dir, defines=pb.define, install_prefix=install_dir)
             builder.build(config='Release')
             # Run tests if enabled
             if test or test_all: builder.test(config='Release')
             # Install
             builder.build(target='install', config='Release')
-            util.symlink_dir(pkg_dir, self.prefix)
+            util.symlink_dir(install_dir, self.prefix)
         self.write_parent(pb)
         return "Successfully installed {}".format(pb.to_name())
 
@@ -215,10 +216,8 @@ class CGetPrefix:
     def remove(self, pkg):
         pkg = self.parse_pkg_src(pkg)
         pkg_dir = self.get_package_directory(pkg.to_fname())
-        deps_dir = self.get_deps_directory(pkg.to_fname())
         if os.path.exists(pkg_dir):
             shutil.rmtree(pkg_dir)
-            if os.path.exists(deps_dir): shutil.rmtree(deps_dir)
             util.rm_symlink_dir(self.prefix)
             util.rm_empty_dirs(self.prefix)
             return "Removed package {}".format(pkg.name)
