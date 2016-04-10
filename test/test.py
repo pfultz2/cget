@@ -155,6 +155,8 @@ def test_build(url=None, size=0, defines=None, prefix=None):
     yield cg('build', '--verbose --path', url)
     yield cg('build', '--verbose --test -C -y', defines, url)
     yield cg('size', str(size))
+    yield cg('build', '--verbose --test', defines, url)
+    yield cg('size', str(size))
 
 @test
 def test_tar(d):

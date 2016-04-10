@@ -185,7 +185,8 @@ class CGetPrefix:
 
     @params(pb=PACKAGE_SOURCE_TYPES)
     def build_clean(self, pb):
-        p = self.build_path(pb)
+        pb = self.parse_pkg_build(pb)
+        p = self.get_builder_path(pb.to_fname())
         if os.path.exists(p): shutil.rmtree(p)
 
     @params(pb=PACKAGE_SOURCE_TYPES)
