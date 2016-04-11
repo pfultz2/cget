@@ -134,16 +134,14 @@ class CGetPrefix:
     def write_parent(self, pb):
         if pb.parent is not None: util.mkfile(self.get_deps_directory(pb.to_fname()), pb.parent, pb.parent)
 
-    def install_deps(self, pb, d, test_all=False):
+    def install_deps(self, pb, d, test=False, test_all=False):
         for dependent in self.from_file(os.path.join(d, 'requirements.txt')):
-            self.install(dependent.of(pb), test_all=test_all)
+            if not dependent.test or (dependent.test == test): self.install(dependent.of(pb), test_all=test_all)
 
     @returns(six.string_types)
     @params(pb=PACKAGE_SOURCE_TYPES, test=bool, test_all=bool, update=bool)
     def install(self, pb, test=False, test_all=False, update=False):
         pb = self.parse_pkg_build(pb)
-        # Only install test packages if we are testing
-        if pb.test != test and pb.test != test_all: return ""
         pkg_dir = self.get_package_directory(pb.to_fname())
         if os.path.exists(pkg_dir): 
             self.write_parent(pb)
@@ -153,7 +151,7 @@ class CGetPrefix:
             # Fetch package
             src_dir = builder.fetch(pb.pkg_src.url)
             # Install any dependencies first
-            self.install_deps(pb, src_dir, test_all=test_all)
+            self.install_deps(pb, src_dir, test=test, test_all=test_all)
             # Confirue and build
             builder.configure(src_dir, defines=pb.define, install_prefix=pkg_dir)
             builder.build(config='Release')
@@ -171,7 +169,7 @@ class CGetPrefix:
         src_dir = pb.pkg_src.get_src_dir()
         with self.create_builder(pb.to_fname()) as builder:
             # Install any dependencies first
-            self.install_deps(pb, src_dir)
+            self.install_deps(pb, src_dir, test=test)
             # Configure and build
             if not builder.exists: builder.configure(src_dir, defines=pb.define)
             builder.build(config='Release')

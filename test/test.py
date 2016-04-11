@@ -259,6 +259,28 @@ if __has_pkg_config__:
         d.cmds(test_build(get_path('basicapp'), size=1))
 
 @test
+def test_install_simple_app_test_with_test(d):
+    d.cmds(test_install(url=get_path('simpleapptest'), lib='simple', alias='simple', size=2))
+
+@test
+def test_install_simple_app_test_without_test(d):
+    d.cmds([
+        cget_cmd('install', '--verbose', get_path('simpleapptest')),
+        cget_cmd('size', '1')
+    ])
+
+@test
+def test_build_simple_app_test_with_test(d):
+    d.cmds(test_build(get_path('simpleapptest'), size=1))
+
+@test
+def test_build_simple_app_test_without_test(d):
+    d.cmds([
+        cget_cmd('build', '--verbose', get_path('simpleapptest')),
+        cget_cmd('size', '0')
+    ])
+
+@test
 def test_flags_fail(d):
     should_fail(lambda: d.cmds([cget_cmd('install', '--verbose --test -DCGET_FLAG=Off', get_path('libsimpleflag'))]))
 
