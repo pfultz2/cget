@@ -117,11 +117,12 @@ class CGetCmd:
 def cget_cmd(*args):
     return CGetCmd()(*args)
 
-def test_install(url, lib=None, alias=None, remove='remove', size=1, prefix=None):
+def test_install(url, lib=None, alias=None, init=None, remove='remove', size=1, prefix=None):
     cg = CGetCmd(prefix=prefix)
-    yield cg('init')
+    yield cg('init', init)
     yield cg('list')
     yield cg('clean', '-y')
+    yield cg('init', init)
     yield cg('list')
     yield cg('size', '0')
     yield cg('install', '--verbose --test', url)
@@ -142,9 +143,9 @@ def test_install(url, lib=None, alias=None, remove='remove', size=1, prefix=None
     yield cg('list')
     yield cg('size', '0')
 
-def test_build(url=None, size=0, defines=None, prefix=None):
+def test_build(url=None, init=None, size=0, defines=None, prefix=None):
     cg = CGetCmd(prefix=prefix)
-    yield cg('init')
+    yield cg('init', init)
     yield cg('size', '0')
     yield cg('build', '--verbose -C -y', url)
     yield cg('size', '0')
@@ -290,15 +291,27 @@ def test_flags(d):
     d.cmds(test_install(url='-DCGET_FLAG=On {}'.format(p), alias=p))
 
 @test
+def test_flags_init(d):
+    d.cmds(test_install(init='-DCGET_FLAG=On', url=get_path('libsimpleflag')))
+
+@test
 def test_build_flags(d):
     d.cmds(test_build(get_path('libsimpleflag'), defines='-DCGET_FLAG=On'))
 
 @test
-def test_flags_fail_int(d):
+def test_build_flags_init(d):
+    d.cmds(test_build(init='-DCGET_FLAG=On', url=get_path('libsimpleflag')))
+
+@test
+def test_flags_init_integer(d):
+    d.cmds(test_install(init='-DCGET_FLAG=1', url=get_path('libsimpleflag')))
+
+@test
+def test_flags_fail_integer(d):
     should_fail(lambda: d.cmds([cget_cmd('install --verbose --test -DCGET_FLAG=0', get_path('libsimpleflag'))]))
 
 @test
-def test_flags_int(d):
+def test_flags_integer(d):
     p = get_path('libsimpleflag')
     d.cmds(test_install(url='-DCGET_FLAG=1 {}'.format(p), alias=p))
 

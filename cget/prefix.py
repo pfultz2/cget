@@ -18,7 +18,7 @@ def parse_alias(s):
 def cmake_set(var, val, quote=True, cache=None, description=None):
     x = val
     if quote: x = util.quote(val)
-    if cache is None:
+    if cache is None or cache.lower() == 'none':
         yield "set({0} {1})".format(var, x)
     else:
         yield 'set({0} {1} CACHE {2} "{3}")'.format(var, x, cache, description or '')
@@ -29,6 +29,16 @@ def cmake_if(cond, *args):
         for line in arg:
             yield '    ' + line
     yield 'endif()'
+
+def parse_cmake_var_type(key, value):
+    if ':' in key:
+        p = key.split(':')
+        return (p[0], p[1].upper(), value)
+    elif value.lower() in ['on', 'off', 'true', 'false']: 
+        return (key, 'BOOL', value)
+    else:
+        return (key, 'STRING', value)
+
 
 
 PACKAGE_SOURCE_TYPES = (six.string_types, PackageSource, PackageBuild)
@@ -52,7 +62,7 @@ class CGetPrefix:
         return util.mkfile(self.get_private_path(), 'cget.cmake', util.flat(self.generate_cmake_toolchain(**kwargs)), always_write=always_write)
 
     @returns(inspect.isgenerator)
-    def generate_cmake_toolchain(self, toolchain=None, cxxflags=None, ldflags=None, std=None):
+    def generate_cmake_toolchain(self, toolchain=None, cxxflags=None, ldflags=None, std=None, defines=None):
         set_ = cmake_set
         if_ = cmake_if
         yield set_('CGET_PREFIX', self.prefix)
@@ -71,6 +81,10 @@ class CGetPrefix:
         if ldflags is not None:
             for link_type in ['SHARED', 'MODULE', 'EXE']:
                 yield set_('CMAKE_{}_LINKER_FLAGS'.format(link_type), "$ENV{{LDFLAGS}} {0}".format(ldflags), cache='STRING')
+        for dkey in defines or {}:
+            name, vtype, value = parse_cmake_var_type(dkey, defines[dkey])
+            yield set_(name, value, cache=vtype, quote=(vtype != 'BOOL'))
+
 
     def get_path(self, *paths):
         return os.path.join(self.prefix, *paths)
@@ -91,11 +105,11 @@ class CGetPrefix:
         yield Builder(self, d, exists)
         if tmp: shutil.rmtree(d)
 
-    def get_package_directory(self, *name):
-        return self.get_private_path('pkg', *name)
+    def get_package_directory(self, *dirs):
+        return self.get_private_path('pkg', *dirs)
 
-    def get_deps_directory(self, *name):
-        return self.get_private_path('deps', *name)
+    def get_deps_directory(self, name, *dirs):
+        return self.get_package_directory(name, 'deps', *dirs)
 
     @returns(PackageSource)
     @params(pkg=PACKAGE_SOURCE_TYPES)
@@ -143,6 +157,7 @@ class CGetPrefix:
     def install(self, pb, test=False, test_all=False, update=False):
         pb = self.parse_pkg_build(pb)
         pkg_dir = self.get_package_directory(pb.to_fname())
+        install_dir = self.get_package_directory(pb.to_fname(), 'install')
         if os.path.exists(pkg_dir): 
             self.write_parent(pb)
             if update: self.remove(pb)
@@ -153,13 +168,13 @@ class CGetPrefix:
             # Install any dependencies first
             self.install_deps(pb, src_dir, test=test, test_all=test_all)
             # Confirue and build
-            builder.configure(src_dir, defines=pb.define, install_prefix=pkg_dir)
+            builder.configure(src_dir, defines=pb.define, install_prefix=install_dir)
             builder.build(config='Release')
             # Run tests if enabled
             if test or test_all: builder.test(config='Release')
             # Install
             builder.build(target='install', config='Release')
-            util.symlink_dir(pkg_dir, self.prefix)
+            util.symlink_dir(install_dir, self.prefix)
         self.write_parent(pb)
         return "Successfully installed {}".format(pb.to_name())
 
@@ -200,10 +215,8 @@ class CGetPrefix:
     def remove(self, pkg):
         pkg = self.parse_pkg_src(pkg)
         pkg_dir = self.get_package_directory(pkg.to_fname())
-        deps_dir = self.get_deps_directory(pkg.to_fname())
         if os.path.exists(pkg_dir):
             shutil.rmtree(pkg_dir)
-            if os.path.exists(deps_dir): shutil.rmtree(deps_dir)
             util.rm_symlink_dir(self.prefix)
             util.rm_empty_dirs(self.prefix)
             return "Removed package {}".format(pkg.name)

@@ -38,9 +38,10 @@ def use_prefix(f):
 @click.option('--cxxflags', required=False, help="Set additional c++ flags")
 @click.option('--ldflags', required=False, help="Set additional linker flags")
 @click.option('--std', required=False, help="Set C++ standard if available")
-def init_command(prefix, toolchain, cxxflags, ldflags, std):
+@click.option('-D', '--define', multiple=True, help="Extra configuration variables to pass to CMake")
+def init_command(prefix, toolchain, cxxflags, ldflags, std, define):
     """ Initialize install directory """
-    prefix.write_cmake(always_write=True, toolchain=toolchain, cxxflags=cxxflags, ldflags=ldflags, std=std)
+    prefix.write_cmake(always_write=True, toolchain=toolchain, cxxflags=cxxflags, ldflags=ldflags, std=std, defines=util.to_define_dict(define))
 
 @cli.command(name='install')
 @use_prefix
@@ -112,9 +113,6 @@ def list_command(prefix):
 @click.argument('n')
 def size_command(prefix, n):
     pkgs = len(list(util.ls(prefix.get_package_directory(), os.path.isdir)))
-    deps = len(list(util.ls(prefix.get_deps_directory(), os.path.isdir)))
-    if deps > pkgs:
-        raise util.BuildError("Extra deps items: {}".format(deps))
     if pkgs != int(n):
         raise util.BuildError("Not the correct number of items: {}".format(pkgs))
 
