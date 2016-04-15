@@ -275,6 +275,17 @@ def test_install_simple_app_test_with_test(d):
     ])
 
 @test
+def test_install_simple_app_test_with_test_all(d):
+    d.cmds([
+        cget_cmd('install', '--verbose --test-all', get_path('simpleapptest')),
+        cget_cmd('list'),
+        cget_cmd('size', '2'),
+        cget_cmd('remove', '-y simple'),
+        cget_cmd('list'),
+        cget_cmd('size', '1')
+    ])
+
+@test
 def test_install_simple_app_test_all_with_test_with_all(d):
     d.cmds([
         cget_cmd('install', '--verbose --test-all', get_path('simpleapptestall')),
@@ -323,6 +334,73 @@ def test_build_simple_app_test_with_test(d):
 def test_build_simple_app_test_without_test(d):
     d.cmds([
         cget_cmd('build', '--verbose', get_path('simpleapptest')),
+        cget_cmd('size', '0')
+    ])
+
+@test
+def test_install_simple_basic_app_test_with_test_all(d):
+    d.cmds([
+        cget_cmd('install', '--verbose --test-all', get_path('simplebasicapptest')),
+        cget_cmd('list'),
+        cget_cmd('size', '3'),
+        cget_cmd('remove', '-y simple'),
+        cget_cmd('list'),
+        cget_cmd('size', '1')
+    ])
+
+@test
+def test_install_simple_basic_app_test_with_test(d):
+    d.cmds([
+        cget_cmd('install', '--verbose --test', get_path('simplebasicapptest')),
+        cget_cmd('list'),
+        cget_cmd('size', '3'),
+        cget_cmd('remove', '-y simple'),
+        cget_cmd('list'),
+        cget_cmd('size', '1')
+    ])
+
+@test
+def test_install_simple_basic_app_test_without_test(d):
+    d.cmds([
+        cget_cmd('install', '--verbose ', get_path('simplebasicapptest')),
+        cget_cmd('list'),
+        cget_cmd('size', '1'),
+        cget_cmd('remove', '-y', get_path('simplebasicapptest')),
+        cget_cmd('list'),
+        cget_cmd('size', '0')
+    ])
+
+
+@test
+def test_install_simple_basic_app2_test_with_test_all(d):
+    d.cmds([
+        cget_cmd('install', '--verbose --test-all', get_path('simplebasicapp')),
+        cget_cmd('list'),
+        cget_cmd('size', '4'),
+        cget_cmd('remove', '-y simple'),
+        cget_cmd('list'),
+        cget_cmd('size', '2')
+    ])
+
+@test
+def test_install_simple_basic_app2_test_with_test(d):
+    d.cmds([
+        cget_cmd('install', '--verbose --test', get_path('simplebasicapp')),
+        cget_cmd('list'),
+        cget_cmd('size', '2'),
+        cget_cmd('remove', '-y simplebasicapptest'),
+        cget_cmd('list'),
+        cget_cmd('size', '1')
+    ])
+
+@test
+def test_install_simple_basic_app2_test_without_test(d):
+    d.cmds([
+        cget_cmd('install', '--verbose ', get_path('simplebasicapp')),
+        cget_cmd('list'),
+        cget_cmd('size', '1'),
+        cget_cmd('remove', '-y', get_path('simplebasicapp')),
+        cget_cmd('list'),
         cget_cmd('size', '0')
     ])
 
