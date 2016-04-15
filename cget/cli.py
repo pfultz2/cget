@@ -48,7 +48,7 @@ def init_command(prefix, toolchain, cxxflags, ldflags, std, define):
 @use_prefix
 @click.option('-U', '--update', is_flag=True, help="Update package")
 @click.option('-t', '--test', is_flag=True, help="Test package before installing by running ctest or check target")
-@click.option('-t', '--test-all', is_flag=True, help="Test all packages including its dependencies before installing by running ctest or check target")
+@click.option('--test-all', is_flag=True, help="Test all packages including its dependencies before installing by running ctest or check target")
 @click.option('-f', '--file', default=None, help="Install packages listed in the file")
 @click.option('-D', '--define', multiple=True, help="Extra configuration variables to pass to CMake")
 @click.argument('pkgs', nargs=-1, type=click.STRING)
