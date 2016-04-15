@@ -267,15 +267,51 @@ if __has_pkg_config__:
 def test_install_simple_app_test_with_test(d):
     d.cmds([
         cget_cmd('install', '--verbose --test', get_path('simpleapptest')),
+        cget_cmd('list'),
         cget_cmd('size', '2'),
         cget_cmd('remove', '-y simple'),
+        cget_cmd('list'),
         cget_cmd('size', '1')
+    ])
+
+@test
+def test_install_simple_app_test_all_with_test_with_all(d):
+    d.cmds([
+        cget_cmd('install', '--verbose --test-all', get_path('simpleapptestall')),
+        cget_cmd('list'),
+        cget_cmd('size', '3'),
+        cget_cmd('remove', '-y simple'),
+        cget_cmd('list'),
+        cget_cmd('size', '2')
+    ])
+
+@test
+def test_install_simple_app_test_all_with_test(d):
+    d.cmds([
+        cget_cmd('install', '--verbose --test', get_path('simpleapptestall')),
+        cget_cmd('list'),
+        cget_cmd('size', '2'),
+        cget_cmd('remove', '-y simpleapptest'),
+        cget_cmd('list'),
+        cget_cmd('size', '1')
+    ])
+
+@test
+def test_install_simple_app_test_all_without_test(d):
+    d.cmds([
+        cget_cmd('install', '--verbose', get_path('simpleapptestall')),
+        cget_cmd('list'),
+        cget_cmd('size', '1'),
+        cget_cmd('remove', '-y', get_path('simpleapptestall')),
+        cget_cmd('list'),
+        cget_cmd('size', '0')
     ])
 
 @test
 def test_install_simple_app_test_without_test(d):
     d.cmds([
         cget_cmd('install', '--verbose', get_path('simpleapptest')),
+        cget_cmd('list'),
         cget_cmd('size', '1')
     ])
 

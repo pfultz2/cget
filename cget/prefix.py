@@ -151,7 +151,7 @@ class CGetPrefix:
     def install_deps(self, pb, d, test=False, test_all=False):
         for dependent in self.from_file(os.path.join(d, 'requirements.txt')):
             track = not dependent.test
-            if track or (dependent.test == test): self.install(dependent.of(pb), test_all=test_all, track=track)
+            if track or (dependent.test == test or test_all): self.install(dependent.of(pb), test_all=test_all, track=track)
 
     @returns(six.string_types)
     @params(pb=PACKAGE_SOURCE_TYPES, test=bool, test_all=bool, update=bool, track=bool)
