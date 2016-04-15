@@ -117,17 +117,17 @@ class CGetCmd:
 def cget_cmd(*args):
     return CGetCmd()(*args)
 
-def test_install(url, lib=None, alias=None, init=None, remove='remove', size=1, prefix=None):
+def test_install(url, lib=None, alias=None, init=None, remove='remove', list_='list', size=1, prefix=None):
     cg = CGetCmd(prefix=prefix)
     yield cg('init', init)
-    yield cg('list')
+    yield cg(list_)
     yield cg('clean', '-y')
     yield cg('init', init)
-    yield cg('list')
+    yield cg(list_)
     yield cg('size', '0')
     yield cg('install', '--verbose --test', url)
     yield cg('size', str(size))
-    yield cg('list')
+    yield cg(list_)
     if __has_pkg_config__ and lib is not None:
         yield cg('pkg-config', '--list-all')
         yield cg('pkg-config', '--exists', lib)
@@ -135,12 +135,12 @@ def test_install(url, lib=None, alias=None, init=None, remove='remove', size=1, 
     if alias is None: yield cg(remove, '--verbose -y', url)
     else: yield cg(remove, '--verbose -y', alias)
     yield cg('size', '0')
-    yield cg('list')
+    yield cg(list_)
     yield cg('install', '--verbose --test', url)
-    yield cg('list')
+    yield cg(list_)
     yield cg('size', str(size))
     yield cg('clean', '-y')
-    yield cg('list')
+    yield cg(list_)
     yield cg('size', '0')
 
 def test_build(url=None, init=None, size=0, defines=None, prefix=None):
@@ -182,6 +182,10 @@ def test_prefix(d):
 @test
 def test_rm(d):
     d.cmds(test_install(url=get_path('libsimple'), lib='simple', remove='rm'))
+
+@test
+def test_ls(d):
+    d.cmds(test_install(url=get_path('libsimple'), lib='simple', list_='ls'))
 
 @test
 def test_update(d):

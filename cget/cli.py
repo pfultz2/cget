@@ -7,7 +7,8 @@ import cget.util as util
 
 
 aliases = {
-    'rm': 'remove'
+    'rm': 'remove',
+    'ls': 'list'
 }
 
 class AliasedGroup(click.Group):
