@@ -145,21 +145,22 @@ class CGetPrefix:
                     tokens = shlex.split(line, comments=True)
                     if len(tokens) > 0: yield parse_pkg_build(tokens)
 
-    def write_parent(self, pb):
-        if pb.parent is not None: util.mkfile(self.get_deps_directory(pb.to_fname()), pb.parent, pb.parent)
+    def write_parent(self, pb, track=True):
+        if track and pb.parent is not None: util.mkfile(self.get_deps_directory(pb.to_fname()), pb.parent, pb.parent)
 
     def install_deps(self, pb, d, test=False, test_all=False):
         for dependent in self.from_file(os.path.join(d, 'requirements.txt')):
-            if not dependent.test or (dependent.test == test): self.install(dependent.of(pb), test_all=test_all)
+            track = not dependent.test
+            if track or (dependent.test == test): self.install(dependent.of(pb), test_all=test_all, track=track)
 
     @returns(six.string_types)
-    @params(pb=PACKAGE_SOURCE_TYPES, test=bool, test_all=bool, update=bool)
-    def install(self, pb, test=False, test_all=False, update=False):
+    @params(pb=PACKAGE_SOURCE_TYPES, test=bool, test_all=bool, update=bool, track=bool)
+    def install(self, pb, test=False, test_all=False, update=False, track=True):
         pb = self.parse_pkg_build(pb)
         pkg_dir = self.get_package_directory(pb.to_fname())
         install_dir = self.get_package_directory(pb.to_fname(), 'install')
         if os.path.exists(pkg_dir): 
-            self.write_parent(pb)
+            self.write_parent(pb, track=track)
             if update: self.remove(pb)
             else: return "Package {} already installed".format(pb.to_name())
         with self.create_builder(pb.to_fname(), tmp=True) as builder:
@@ -175,7 +176,7 @@ class CGetPrefix:
             # Install
             builder.build(target='install', config='Release')
             util.symlink_dir(install_dir, self.prefix)
-        self.write_parent(pb)
+        self.write_parent(pb, track=track)
         return "Successfully installed {}".format(pb.to_name())
 
     @params(pb=PACKAGE_SOURCE_TYPES, test=bool)

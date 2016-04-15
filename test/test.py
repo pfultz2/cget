@@ -265,7 +265,12 @@ if __has_pkg_config__:
 
 @test
 def test_install_simple_app_test_with_test(d):
-    d.cmds(test_install(url=get_path('simpleapptest'), lib='simple', alias='simple', size=2))
+    d.cmds([
+        cget_cmd('install', '--verbose --test', get_path('simpleapptest')),
+        cget_cmd('size', '2'),
+        cget_cmd('remove', '-y simple'),
+        cget_cmd('size', '1')
+    ])
 
 @test
 def test_install_simple_app_test_without_test(d):
