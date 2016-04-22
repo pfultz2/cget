@@ -180,7 +180,7 @@ class CGetPrefix:
         return "Successfully installed {}".format(pb.to_name())
 
     @params(pb=PACKAGE_SOURCE_TYPES, test=bool)
-    def build(self, pb, test=False):
+    def build(self, pb, test=False, target=None):
         pb = self.parse_pkg_build(pb)
         src_dir = pb.pkg_src.get_src_dir()
         with self.create_builder(pb.to_fname()) as builder:
@@ -188,7 +188,7 @@ class CGetPrefix:
             self.install_deps(pb, src_dir, test=test)
             # Configure and build
             if not builder.exists: builder.configure(src_dir, defines=pb.define)
-            builder.build(config='Release')
+            builder.build(config='Release', target=target)
             # Run tests if enabled
             if test: builder.test(config='Release')
 

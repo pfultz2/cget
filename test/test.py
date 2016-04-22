@@ -219,6 +219,20 @@ def test_build_current_dir(d):
     d.cmds(test_build(prefix=d.get_path('cget')), cwd=cwd)
 
 @test
+def test_build_target(d):
+    d.cmds([
+        cget_cmd('build', '--verbose', '--target simpleapp', get_path('simpleapp')),
+        cget_cmd('build', '--verbose', '--target simpleapptest', get_path('simpleapp')),
+        cget_cmd('build', '--verbose', '--target test', get_path('simpleapp')),
+        cget_cmd('size', '0')
+    ])
+
+
+@test
+def test_build_target_fail(d):
+    should_fail(lambda: d.cmds([cget_cmd('build', '--verbose', '--target xyz', get_path('simpleapp'))]))
+
+@test
 def test_dir_alias(d):
     d.cmds(test_install(url='simple:'+get_path('libsimple'), lib='simple', alias='simple'))
 
