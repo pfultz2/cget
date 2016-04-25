@@ -223,7 +223,6 @@ def test_build_target(d):
     d.cmds([
         cget_cmd('build', '--verbose', '--target simpleapp', get_path('simpleapp')),
         cget_cmd('build', '--verbose', '--target simpleapptest', get_path('simpleapp')),
-        cget_cmd('build', '--verbose', '--target test', get_path('simpleapp')),
         cget_cmd('size', '0')
     ])
 
