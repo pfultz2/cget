@@ -51,13 +51,14 @@ def init_command(prefix, toolchain, cxxflags, ldflags, std, define):
 @click.option('--test-all', is_flag=True, help="Test all packages including its dependencies before installing by running ctest or check target")
 @click.option('-f', '--file', default=None, help="Install packages listed in the file")
 @click.option('-D', '--define', multiple=True, help="Extra configuration variables to pass to CMake")
+@click.option('-G', '--generator', envvar='CGET_GENERATOR', help='Set the generator for CMake to use')
 @click.argument('pkgs', nargs=-1, type=click.STRING)
-def install_command(prefix, pkgs, define, file, test, test_all, update):
+def install_command(prefix, pkgs, define, file, test, test_all, update, generator):
     """ Install packages """
     pbs = [PackageBuild(pkg) for pkg in pkgs]
     for pb in list(prefix.from_file(file))+pbs:
         try:
-            click.echo(prefix.install(pb.merge(define), test=test, test_all=test_all, update=update))
+            click.echo(prefix.install(pb.merge(define), test=test, test_all=test_all, update=update, generator=generator))
         except:
             click.echo("Failed to build package {}".format(pb.to_name()))
             prefix.remove(pb)
@@ -72,8 +73,9 @@ def install_command(prefix, pkgs, define, file, test, test_all, update):
 @click.option('-D', '--define', multiple=True, help="Extra configuration variables to pass to CMake")
 @click.option('-T', '--target', default=None, help="Cmake target to build")
 @click.option('-y', '--yes', is_flag=True, default=False)
+@click.option('-G', '--generator', envvar='CGET_GENERATOR', help='Set the generator for CMake to use')
 @click.argument('pkg', nargs=1, default='.', type=click.STRING)
-def build_command(prefix, pkg, define, test, configure, clean, path, yes, target):
+def build_command(prefix, pkg, define, test, configure, clean, path, yes, target, generator):
     """ Build package """
     pb = PackageBuild(pkg).merge(define)
     if configure: prefix.build_configure(pb)
@@ -81,7 +83,7 @@ def build_command(prefix, pkg, define, test, configure, clean, path, yes, target
     elif clean: 
         if not yes: yes = click.confirm("Are you sure you want to delete the build directory?")
         if yes: prefix.build_clean(pb)
-    else: prefix.build(pb, test=test, target=target)
+    else: prefix.build(pb, test=test, target=target, generator=generator)
 
 @cli.command(name='remove')
 @use_prefix

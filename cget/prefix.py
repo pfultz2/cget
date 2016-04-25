@@ -148,14 +148,14 @@ class CGetPrefix:
     def write_parent(self, pb, track=True):
         if track and pb.parent is not None: util.mkfile(self.get_deps_directory(pb.to_fname()), pb.parent, pb.parent)
 
-    def install_deps(self, pb, d, test=False, test_all=False):
+    def install_deps(self, pb, d, test=False, test_all=False, generator=None):
         for dependent in self.from_file(os.path.join(d, 'requirements.txt')):
             track = not dependent.test
-            if track or (dependent.test == test or test_all): self.install(dependent.of(pb), test_all=test_all, track=track)
+            if track or (dependent.test == test or test_all): self.install(dependent.of(pb), test_all=test_all, generator=generator, track=track)
 
     @returns(six.string_types)
     @params(pb=PACKAGE_SOURCE_TYPES, test=bool, test_all=bool, update=bool, track=bool)
-    def install(self, pb, test=False, test_all=False, update=False, track=True):
+    def install(self, pb, test=False, test_all=False, generator=None, update=False, track=True):
         pb = self.parse_pkg_build(pb)
         pkg_dir = self.get_package_directory(pb.to_fname())
         install_dir = self.get_package_directory(pb.to_fname(), 'install')
@@ -167,9 +167,9 @@ class CGetPrefix:
             # Fetch package
             src_dir = builder.fetch(pb.pkg_src.url)
             # Install any dependencies first
-            self.install_deps(pb, src_dir, test=test, test_all=test_all)
+            self.install_deps(pb, src_dir, test=test, test_all=test_all, generator=generator)
             # Confirue and build
-            builder.configure(src_dir, defines=pb.define, install_prefix=install_dir)
+            builder.configure(src_dir, defines=pb.define, generator=generator, install_prefix=install_dir)
             builder.build(config='Release')
             # Run tests if enabled
             if test or test_all: builder.test(config='Release')
@@ -180,14 +180,14 @@ class CGetPrefix:
         return "Successfully installed {}".format(pb.to_name())
 
     @params(pb=PACKAGE_SOURCE_TYPES, test=bool)
-    def build(self, pb, test=False, target=None):
+    def build(self, pb, test=False, target=None, generator=None):
         pb = self.parse_pkg_build(pb)
         src_dir = pb.pkg_src.get_src_dir()
         with self.create_builder(pb.to_fname()) as builder:
             # Install any dependencies first
-            self.install_deps(pb, src_dir, test=test)
+            self.install_deps(pb, src_dir, generator=generator, test=test)
             # Configure and build
-            if not builder.exists: builder.configure(src_dir, defines=pb.define)
+            if not builder.exists: builder.configure(src_dir, defines=pb.define, generator=generator)
             builder.build(config='Release', target=target)
             # Run tests if enabled
             if test: builder.test(config='Release')

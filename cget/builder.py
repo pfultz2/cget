@@ -30,12 +30,13 @@ class Builder:
             util.extract_ar(archive=f, dst=self.top_dir)
         return next(util.get_dirs(self.top_dir))
 
-    def configure(self, src_dir, defines=[], install_prefix=None):
+    def configure(self, src_dir, defines=None, generator=None, install_prefix=None):
         self.prefix.log("configure")
         util.mkdir(self.build_dir)
         args = [src_dir]
+        if generator is not None: args = ['-G', util.quote(generator)] + args
         if install_prefix is not None: args.insert(0, '-DCMAKE_INSTALL_PREFIX=' + install_prefix)
-        for d in defines:
+        for d in defines or []:
             args.append('-D{0}'.format(d))
         self.cmake(args=args, cwd=self.build_dir, use_toolchain=True)
 
