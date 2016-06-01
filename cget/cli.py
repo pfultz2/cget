@@ -27,10 +27,11 @@ def cli():
 def use_prefix(f):
     @click.option('-p', '--prefix', envvar='CGET_PREFIX', help='Set prefix used to install packages')
     @click.option('-v', '--verbose', is_flag=True, envvar='VERBOSE', help="Enable verbose mode")
+    @click.option('-B', '--build-path', envvar='CGET_BUILD_PATH', help='Set the path for the build directory to use when building the package')
     @functools.wraps(f)
-    def w(prefix, verbose, *args, **kwargs):
+    def w(prefix, verbose, build_path, *args, **kwargs):
         if prefix is None: prefix = os.path.join(os.getcwd(), 'cget')
-        f(CGetPrefix(prefix, verbose), *args, **kwargs)
+        f(CGetPrefix(prefix, verbose, build_path), *args, **kwargs)
     return w
 
 @cli.command(name='init')

@@ -106,19 +106,21 @@ def remove_empty_elements(xs):
             if len(s) > 0: yield s
 
 class CGetCmd:
-    def __init__(self, prefix=None):
+    def __init__(self, prefix=None, build_path=None):
         self.prefix = prefix
+        self.build_path = build_path
 
     def __call__(self, arg, *args):
         p = [__cget_exe__, arg]
         if self.prefix is not None: p.append('--prefix {}'.format(self.prefix))
+        if self.build_path is not None: p.append('--build-path {}'.format(self.build_path))
         return ' '.join(p+list(remove_empty_elements(args)))
 
 def cget_cmd(*args):
     return CGetCmd()(*args)
 
-def test_install(url, lib=None, alias=None, init=None, remove='remove', list_='list', size=1, prefix=None):
-    cg = CGetCmd(prefix=prefix)
+def test_install(url, lib=None, alias=None, init=None, remove='remove', list_='list', size=1, prefix=None, build_path=None):
+    cg = CGetCmd(prefix=prefix, build_path=build_path)
     yield cg('init', init)
     yield cg(list_)
     yield cg('clean', '-y')
@@ -143,8 +145,8 @@ def test_install(url, lib=None, alias=None, init=None, remove='remove', list_='l
     yield cg(list_)
     yield cg('size', '0')
 
-def test_build(url=None, init=None, size=0, defines=None, prefix=None):
-    cg = CGetCmd(prefix=prefix)
+def test_build(url=None, init=None, size=0, defines=None, prefix=None, build_path=None):
+    cg = CGetCmd(prefix=prefix, build_path=build_path)
     yield cg('init', init)
     yield cg('size', '0')
     yield cg('build', '--verbose -C -y', url)
@@ -174,6 +176,10 @@ def test_tar_alias(d):
 @test
 def test_dir(d):
     d.cmds(test_install(url=get_path('libsimple'), lib='simple'))
+
+@test
+def test_dir_custom_build_path(d):
+    d.cmds(test_install(url=get_path('libsimple'), lib='simple', build_path=d.get_path('my_build')))
 
 @test
 def test_prefix(d):
@@ -212,6 +218,10 @@ def test_update_reqs(d):
 @test
 def test_build_dir(d):
     d.cmds(test_build(get_path('libsimple')))
+
+@test
+def test_build_dir_custom_build_path(d):
+    d.cmds(test_build(get_path('libsimple'), build_path=d.get_path('my_build')))
 
 @test
 def test_build_current_dir(d):

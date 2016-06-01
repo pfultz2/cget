@@ -44,9 +44,10 @@ def parse_cmake_var_type(key, value):
 PACKAGE_SOURCE_TYPES = (six.string_types, PackageSource, PackageBuild)
 
 class CGetPrefix:
-    def __init__(self, prefix, verbose=False):
+    def __init__(self, prefix, verbose=False, build_path=None):
         self.prefix = prefix
         self.verbose = verbose
+        self.build_path_var = build_path
         self.cmd = util.Commander(paths=[self.get_path('bin')], env=self.get_env(), verbose=self.verbose)
         self.toolchain = self.write_cmake()
 
@@ -92,14 +93,15 @@ class CGetPrefix:
     def get_private_path(self, *paths):
         return self.get_path('cget', *paths)
 
-    def get_builder_path(self, name, tmp=False):
-        pre = ''
-        if tmp: pre = 'tmp-'
-        return self.get_private_path('build', pre + name)
+    def get_builder_path(self, *paths):
+        if self.build_path_var: return os.path.join(self.build_path_var, *paths)
+        else: return self.get_private_path('build', *paths)
 
     @contextlib.contextmanager
     def create_builder(self, name, tmp=False):
-        d = self.get_builder_path(name, tmp)
+        pre = ''
+        if tmp: pre = 'tmp-'
+        d = self.get_builder_path(pre + name)
         exists = os.path.exists(d)
         util.mkdir(d)
         yield Builder(self, d, exists)
@@ -195,7 +197,7 @@ class CGetPrefix:
     @params(pb=PACKAGE_SOURCE_TYPES)
     def build_path(self, pb):
         pb = self.parse_pkg_build(pb)
-        return os.path.join(self.get_builder_path(pb.to_fname()), 'build')
+        return self.get_builder_path(pb.to_fname(), 'build')
 
     @params(pb=PACKAGE_SOURCE_TYPES)
     def build_clean(self, pb):
