@@ -1,5 +1,11 @@
 import click, os, sys, shutil, json, six
 
+if sys.version_info[0] < 3:
+    try:
+        import contextlib
+        import lzma
+    except:
+        pass
 import tarfile
 
 if os.name == 'posix' and sys.version_info[0] < 3:
@@ -8,6 +14,7 @@ else:
     import subprocess
 
 from six.moves.urllib import request
+
 
 def is_string(obj):
     return isinstance(obj, six.string_types)
@@ -119,7 +126,11 @@ def retrieve_url(url, dst):
     else: return download_to(url, dst)
 
 def extract_ar(archive, dst):
-    tarfile.open(archive).extractall(dst)
+    if sys.version_info[0] < 3 and archive.endswith('.xz'):
+        with contextlib.closing(lzma.LZMAFile(archive)) as xz:
+            with tarfile.open(fileobj=xz) as f:
+                f.extractall(dst)
+    else: tarfile.open(archive).extractall(dst)
 
 def which(p, paths=None, throws=True):
     exes = [p+x for x in ['', '.exe', '.bat']]
