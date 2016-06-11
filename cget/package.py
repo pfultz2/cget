@@ -63,7 +63,7 @@ class PackageBuild:
         if isinstance(self.pkg_src, PackageSource): return self.pkg_src.to_name()
         else: return self.pkg_src
 
-def parse_pkg_build(args):
+def parse_pkg_build_tokens(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('pkg_src')
     parser.add_argument('-D', '--define', nargs='+')

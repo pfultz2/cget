@@ -4,7 +4,7 @@ from cget.builder import Builder
 from cget.package import fname_to_pkg
 from cget.package import PackageSource
 from cget.package import PackageBuild
-from cget.package import parse_pkg_build
+from cget.package import parse_pkg_build_tokens
 import cget.util as util
 from cget.types import returns
 from cget.types import params
@@ -115,12 +115,15 @@ class CGetPrefix:
 
     @returns(PackageSource)
     @params(pkg=PACKAGE_SOURCE_TYPES)
-    def parse_pkg_src(self, pkg):
+    def parse_pkg_src(self, pkg, start=None):
         if isinstance(pkg, PackageSource): return pkg
-        if isinstance(pkg, PackageBuild): return self.parse_pkg_src(pkg.pkg_src)
+        if isinstance(pkg, PackageBuild): return self.parse_pkg_src(pkg.pkg_src, start)
         name, url = parse_alias(pkg)
+        self.log('parse_pkg_src:', name, url, pkg)
         if '://' not in url:
-            f = os.path.abspath(os.path.expanduser(url))
+            f = util.actual_path(url, start)
+            self.log('parse_pkg_src atual_path:', start, f)
+            # f = os.path.abspath(os.path.expanduser(url))
             if os.path.exists(f):
                 url = 'file://' + f
             else:
@@ -134,24 +137,28 @@ class CGetPrefix:
 
     @returns(PackageBuild)
     @params(pkg=PACKAGE_SOURCE_TYPES)
-    def parse_pkg_build(self, pkg):
+    def parse_pkg_build(self, pkg, start=None):
         if isinstance(pkg, PackageBuild): 
-            pkg.pkg_src = self.parse_pkg_src(pkg.pkg_src)
+            pkg.pkg_src = self.parse_pkg_src(pkg.pkg_src, start)
             return pkg
-        else: return PackageBuild(self.parse_pkg_src(pkg))
+        else: return PackageBuild(self.parse_pkg_src(pkg, start))
 
-    def from_file(self, file):
+    def from_file(self, file, url=None):
         if file is not None and os.path.exists(file):
+            start = None
+            if url is not None and url.startswith('file://'):
+                start = url[7:]
             with open(file) as f:
                 for line in f.readlines():
                     tokens = shlex.split(line, comments=True)
-                    if len(tokens) > 0: yield parse_pkg_build(tokens)
+                    if len(tokens) > 0: 
+                        yield self.parse_pkg_build(parse_pkg_build_tokens(tokens), start=start)
 
     def write_parent(self, pb, track=True):
         if track and pb.parent is not None: util.mkfile(self.get_deps_directory(pb.to_fname()), pb.parent, pb.parent)
 
     def install_deps(self, pb, d, test=False, test_all=False, generator=None):
-        for dependent in self.from_file(os.path.join(d, 'requirements.txt')):
+        for dependent in self.from_file(os.path.join(d, 'requirements.txt'), pb.pkg_src.url):
             track = not dependent.test
             if track or (dependent.test == test or test_all): self.install(dependent.of(pb), test_all=test_all, generator=generator, track=track)
 

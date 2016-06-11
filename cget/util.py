@@ -172,6 +172,8 @@ def to_define_dict(xs):
             result[x] = ''
     return result
 
+def actual_path(path, start=None):
+    return os.path.normpath(os.path.join(start or os.getcwd(), os.path.expanduser(path)))
 
 class Commander:
     def __init__(self, paths=None, env=None, verbose=False):
