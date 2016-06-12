@@ -14,7 +14,7 @@ install:
   - "c:\\python27\\python c:\\ez_setup.py"
   - "c:\\python27\\python c:\\get-pip.py"
   - "c:\\python27\\Scripts\\pip install tox"
-test_script:
+build_script:
   - "c:\\python27\\Scripts\\tox --version"
   - "c:\\python27\\Scripts\\pip --version"
   - "c:\\python27\\Scripts\\tox"
