@@ -11,7 +11,7 @@ matrix:
           python: '2.7'
         # Linux
         - env: 
-            - PYTHONPATH=/home/travis/.local/lib/python2.7/site-packages/
+            # - PYTHONPATH=/home/travis/.local/lib/python2.7/site-packages/
             - TOXENV=py27
           os: linux
           python: '2.7'
@@ -21,7 +21,7 @@ matrix:
                 - util-linux
                 - cmake 
         - env: 
-            - PYTHONPATH=/home/travis/.local/lib/python3.4/site-packages/
+            # - PYTHONPATH=/home/travis/.local/lib/python3.4/site-packages/
             - TOXENV=py34
           os: linux
           python: '3.4'
@@ -31,7 +31,7 @@ matrix:
                 - util-linux
                 - cmake
         - env: 
-            - PYTHONPATH=/home/travis/.local/lib/python3.5/site-packages/
+            # - PYTHONPATH=/home/travis/.local/lib/python3.5/site-packages/
             - TOXENV=py35
           os: linux
           python: '3.5'
