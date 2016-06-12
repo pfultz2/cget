@@ -47,6 +47,7 @@ install:
     - python --version
     - export DEBUG=1
     - export PATH="/Users/travis/Library/Python/2.7/bin:$PATH"
-    - pip install tox
+    - if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then pip install tox; fi
+    - if [[ "${TRAVIS_OS_NAME}" != "linux" ]]; then pip install --user tox; fi
 script:
     - tox
