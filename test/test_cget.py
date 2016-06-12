@@ -1,6 +1,6 @@
 import pytest
 
-import os, tarfile, shutil, cget.util, multiprocessing
+import os, tarfile, cget.util
 
 from six.moves import shlex_quote
 

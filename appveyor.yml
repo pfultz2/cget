@@ -1,15 +1,21 @@
 environment:
   matrix:
-    - PYTHON: "C:\\Python34-x64"
-    - PYTHON: "C:\\Python35-x64"
+    - TOXENV: py34
+    - TOXENV: py35
 
+init:
+  - "ECHO %TOXENV%"
+  - ps: "ls C:\\Python*"
 install:
   # Install pkg-config from chocolatey
   - cinst pkgconfiglite
-
-build_script:
-  - cmd: "set PATH=%PYTHON%\\Scripts;%PATH%"
-  - cmd: "%PYTHON%\\python.exe -m pip install wheel pyflakes" # https://github.com/pfultz2/pykg-config/archive/master.tar.gz pykg-config
-  - cmd: "pyflakes ."
-  - cmd: "%PYTHON%\\python.exe setup.py install"
-  - cmd: "%PYTHON%\\python.exe test\\test.py"
+  - ps: Invoke-WebRequest "https://bootstrap.pypa.io/ez_setup.py" -OutFile "c:\\ez_setup.py"
+  - ps: Invoke-WebRequest "https://bootstrap.pypa.io/get-pip.py" -OutFile "c:\\get-pip.py"
+  - "c:\\python27\\python c:\\ez_setup.py"
+  - "c:\\python27\\python c:\\get-pip.py"
+  - "c:\\python27\\Scripts\\pip install tox"
+test_script:
+  - "git clean -f -d -x"
+  - "c:\\python27\\Scripts\\tox --version"
+  - "c:\\python27\\Scripts\\pip --version"
+  - "c:\\python27\\Scripts\\tox"
