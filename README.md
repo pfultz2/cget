@@ -80,7 +80,7 @@ Aliasing
 
 Aliasing lets you pick a different name for the package. So when we are installing `zlib`, we could alias it as `zlib`:
 
-    cget install zlib:http://zlib.net/zlib-1.2.8.tar.gz
+    cget install zlib,http://zlib.net/zlib-1.2.8.tar.gz
 
 This way the package can be referred to as `zlib` instead of `http://zlib.net/zlib-1.2.8.tar.gz`.
 
@@ -94,7 +94,7 @@ A package can be removed by using the same source name that was used to install 
 
 If an alias was specified, then the name of the alias must be used instead:
 
-    cget install zlib:http://zlib.net/zlib-1.2.8.tar.gz
+    cget install zlib,http://zlib.net/zlib-1.2.8.tar.gz
     cget remove zlib
 
 Testing packages

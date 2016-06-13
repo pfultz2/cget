@@ -186,8 +186,11 @@ def test_build_target(d):
 def test_build_target_fail(d):
     d.cmds([cget_cmd('build', '--verbose', '--target xyz', get_exists_path('simpleapp'))])
 
-def test_dir_alias(d):
+def test_dir_deprecated_alias(d):
     d.cmds(install_cmds(url='simple:'+get_exists_path('libsimple'), lib='simple', alias='simple'))
+
+def test_dir_alias(d):
+    d.cmds(install_cmds(url='simple,'+get_exists_path('libsimple'), lib='simple', alias='simple'))
 
 def test_init_cpp11(d):
     d.cmds([

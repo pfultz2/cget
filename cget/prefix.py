@@ -10,10 +10,18 @@ from cget.types import returns
 from cget.types import params
 
 @params(s=six.string_types)
-def parse_alias(s):
+def parse_deprecated_alias(s):
     i = s.find(':', 0, max(s.find('://'), s.find(':\\')))
-    if i > 0: return s[0:i], s[i+1:]
+    if i > 0: 
+        click.echo("WARNING: Using ':' for aliases is now deprecated.")
+        return s[0:i], s[i+1:]
     else: return None, s
+
+@params(s=six.string_types)
+def parse_alias(s):
+    i = s.find(',')
+    if i > 0: return s[0:i], s[i+1:]
+    else: return parse_deprecated_alias(s)
 
 def cmake_set(var, val, quote=True, cache=None, description=None):
     x = val
