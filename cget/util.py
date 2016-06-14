@@ -134,7 +134,7 @@ def extract_ar(archive, dst):
 
 def hash_file(f, t):
     h = hashlib.new(t)
-    h.update(open(f).read())
+    h.update(open(f, 'rb').read())
     return h.hexdigest()
 
 def check_hash(f, hash):
