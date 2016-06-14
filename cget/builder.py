@@ -22,10 +22,12 @@ class Builder:
         if use_toolchain: self.prefix.cmd.cmake(options=util.merge({'-DCMAKE_TOOLCHAIN_FILE': self.prefix.toolchain}, options), **kwargs)
         else: self.prefix.cmd.cmake(options=options, **kwargs)
 
-    def fetch(self, url):
+    def fetch(self, url, hash=None):
         self.prefix.log("fetch:", url)
         f = util.retrieve_url(url, self.top_dir)
         if os.path.isfile(f):
+            if hash and not util.check_hash(f, hash):
+                raise util.BuildError("Hash doesn't match for {0}: {1}".format(url, hash))
             click.echo("Extracting archive {0} ...".format(f))
             util.extract_ar(archive=f, dst=self.top_dir)
         return next(util.get_dirs(self.top_dir))

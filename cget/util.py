@@ -1,4 +1,4 @@
-import click, os, sys, shutil, json, six
+import click, os, sys, shutil, json, six, hashlib
 
 if sys.version_info[0] < 3:
     try:
@@ -131,6 +131,15 @@ def extract_ar(archive, dst):
             with tarfile.open(fileobj=xz) as f:
                 f.extractall(dst)
     else: tarfile.open(archive).extractall(dst)
+
+def hash_file(f, t):
+    h = hashlib.new(t)
+    h.update(open(f).read())
+    return h.hexdigest()
+
+def check_hash(f, hash):
+    t, h = hash.lower().split(':')
+    return hash_file(f, t) == h
 
 def which(p, paths=None, throws=True):
     exes = [p+x for x in ['', '.exe', '.bat']]
