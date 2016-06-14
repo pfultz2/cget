@@ -15,6 +15,7 @@ install:
   - "c:\\python27\\python c:\\get-pip.py"
   - "c:\\python27\\Scripts\\pip install tox"
 build_script:
+  - cmd: "set TOX_PYTEST_NTHREADS=8"
   - "c:\\python27\\Scripts\\tox --version"
   - "c:\\python27\\Scripts\\pip --version"
   - "c:\\python27\\Scripts\\tox"
