@@ -23,8 +23,9 @@ def quote(s):
     return json.dumps(s)
 
 class BuildError(Exception):
-    def __init__(self, msg=None):
+    def __init__(self, msg=None, data=None):
         self.msg = msg
+        self.data = data
     def __str__(self):
         if None: return "Build failed"
         else: return self.msg
@@ -163,9 +164,11 @@ def flat(*args):
             for y in x: yield y
 
 def cmd(args, env=None, **kwargs):
-    child = subprocess.Popen(args, env=merge(os.environ, env), **kwargs)
+    e = merge(os.environ, env)
+    child = subprocess.Popen(args, env=e, **kwargs)
     child.communicate()
-    if child.returncode != 0: raise BuildError("Error: " + str(args))
+    if child.returncode != 0: 
+        raise BuildError(msg='Command failed: ' + str(args), data=e)
 
 def as_list(x):
     if is_string(x): return [x]
