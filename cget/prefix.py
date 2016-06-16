@@ -153,7 +153,7 @@ class CGetPrefix:
 
     def from_file(self, file, url=None):
         if file is not None and os.path.exists(file):
-            start = None
+            start = file
             if url is not None and url.startswith('file://'):
                 start = url[7:]
             with open(file) as f:
