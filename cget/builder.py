@@ -37,6 +37,7 @@ class Builder:
         util.mkdir(self.build_dir)
         args = [src_dir]
         if generator is not None: args = ['-G', util.quote(generator)] + args
+        if self.verbose: args.extend(['-DCMAKE_VERBOSE_MAKEFILE=On'])
         if install_prefix is not None: args.insert(0, '-DCMAKE_INSTALL_PREFIX=' + install_prefix)
         for d in defines or []:
             args.append('-D{0}'.format(d))
