@@ -1,4 +1,4 @@
-import os, shutil, shlex, six, inspect, click, contextlib
+import os, shutil, shlex, six, inspect, click, contextlib, uuid
 
 from cget.builder import Builder
 from cget.package import fname_to_pkg
@@ -180,7 +180,7 @@ class CGetPrefix:
             self.write_parent(pb, track=track)
             if update: self.remove(pb)
             else: return "Package {} already installed".format(pb.to_name())
-        with self.create_builder(pb.to_fname(), tmp=True) as builder:
+        with self.create_builder(uuid.uuid4().hex, tmp=True) as builder:
             # Fetch package
             src_dir = builder.fetch(pb.pkg_src.url, pb.hash)
             # Install any dependencies first
