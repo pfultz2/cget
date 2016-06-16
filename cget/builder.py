@@ -22,6 +22,14 @@ class Builder:
         if use_toolchain: self.prefix.cmd.cmake(options=util.merge({'-DCMAKE_TOOLCHAIN_FILE': self.prefix.toolchain}, options), **kwargs)
         else: self.prefix.cmd.cmake(options=options, **kwargs)
 
+    def show_log(self, log):
+        if self.prefix.verbose and os.path.exists(log):
+            click.echo(open(log).read())
+
+    def show_logs(self):
+        self.show_log(self.get_build_path('CMakeFiles', 'CMakeOutput.log'))
+        self.show_log(self.get_build_path('CMakeFiles', 'CMakeError.log'))
+
     def fetch(self, url, hash=None):
         self.prefix.log("fetch:", url)
         f = util.retrieve_url(url, self.top_dir)
@@ -41,7 +49,11 @@ class Builder:
         if install_prefix is not None: args.insert(0, '-DCMAKE_INSTALL_PREFIX=' + install_prefix)
         for d in defines or []:
             args.append('-D{0}'.format(d))
-        self.cmake(args=args, cwd=self.build_dir, use_toolchain=True)
+        try:
+            self.cmake(args=args, cwd=self.build_dir, use_toolchain=True)
+        except:
+            self.show_logs()
+            raise
 
     def build(self, target=None, config=None, cwd=None):
         self.prefix.log("build")
