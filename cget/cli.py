@@ -60,6 +60,12 @@ def install_command(prefix, pkgs, define, file, test, test_all, update, generato
     for pb in list(prefix.from_file(file))+pbs:
         try:
             click.echo(prefix.install(pb.merge(define), test=test, test_all=test_all, update=update, generator=generator))
+        except util.BuildError as err:
+            click.echo("Failed to build package {}".format(pb.to_name()))
+            prefix.remove(pb)
+            if prefix.verbose: 
+                if err.data: click.echo(err.data)
+                raise
         except:
             click.echo("Failed to build package {}".format(pb.to_name()))
             prefix.remove(pb)
