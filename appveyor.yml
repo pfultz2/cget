@@ -16,6 +16,7 @@ install:
   - "c:\\python27\\Scripts\\pip install tox"
 build_script:
   - cmd: "set TOX_PYTEST_NTHREADS=8"
+  - cmd: call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\vsvars32.bat"
   - "c:\\python27\\Scripts\\tox --version"
   - "c:\\python27\\Scripts\\pip --version"
   - "c:\\python27\\Scripts\\tox -- -x"
