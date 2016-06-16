@@ -85,12 +85,21 @@ def install_command(prefix, pkgs, define, file, test, test_all, update, generato
 def build_command(prefix, pkg, define, test, configure, clean, path, yes, target, generator):
     """ Build package """
     pb = PackageBuild(pkg).merge(define)
-    if configure: prefix.build_configure(pb)
-    elif path: click.echo(prefix.build_path(pb))
-    elif clean: 
-        if not yes: yes = click.confirm("Are you sure you want to delete the build directory?")
-        if yes: prefix.build_clean(pb)
-    else: prefix.build(pb, test=test, target=target, generator=generator)
+    try:
+        if configure: prefix.build_configure(pb)
+        elif path: click.echo(prefix.build_path(pb))
+        elif clean: 
+            if not yes: yes = click.confirm("Are you sure you want to delete the build directory?")
+            if yes: prefix.build_clean(pb)
+        else: prefix.build(pb, test=test, target=target, generator=generator)
+    except util.BuildError as err:
+        click.echo("Failed to build package {}".format(pb.to_name()))
+        if prefix.verbose: 
+            if err.data: click.echo(err.data)
+            raise
+    except:
+        click.echo("Failed to build package {}".format(pb.to_name()))
+        if prefix.verbose: raise
 
 @cli.command(name='remove')
 @use_prefix
