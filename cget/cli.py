@@ -37,13 +37,21 @@ def use_prefix(f):
 @cli.command(name='init')
 @use_prefix
 @click.option('-t', '--toolchain', required=False, help="Set cmake toolchain file to use")
+@click.option('--cxx', required=False, help="Set c++ compiler")
 @click.option('--cxxflags', required=False, help="Set additional c++ flags")
 @click.option('--ldflags', required=False, help="Set additional linker flags")
 @click.option('--std', required=False, help="Set C++ standard if available")
 @click.option('-D', '--define', multiple=True, help="Extra configuration variables to pass to CMake")
-def init_command(prefix, toolchain, cxxflags, ldflags, std, define):
+def init_command(prefix, toolchain, cxx, cxxflags, ldflags, std, define):
     """ Initialize install directory """
-    prefix.write_cmake(always_write=True, toolchain=toolchain, cxxflags=cxxflags, ldflags=ldflags, std=std, defines=util.to_define_dict(define))
+    prefix.write_cmake(
+        always_write=True, 
+        toolchain=toolchain, 
+        cxx=cxx,
+        cxxflags=cxxflags, 
+        ldflags=ldflags, 
+        std=std, 
+        defines=util.to_define_dict(define))
 
 @cli.command(name='install')
 @use_prefix

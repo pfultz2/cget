@@ -71,23 +71,24 @@ class CGetPrefix:
         return util.mkfile(self.get_private_path(), 'cget.cmake', util.flat(self.generate_cmake_toolchain(**kwargs)), always_write=always_write)
 
     @returns(inspect.isgenerator)
-    def generate_cmake_toolchain(self, toolchain=None, cxxflags=None, ldflags=None, std=None, defines=None):
+    def generate_cmake_toolchain(self, toolchain=None, cxx=None, cxxflags=None, ldflags=None, std=None, defines=None):
         set_ = cmake_set
         if_ = cmake_if
         yield set_('CGET_PREFIX', self.prefix)
         yield set_('CMAKE_PREFIX_PATH', self.prefix)
         yield ['include_directories(SYSTEM ${CMAKE_PREFIX_PATH}/include)']
-        if toolchain is not None: yield ['include({})'.format(util.quote(os.path.abspath(toolchain)))]
+        if toolchain: yield ['include({})'.format(util.quote(os.path.abspath(toolchain)))]
         yield if_('CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT',
             set_('CMAKE_INSTALL_PREFIX', self.prefix)
         )
-        if std is not None:
+        if cxx: yield set_('CMAKE_CXX_COMPILER', cxx)
+        if std:
             yield if_('NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC"',
                 set_('CMAKE_CXX_STD_FLAG', "-std={}".format(std))
             )
-        if cxxflags is not None or std is not None:
+        if cxxflags or std:
             yield set_('CMAKE_CXX_FLAGS', "$ENV{{CXXFLAGS}} ${{CMAKE_CXX_FLAGS_INIT}} ${{CMAKE_CXX_STD_FLAG}} {}".format(cxxflags or ''), cache='STRING')
-        if ldflags is not None:
+        if ldflags:
             for link_type in ['SHARED', 'MODULE', 'EXE']:
                 yield set_('CMAKE_{}_LINKER_FLAGS'.format(link_type), "$ENV{{LDFLAGS}} {0}".format(ldflags), cache='STRING')
         for dkey in defines or {}:
