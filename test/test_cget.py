@@ -427,3 +427,12 @@ def test_comments_reqs_f(d):
     reqs_file = d.write_to('reqs', [shlex_quote(p) + ' #A comment', '# Another comment'])
     d.cmds(install_cmds(url='-f {}'.format(reqs_file), alias=p))
 
+def test_shared_init(d):
+    d.cmds(install_cmds(init='--shared', url=get_exists_path('libsimple'), lib='simple'))
+
+def test_static_init(d):
+    d.cmds(install_cmds(init='--static', url=get_exists_path('libsimple'), lib='simple'))
+
+@pytest.mark.xfail
+def test_shared_static_init(d):
+    d.cmds(install_cmds(init='--shared --static', url=get_exists_path('libsimple'), lib='simple'))

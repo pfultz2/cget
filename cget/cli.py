@@ -1,4 +1,4 @@
-import click, os, functools
+import click, os, functools, sys
 
 from cget import __version__
 from cget.prefix import CGetPrefix
@@ -42,8 +42,16 @@ def use_prefix(f):
 @click.option('--ldflags', required=False, help="Set additional linker flags")
 @click.option('--std', required=False, help="Set C++ standard if available")
 @click.option('-D', '--define', multiple=True, help="Extra configuration variables to pass to CMake")
-def init_command(prefix, toolchain, cxx, cxxflags, ldflags, std, define):
+@click.option('--shared', is_flag=True, help="Set toolchain to build shared libraries by default")
+@click.option('--static', is_flag=True, help="Set toolchain to build static libraries by default")
+def init_command(prefix, toolchain, cxx, cxxflags, ldflags, std, define, shared, static):
     """ Initialize install directory """
+    if shared and static:
+        click.echo("ERROR: shared and static are not supported together")
+        sys.exit(1)
+    defines = util.to_define_dict(define)
+    if shared: defines['BUILD_SHARED_LIBS'] = 'On'
+    if static: defines['BUILD_SHARED_LIBS'] = 'Off'
     prefix.write_cmake(
         always_write=True, 
         toolchain=toolchain, 
@@ -51,7 +59,7 @@ def init_command(prefix, toolchain, cxx, cxxflags, ldflags, std, define):
         cxxflags=cxxflags, 
         ldflags=ldflags, 
         std=std, 
-        defines=util.to_define_dict(define))
+        defines=defines)
 
 @cli.command(name='install')
 @use_prefix
