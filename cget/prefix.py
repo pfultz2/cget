@@ -1,4 +1,4 @@
-import os, shutil, shlex, six, inspect, click, contextlib, uuid
+import os, shutil, shlex, six, inspect, click, contextlib, uuid, sys
 
 from cget.builder import Builder
 from cget.package import fname_to_pkg
@@ -268,4 +268,21 @@ class CGetPrefix:
         for p in ['lib', 'lib64', 'share']:
             libs.append(self.get_path(p, 'pkgconfig'))
         return os.pathsep.join(libs)
+
+    @contextlib.contextmanager
+    def try_(self, msg=None, on_fail=None):
+        try:
+            yield
+        except util.BuildError as err:
+            if msg: click.echo(msg)
+            if on_fail: on_fail()
+            if self.verbose: 
+                if err.data: click.echo(err.data)
+                raise
+            sys.exit(1)
+        except:
+            if msg: click.echo(msg)
+            if on_fail: on_fail()
+            if self.verbose: raise
+            sys.exit(1)
 

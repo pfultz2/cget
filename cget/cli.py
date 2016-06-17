@@ -58,18 +58,8 @@ def install_command(prefix, pkgs, define, file, test, test_all, update, generato
     """ Install packages """
     pbs = [PackageBuild(pkg) for pkg in pkgs]
     for pb in list(prefix.from_file(file))+pbs:
-        try:
+        with prefix.try_("Failed to build package {}".format(pb.to_name()), on_fail=lambda: prefix.remove(pb)):
             click.echo(prefix.install(pb.merge(define), test=test, test_all=test_all, update=update, generator=generator))
-        except util.BuildError as err:
-            click.echo("Failed to build package {}".format(pb.to_name()))
-            prefix.remove(pb)
-            if prefix.verbose: 
-                if err.data: click.echo(err.data)
-                raise
-        except:
-            click.echo("Failed to build package {}".format(pb.to_name()))
-            prefix.remove(pb)
-            if prefix.verbose: raise
 
 @cli.command(name='build')
 @use_prefix
@@ -85,21 +75,13 @@ def install_command(prefix, pkgs, define, file, test, test_all, update, generato
 def build_command(prefix, pkg, define, test, configure, clean, path, yes, target, generator):
     """ Build package """
     pb = PackageBuild(pkg).merge(define)
-    try:
+    with prefix.try_("Failed to build package {}".format(pb.to_name())):
         if configure: prefix.build_configure(pb)
         elif path: click.echo(prefix.build_path(pb))
         elif clean: 
             if not yes: yes = click.confirm("Are you sure you want to delete the build directory?")
             if yes: prefix.build_clean(pb)
         else: prefix.build(pb, test=test, target=target, generator=generator)
-    except util.BuildError as err:
-        click.echo("Failed to build package {}".format(pb.to_name()))
-        if prefix.verbose: 
-            if err.data: click.echo(err.data)
-            raise
-    except:
-        click.echo("Failed to build package {}".format(pb.to_name()))
-        if prefix.verbose: raise
 
 @cli.command(name='remove')
 @use_prefix
@@ -113,12 +95,9 @@ def remove_command(prefix, pkgs, yes):
     if not yes: yes = click.confirm("Are you sure you want to remove these packages?")
     if yes:
         for pkg in pkgs_set:
-            try:
+            with prefix.try_("Failed to remove package {}".format(pkg)):
                 prefix.remove(pkg)
                 click.echo("Removed package {}".format(pkg))
-            except:
-                click.echo("Failed to remove package {}".format(pkg))
-                if prefix.verbose: raise
 
 @cli.command(name='list')
 @use_prefix
