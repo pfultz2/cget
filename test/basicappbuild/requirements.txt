@@ -1,0 +1,3 @@
+# Initial comment
+simple:../libsimple --build # A comment
+# Trailing comment

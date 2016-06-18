@@ -238,6 +238,26 @@ if __has_pkg_config__:
     def test_app_dir(d):
         d.cmds(install_cmds(url=get_exists_path('basicapp'), lib='simple', alias='simple', size=2))
 
+    def test_build_flag_child(d):
+        d.cmds([
+            cget_cmd('install', '--verbose', get_exists_path('basicappbuild')),
+            cget_cmd('list'),
+            cget_cmd('size', '2'),
+            cget_cmd('remove', '-y simple'),
+            cget_cmd('list'),
+            cget_cmd('size', '1')
+        ])
+
+    def test_build_flag_parent(d):
+        d.cmds([
+            cget_cmd('install', '--verbose', get_exists_path('basicappbuild')),
+            cget_cmd('list'),
+            cget_cmd('size', '2'),
+            cget_cmd('remove', '-y', get_exists_path('basicappbuild')),
+            cget_cmd('list'),
+            cget_cmd('size', '1')
+        ])
+
 
     def test_build_app_dir(d):
         d.cmds(build_cmds(get_exists_path('basicapp'), size=1))
