@@ -119,7 +119,7 @@ def download_to(url, download_dir):
         def hook(count, block_size, total_size):
             percent = int(count*block_size*100/total_size)
             if percent > 0 and percent < 100: bar.update(percent)
-        request.urlretrieve(url, filename=file, reporthook=hook, data=None)
+        request.FancyURLopener().retrieve(url, filename=file, reporthook=hook, data=None)
     return file
 
 def retrieve_url(url, dst):
