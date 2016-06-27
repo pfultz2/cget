@@ -10,7 +10,7 @@ Cmake package retrieval. This can be used to download and install cmake packages
 Getting cget
 ------------
 
-`cget` can be simply installed using `pip`:
+`cget` can be simply installed using `pip`(you can get pip from [here](https://pip.pypa.io/en/stable/installing/)):
 
     pip install cget
 
