@@ -149,6 +149,8 @@ class CGetPrefix:
     def parse_pkg_build(self, pkg, start=None):
         if isinstance(pkg, PackageBuild): 
             pkg.pkg_src = self.parse_pkg_src(pkg.pkg_src, start)
+            if pkg.cmake and not os.path.isabs(pkg.cmake):
+                pkg.cmake = util.actual_path(pkg.cmake, start)
             return pkg
         else: return PackageBuild(self.parse_pkg_src(pkg, start))
 

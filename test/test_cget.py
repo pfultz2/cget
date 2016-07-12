@@ -146,6 +146,10 @@ def test_xcmake(d):
     url = get_exists_path('libsimplebare') + ' --cmake ' + get_exists_path('libsimple', 'CMakeLists.txt')
     d.cmds(install_cmds(url=url, lib='simple', alias=get_exists_path('libsimplebare')))
 
+def test_xcmake_s(d):
+    url = get_exists_path('libsimplebare') + ' -X ' + get_exists_path('libsimple', 'CMakeLists.txt')
+    d.cmds(install_cmds(url=url, lib='simple', alias=get_exists_path('libsimplebare')))
+
 def test_rm(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', remove='rm'))
 
@@ -245,6 +249,9 @@ if __has_pkg_config__:
 
     def test_app_dir(d):
         d.cmds(install_cmds(url=get_exists_path('basicapp'), lib='simple', alias='simple', size=2))
+
+    def test_xapp_dir(d):
+        d.cmds(install_cmds(url=get_exists_path('basicappx'), lib='simple', alias='simple', size=2))
 
     def test_build_flag_child(d):
         d.cmds([
