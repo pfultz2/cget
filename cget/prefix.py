@@ -189,6 +189,10 @@ class CGetPrefix:
             src_dir = builder.fetch(pb.pkg_src.url, pb.hash)
             # Install any dependencies first
             self.install_deps(pb, src_dir, test=test, test_all=test_all, generator=generator)
+            # Setup cmake file
+            if pb.cmake: 
+                target = os.path.join(src_dir, 'CMakeLists.txt')
+                shutil.copyfile(pb.cmake, target)
             # Confirue and build
             builder.configure(src_dir, defines=pb.define, generator=generator, install_prefix=install_dir)
             builder.build(config='Release')

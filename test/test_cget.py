@@ -138,6 +138,14 @@ def test_dir_custom_build_path(d):
 def test_prefix(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', prefix=d.get_path('usr')))
 
+@pytest.mark.xfail
+def test_xcmake_fail(d):
+    d.cmds(install_cmds(url=get_exists_path('libsimplebare'), lib='simple'))
+
+def test_xcmake(d):
+    url = get_exists_path('libsimplebare') + ' --cmake ' + get_exists_path('libsimple', 'CMakeLists.txt')
+    d.cmds(install_cmds(url=url, lib='simple', alias=get_exists_path('libsimplebare')))
+
 def test_rm(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', remove='rm'))
 
