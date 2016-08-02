@@ -69,13 +69,14 @@ def init_command(prefix, toolchain, cxx, cxxflags, ldflags, std, define, shared,
 @click.option('-f', '--file', default=None, help="Install packages listed in the file")
 @click.option('-D', '--define', multiple=True, help="Extra configuration variables to pass to CMake")
 @click.option('-G', '--generator', envvar='CGET_GENERATOR', help='Set the generator for CMake to use')
+@click.option('-X', '--cmake', help='Set cmake file to use to build project')
 @click.argument('pkgs', nargs=-1, type=click.STRING)
-def install_command(prefix, pkgs, define, file, test, test_all, update, generator):
+def install_command(prefix, pkgs, define, file, test, test_all, update, generator, cmake):
     """ Install packages """
-    pbs = [PackageBuild(pkg) for pkg in pkgs]
+    pbs = [PackageBuild(pkg, define=define, cmake=cmake) for pkg in pkgs]
     for pb in list(prefix.from_file(file))+pbs:
         with prefix.try_("Failed to build package {}".format(pb.to_name()), on_fail=lambda: prefix.remove(pb)):
-            click.echo(prefix.install(pb.merge(define), test=test, test_all=test_all, update=update, generator=generator))
+            click.echo(prefix.install(pb, test=test, test_all=test_all, update=update, generator=generator))
 
 @cli.command(name='build')
 @use_prefix

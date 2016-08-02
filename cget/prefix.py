@@ -149,6 +149,8 @@ class CGetPrefix:
     def parse_pkg_build(self, pkg, start=None):
         if isinstance(pkg, PackageBuild): 
             pkg.pkg_src = self.parse_pkg_src(pkg.pkg_src, start)
+            if pkg.cmake and not os.path.isabs(pkg.cmake):
+                pkg.cmake = util.actual_path(pkg.cmake, start)
             return pkg
         else: return PackageBuild(self.parse_pkg_src(pkg, start))
 
@@ -189,6 +191,10 @@ class CGetPrefix:
             src_dir = builder.fetch(pb.pkg_src.url, pb.hash)
             # Install any dependencies first
             self.install_deps(pb, src_dir, test=test, test_all=test_all, generator=generator)
+            # Setup cmake file
+            if pb.cmake: 
+                target = os.path.join(src_dir, 'CMakeLists.txt')
+                shutil.copyfile(pb.cmake, target)
             # Confirue and build
             builder.configure(src_dir, defines=pb.define, generator=generator, install_prefix=install_dir)
             builder.build(config='Release')
