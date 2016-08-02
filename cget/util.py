@@ -111,6 +111,11 @@ def copy_to(src, dst_dir):
     else: shutil.copytree(src, target)
     return target
 
+def symlink_to(src, dst_dir):
+    target = os.path.join(dst_dir, os.path.basename(src))
+    os.symlink(src, target)
+    return target
+
 def download_to(url, download_dir):
     name = url.split('/')[-1]
     file = os.path.join(download_dir, name)
@@ -123,7 +128,7 @@ def download_to(url, download_dir):
     return file
 
 def retrieve_url(url, dst):
-    if url.startswith('file://'): return copy_to(url[7:], dst)
+    if url.startswith('file://'): return symlink_to(url[7:], dst)
     else: return download_to(url, dst)
 
 def extract_ar(archive, dst):
