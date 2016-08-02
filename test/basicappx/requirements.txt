@@ -1,0 +1,3 @@
+# Initial comment
+simple:../libsimplebare --cmake ../libsimple/CMakeLists.txt # A comment
+# Trailing comment
