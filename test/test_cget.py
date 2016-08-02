@@ -50,8 +50,8 @@ class DirForTests:
         cget.util.write_to(p, content)
         return p
 
-    def get_path(self, p):
-        return os.path.join(self.tmp_dir, p)
+    def get_path(self, *ps):
+        return os.path.join(self.tmp_dir, *ps)
 
 @pytest.fixture
 def d(tmpdir):
@@ -131,6 +131,10 @@ def test_tar_alias(d):
 
 def test_dir(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple'))
+
+def test_local_dir(d):
+    cget.util.copy_to(get_exists_path('libsimple'), d.tmp_dir)
+    d.cmds(install_cmds(url='.', lib='simple'), cwd=d.get_path('libsimple'))
 
 def test_dir_custom_build_path(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', build_path=d.get_path('my_build')))
