@@ -21,17 +21,25 @@ class AliasedGroup(click.Group):
 
 @click.group(cls=AliasedGroup, context_settings={'help_option_names': ['-h', '--help']})
 @click.version_option(version=__version__, prog_name='cget')
-def cli():
-    pass
+@click.option('-p', '--prefix', envvar='CGET_PREFIX', help='Set prefix used to install packages')
+@click.option('-v', '--verbose', is_flag=True, envvar='VERBOSE', help="Enable verbose mode")
+@click.option('-B', '--build-path', envvar='CGET_BUILD_PATH', help='Set the path for the build directory to use when building the package')
+@click.pass_context
+def cli(ctx, prefix, verbose, build_path):
+    ctx.obj = {}
+    if prefix: ctx.obj['PREFIX'] = prefix
+    if verbose: ctx.obj['VERBOSE'] = verbose
+    if build_path: ctx.obj['BUILD_PATH'] = build_path
 
 def use_prefix(f):
-    @click.option('-p', '--prefix', envvar='CGET_PREFIX', help='Set prefix used to install packages')
-    @click.option('-v', '--verbose', is_flag=True, envvar='VERBOSE', help="Enable verbose mode")
-    @click.option('-B', '--build-path', envvar='CGET_BUILD_PATH', help='Set the path for the build directory to use when building the package')
+    @click.option('-p', '--prefix', help='Set prefix used to install packages')
+    @click.option('-v', '--verbose', is_flag=True, help="Enable verbose mode")
+    @click.option('-B', '--build-path', help='Set the path for the build directory to use when building the package')
+    @click.pass_obj
     @functools.wraps(f)
-    def w(prefix, verbose, build_path, *args, **kwargs):
-        if prefix is None: prefix = os.path.join(os.getcwd(), 'cget')
-        f(CGetPrefix(prefix, verbose, build_path), *args, **kwargs)
+    def w(obj, prefix, verbose, build_path, *args, **kwargs):
+        p = CGetPrefix(prefix or obj.get('PREFIX'), verbose or obj.get('VERBOSE'), build_path or obj.get('BUILD_PATH'))
+        f(p, *args, **kwargs)
     return w
 
 @cli.command(name='init')
