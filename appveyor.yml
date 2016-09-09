@@ -15,7 +15,7 @@ install:
   - "c:\\python27\\python c:\\get-pip.py"
   - "c:\\python27\\Scripts\\pip install tox cget"
   # Install pkgconfig using cget
-  - "c:\\python27\\Scripts\\cget install -p c:\\cget pfultz2/pkgconfig"
+  - "c:\\python27\\Scripts\\cget install --verbose -p c:\\cget pfultz2/pkgconfig"
 build_script:
   - cmd: set PATH=c:\cget\bin;%PATH%
   - cmd: "set TOX_PYTEST_NTHREADS=8"
