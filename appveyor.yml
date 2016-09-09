@@ -11,15 +11,15 @@ install:
   # - cinst pkgconfiglite
   - ps: Invoke-WebRequest "https://bootstrap.pypa.io/ez_setup.py" -OutFile "c:\\ez_setup.py"
   - ps: Invoke-WebRequest "https://bootstrap.pypa.io/get-pip.py" -OutFile "c:\\get-pip.py"
-  - "c:\\python27\\python c:\\ez_setup.py"
-  - "c:\\python27\\python c:\\get-pip.py"
-  - "c:\\python27\\Scripts\\pip install tox cget"
+  - "c:\\Python34\\python c:\\ez_setup.py"
+  - "c:\\Python34\\python c:\\get-pip.py"
+  - "c:\\Python34\\Scripts\\pip install tox cget"
   # Install pkgconfig using cget
-  - "c:\\python27\\Scripts\\cget install --verbose -p c:\\cget pfultz2/pkgconfig"
+  - "c:\\Python34\\Scripts\\cget install --verbose -p c:\\cget pfultz2/pkgconfig"
 build_script:
   - cmd: set PATH=c:\cget\bin;%PATH%
   - cmd: "set TOX_PYTEST_NTHREADS=8"
   - cmd: call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\vsvars32.bat"
-  - "c:\\python27\\Scripts\\tox --version"
-  - "c:\\python27\\Scripts\\pip --version"
-  - "c:\\python27\\Scripts\\tox -- -x"
+  - "c:\\Python34\\Scripts\\tox --version"
+  - "c:\\Python34\\Scripts\\pip --version"
+  - "c:\\Python34\\Scripts\\tox -- -x"
