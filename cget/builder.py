@@ -40,12 +40,14 @@ class Builder:
             util.extract_ar(archive=f, dst=self.top_dir)
         return next(util.get_dirs(self.top_dir))
 
-    def configure(self, src_dir, defines=None, generator=None, install_prefix=None):
+    def configure(self, src_dir, defines=None, generator=None, install_prefix=None, test=True):
         self.prefix.log("configure")
         util.mkdir(self.build_dir)
         args = [src_dir]
         if generator is not None: args = ['-G', util.quote(generator)] + args
         if self.prefix.verbose: args.extend(['-DCMAKE_VERBOSE_MAKEFILE=On'])
+        if test: args.extend(['-DBUILD_TESTING=On'])
+        else: args.extend(['-DBUILD_TESTING=Off'])
         if install_prefix is not None: args.insert(0, '-DCMAKE_INSTALL_PREFIX=' + install_prefix)
         for d in defines or []:
             args.append('-D{0}'.format(d))
