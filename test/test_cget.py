@@ -68,8 +68,8 @@ class CGetCmd:
         self.prefix = prefix
         self.build_path = build_path
 
-    def __call__(self, arg, *args):
-        p = [__cget_exe__, arg]
+    def __call__(self, *args):
+        p = [__cget_exe__]
         if self.prefix is not None: p.append('--prefix {}'.format(self.prefix))
         if self.build_path is not None: p.append('--build-path {}'.format(self.build_path))
         return ' '.join(p+list(remove_empty_elements(args)))

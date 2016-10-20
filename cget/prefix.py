@@ -53,7 +53,7 @@ PACKAGE_SOURCE_TYPES = (six.string_types, PackageSource, PackageBuild)
 
 class CGetPrefix:
     def __init__(self, prefix, verbose=False, build_path=None):
-        self.prefix = prefix
+        self.prefix = prefix or os.path.join(os.getcwd(), 'cget')
         self.verbose = verbose
         self.build_path_var = build_path
         self.cmd = util.Commander(paths=[self.get_path('bin')], env=self.get_env(), verbose=self.verbose)
@@ -196,7 +196,7 @@ class CGetPrefix:
                 target = os.path.join(src_dir, 'CMakeLists.txt')
                 shutil.copyfile(pb.cmake, target)
             # Confirue and build
-            builder.configure(src_dir, defines=pb.define, generator=generator, install_prefix=install_dir)
+            builder.configure(src_dir, defines=pb.define, generator=generator, install_prefix=install_dir, test=test)
             builder.build(config='Release')
             # Run tests if enabled
             if test or test_all: builder.test(config='Release')
