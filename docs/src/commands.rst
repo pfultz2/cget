@@ -85,7 +85,7 @@ init
 
 .. program:: init
 
-This will initialize the cmake toolchain. By default, the ``install`` command will initialize a cmake toolchain if there one doesn't exists. This allows setting different variable, such as setting C++ compiler or standard version.
+This will initialize the cmake toolchain. By default, the ``install`` command will initialize a cmake toolchain if one doesn't exists. This allows setting different variable, such as setting C++ compiler or standard version.
 
 .. option::  -p, --prefix PATH      
 
