@@ -83,6 +83,14 @@ def symlink_dir(src, dst):
             mkdir(d)
             os.symlink(os.path.join(root, file), os.path.join(d, file))
 
+def copy_dir(src, dst):
+    for root, dirs, files in os.walk(src):
+        for file in files:
+            path = os.path.relpath(root, src)
+            d = os.path.join(dst, path)
+            mkdir(d)
+            shutil.copy2(os.path.join(root, file), os.path.join(d, file))
+
 def rm_symlink(file):
     if os.path.islink(file):
         f = os.readlink(file)
@@ -92,6 +100,16 @@ def rm_symlink_dir(d):
     for root, dirs, files in os.walk(d):
         for file in files:
             rm_symlink(os.path.join(root, file))
+
+def rm_dup_dir(d, prefix):
+    for root, dirs, files in os.walk(d):
+        for file in files:
+            fullpath = os.path.join(root, file)
+            relpath = os.path.relpath(fullpath, d)
+            if '..' in relpath: 
+                raise BuildError('Trying to remove link outside of prefix directory: ' + relpath)
+            os.remove(os.path.join(prefix, relpath))
+            os.remove(fullpath)
 
 def rm_empty_dirs(d):
     has_files = False

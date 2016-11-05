@@ -9,6 +9,8 @@ import cget.util as util
 from cget.types import returns
 from cget.types import params
 
+USE_SYMLINKS=(os.name == 'posix')
+
 @params(s=six.string_types)
 def parse_deprecated_alias(s):
     i = s.find(':', 0, max(s.find('://'), s.find(':\\')))
@@ -202,7 +204,10 @@ class CGetPrefix:
             if test or test_all: builder.test(config='Release')
             # Install
             builder.build(target='install', config='Release')
-            util.symlink_dir(install_dir, self.prefix)
+            if USE_SYMLINKS: util.symlink_dir(install_dir, self.prefix)
+            else: 
+                print("util.copy_dir: ", install_dir, self.prefix)
+                util.copy_dir(install_dir, self.prefix)
         self.write_parent(pb, track=track)
         return "Successfully installed {}".format(pb.to_name())
 
@@ -244,8 +249,12 @@ class CGetPrefix:
         pkg = self.parse_pkg_src(pkg)
         pkg_dir = self.get_package_directory(pkg.to_fname())
         if os.path.exists(pkg_dir):
-            shutil.rmtree(pkg_dir)
-            util.rm_symlink_dir(self.prefix)
+            if USE_SYMLINKS:
+                shutil.rmtree(pkg_dir)
+                util.rm_symlink_dir(self.prefix)
+            else:
+                util.rm_dup_dir(os.path.join(pkg_dir, 'install'), os.path.abspath(self.prefix))
+                shutil.rmtree(pkg_dir)
             util.rm_empty_dirs(self.prefix)
             return "Removed package {}".format(pkg.name)
         else:
@@ -269,9 +278,15 @@ class CGetPrefix:
                     yield child
 
     def clean(self):
-        util.delete_dir(self.get_private_path())
-        util.rm_symlink_dir(self.prefix)
-        util.rm_empty_dirs(self.prefix)
+        if USE_SYMLINKS:
+            util.delete_dir(self.get_private_path())
+            util.rm_symlink_dir(self.prefix)
+            util.rm_empty_dirs(self.prefix)
+        else:
+            for p in self.list():
+                self.remove(p)
+            util.delete_dir(self.get_private_path())
+
 
     def pkg_config_path(self):
         libs = []
