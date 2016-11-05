@@ -131,7 +131,7 @@ Which is necessary to use modern C++ on many compilers.
 Supported platforms
 -------------------
 
-This is supported on python 2.7, 3.4, and 3.5. However, windows is only supported using python 3. 
+This is supported on python 2.7, 3.4, and 3.5. 
 
 Future work
 -----------
