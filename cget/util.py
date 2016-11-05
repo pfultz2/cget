@@ -210,6 +210,12 @@ def to_define_dict(xs):
             result[x] = ''
     return result
 
+def as_dict_str(d):
+    result = {}
+    for x in d:
+        result[x] = str(d[x])
+    return result
+
 def actual_path(path, start=None):
     return os.path.normpath(os.path.join(start or os.getcwd(), os.path.expanduser(path)))
 
@@ -229,7 +235,7 @@ class Commander:
         option_args = ["{0}={1}".format(key, value) for key, value in six.iteritems(options or {})]
         c = [exe] + option_args + as_list(args or [])
         if self.verbose: click.secho(' '.join(c), bold=True)
-        cmd(c, env=merge(self.env, self._get_paths_env(), env), **kwargs)
+        cmd(c, env=as_dict_str(merge(self.env, self._get_paths_env(), env)), **kwargs)
 
     def __getattr__(self, name):
         c = name.replace('_', '-')
