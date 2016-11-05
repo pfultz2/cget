@@ -15,6 +15,7 @@ else:
 
 from six.moves.urllib import request
 
+USE_SYMLINKS=(os.name == 'posix')
 
 def is_string(obj):
     return isinstance(obj, six.string_types)
@@ -146,7 +147,9 @@ def download_to(url, download_dir):
     return file
 
 def retrieve_url(url, dst):
-    if url.startswith('file://'): return symlink_to(url[7:], dst)
+    if url.startswith('file://'): 
+        if USE_SYMLINKS: return symlink_to(url[7:], dst)
+        else: return copy_to(url[7:], dst)
     else: return download_to(url, dst)
 
 def extract_ar(archive, dst):

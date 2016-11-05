@@ -132,9 +132,10 @@ def test_tar_alias(d):
 def test_dir(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple'))
 
-def test_local_dir(d):
-    cget.util.copy_to(get_exists_path('libsimple'), d.tmp_dir)
-    d.cmds(install_cmds(url='.', lib='simple'), cwd=d.get_path('libsimple'))
+if cget.util.USE_SYMLINKS:
+    def test_local_dir(d):
+        cget.util.copy_to(get_exists_path('libsimple'), d.tmp_dir)
+        d.cmds(install_cmds(url='.', lib='simple'), cwd=d.get_path('libsimple'))
 
 def test_dir_custom_build_path(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', build_path=d.get_path('my_build')))

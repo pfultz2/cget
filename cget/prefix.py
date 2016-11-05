@@ -9,7 +9,6 @@ import cget.util as util
 from cget.types import returns
 from cget.types import params
 
-USE_SYMLINKS=(os.name == 'posix')
 
 @params(s=six.string_types)
 def parse_deprecated_alias(s):
@@ -204,7 +203,7 @@ class CGetPrefix:
             if test or test_all: builder.test(config='Release')
             # Install
             builder.build(target='install', config='Release')
-            if USE_SYMLINKS: util.symlink_dir(install_dir, self.prefix)
+            if util.USE_SYMLINKS: util.symlink_dir(install_dir, self.prefix)
             else: 
                 print("util.copy_dir: ", install_dir, self.prefix)
                 util.copy_dir(install_dir, self.prefix)
@@ -249,7 +248,7 @@ class CGetPrefix:
         pkg = self.parse_pkg_src(pkg)
         pkg_dir = self.get_package_directory(pkg.to_fname())
         if os.path.exists(pkg_dir):
-            if USE_SYMLINKS:
+            if util.USE_SYMLINKS:
                 shutil.rmtree(pkg_dir)
                 util.rm_symlink_dir(self.prefix)
             else:
@@ -278,7 +277,7 @@ class CGetPrefix:
                     yield child
 
     def clean(self):
-        if USE_SYMLINKS:
+        if util.USE_SYMLINKS:
             util.delete_dir(self.get_private_path())
             util.rm_symlink_dir(self.prefix)
             util.rm_empty_dirs(self.prefix)
