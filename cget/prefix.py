@@ -9,6 +9,7 @@ import cget.util as util
 from cget.types import returns
 from cget.types import params
 
+__CGET_DIR__ = os.path.dirname(os.path.realpath(__file__))
 
 @params(s=six.string_types)
 def parse_deprecated_alias(s):
@@ -47,6 +48,16 @@ def parse_cmake_var_type(key, value):
         return (key, 'BOOL', value)
     else:
         return (key, 'STRING', value)
+
+def find_cmake(p, start):
+    if p and not os.path.isabs(p):
+        absp = util.actual_path(p, start)
+        if os.path.exists(absp): return absp
+        else:
+            x = os.path.join(__CGET_DIR__, 'cmake', p)
+            if os.path.exists(x): return x
+            elif os.path.exists(x + '.cmake'): return x + '.cmake'
+    return p
 
 
 
@@ -150,8 +161,7 @@ class CGetPrefix:
     def parse_pkg_build(self, pkg, start=None):
         if isinstance(pkg, PackageBuild): 
             pkg.pkg_src = self.parse_pkg_src(pkg.pkg_src, start)
-            if pkg.cmake and not os.path.isabs(pkg.cmake):
-                pkg.cmake = util.actual_path(pkg.cmake, start)
+            if pkg.cmake: pkg.cmake = find_cmake(pkg.cmake, start)
             return pkg
         else: return PackageBuild(self.parse_pkg_src(pkg, start))
 

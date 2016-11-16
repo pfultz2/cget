@@ -249,6 +249,9 @@ def test_reqs_hash_fail(d):
 def test_app_include_dir(d):
     d.cmds(install_cmds(url=get_exists_path('basicapp-include'), lib='simple', alias='simple', size=2))
 
+def test_app_header_dep(d):
+    d.cmds(install_cmds(url=get_exists_path('basicapp-simpleinclude'), alias='simple', size=2))
+
 # Basic app needs pkg-config
 if __has_pkg_config__:
 
