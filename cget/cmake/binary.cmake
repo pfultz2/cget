@@ -14,7 +14,7 @@ endmacro()
 subdirlist(DIRS ${CMAKE_CURRENT_SOURCE_DIR})
 
 foreach(subdir ${DIRS})
-    install(DIRECTORY ${subdir}/ DESTINATION ${subdir})
+    install(DIRECTORY ${subdir}/ DESTINATION ${subdir} USE_SOURCE_PERMISSIONS)
 endforeach()
 
 include(CTest)
