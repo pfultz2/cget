@@ -5,7 +5,10 @@ if sys.version_info[0] < 3:
         import contextlib
         import lzma
     except:
-        pass
+        try:
+            from backports import lzma
+        except:
+            pass
 import tarfile
 
 if os.name == 'posix' and sys.version_info[0] < 3:
