@@ -155,6 +155,14 @@ def test_xcmake_s(d):
     url = get_exists_path('libsimplebare') + ' -X ' + get_exists_path('libsimple', 'CMakeLists.txt')
     d.cmds(install_cmds(url=url, lib='simple', alias=get_exists_path('libsimplebare')))
 
+@pytest.mark.xfail(strict=True)
+def test_header_xcmake_fail(d):
+    d.cmds(install_cmds(url=get_exists_path('simpleinclude')))
+
+def test_header_xcmake(d):
+    url = get_exists_path('simpleinclude') + ' --cmake header'
+    d.cmds(install_cmds(url=url, alias=get_exists_path('simpleinclude')))
+
 def test_rm(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', remove='rm'))
 
