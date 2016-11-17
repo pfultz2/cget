@@ -199,7 +199,7 @@ class CGetPrefix:
             else: return "Package {} already installed".format(pb.to_name())
         with self.create_builder(uuid.uuid4().hex, tmp=True) as builder:
             # Fetch package
-            src_dir = builder.fetch(pb.pkg_src.url, pb.hash)
+            src_dir = builder.fetch(pb.pkg_src.url, pb.hash, (pb.cmake != None))
             # Install any dependencies first
             self.install_deps(pb, src_dir, test=test, test_all=test_all, generator=generator)
             # Setup cmake file

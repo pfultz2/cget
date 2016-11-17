@@ -146,9 +146,9 @@ def download_to(url, download_dir):
         request.FancyURLopener().retrieve(url, filename=file, reporthook=hook, data=None)
     return file
 
-def retrieve_url(url, dst):
+def retrieve_url(url, dst, copy=False):
     if url.startswith('file://'): 
-        if USE_SYMLINKS: return symlink_to(url[7:], dst)
+        if USE_SYMLINKS and not copy: return symlink_to(url[7:], dst)
         else: return copy_to(url[7:], dst)
     else: return download_to(url, dst)
 
