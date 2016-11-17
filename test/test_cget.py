@@ -143,7 +143,7 @@ def test_dir_custom_build_path(d):
 def test_prefix(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', prefix=d.get_path('usr')))
 
-@pytest.mark.xfail
+@pytest.mark.xfail(strict=True)
 def test_xcmake_fail(d):
     d.cmds(install_cmds(url=get_exists_path('libsimplebare'), lib='simple'))
 
@@ -199,7 +199,7 @@ def test_build_target(d):
     ])
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail(strict=True)
 def test_build_target_fail(d):
     d.cmds([cget_cmd('build', '--verbose', '--target xyz', get_exists_path('simpleapp'))])
 
@@ -238,7 +238,7 @@ def test_reqs_hash(d):
     reqs_file = d.write_to('reqs', ["{0} --hash=sha1:{1}".format(shlex_quote(ar), h)])
     d.cmds(install_cmds(url='--file {}'.format(reqs_file), lib='simple', alias=ar))
 
-@pytest.mark.xfail
+@pytest.mark.xfail(strict=True)
 def test_reqs_hash_fail(d):
     ar = d.get_path('libsimple.tar.gz')
     create_ar(archive=ar, src=get_exists_path('libsimple'))
@@ -412,7 +412,7 @@ def test_install_simple_basic_app2_test_without_test(d):
         cget_cmd('size', '0')
     ])
 
-@pytest.mark.xfail
+@pytest.mark.xfail(strict=True)
 def test_flags_fail(d):
     d.cmds([cget_cmd('install', '--verbose --test -DCGET_FLAG=Off', get_path('libsimpleflag'))])
 
@@ -432,7 +432,7 @@ def test_build_flags_init(d):
 def test_flags_init_integer(d):
     d.cmds(install_cmds(init='-DCGET_FLAG=1', url=get_exists_path('libsimpleflag')))
 
-@pytest.mark.xfail
+@pytest.mark.xfail(strict=True)
 def test_flags_fail_integer(d):
     d.cmds([cget_cmd('install --verbose --test -DCGET_FLAG=0', get_path('libsimpleflag'))])
 
@@ -440,7 +440,7 @@ def test_flags_integer(d):
     p = get_exists_path('libsimpleflag')
     d.cmds(install_cmds(url='-DCGET_FLAG=1 {}'.format(p), alias=p))
 
-@pytest.mark.xfail
+@pytest.mark.xfail(strict=True)
 def test_flags_fail_define(d):
     d.cmds([cget_cmd('install', '--verbose --test --define CGET_FLAG=Off', get_path('libsimpleflag'))])
 
@@ -476,6 +476,6 @@ def test_shared_init(d):
 def test_static_init(d):
     d.cmds(install_cmds(init='--static', url=get_exists_path('libsimple'), lib='simple'))
 
-@pytest.mark.xfail
+@pytest.mark.xfail(strict=True)
 def test_shared_static_init(d):
     d.cmds(install_cmds(init='--shared --static', url=get_exists_path('libsimple'), lib='simple'))
