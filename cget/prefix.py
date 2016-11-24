@@ -80,9 +80,10 @@ class CGetPrefix:
         }
 
     def write_cmake(self, always_write=False, **kwargs):
-        return util.mkfile(self.get_private_path(), 'cget.cmake', util.flat(self.generate_cmake_toolchain(**kwargs)), always_write=always_write)
+        return util.mkfile(self.get_private_path(), 'cget.cmake', self.generate_cmake_toolchain(**kwargs), always_write=always_write)
 
     @returns(inspect.isgenerator)
+    @util.yield_from
     def generate_cmake_toolchain(self, toolchain=None, cxx=None, cxxflags=None, ldflags=None, std=None, defines=None):
         set_ = cmake_set
         if_ = cmake_if

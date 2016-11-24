@@ -192,6 +192,12 @@ def flat(*args):
         for x in arg:
             for y in x: yield y
 
+def yield_from(f):
+    @six.wraps(f)
+    def g(*args, **kwargs):
+        return flat(f(*args, **kwargs))
+    return g
+
 def cmd(args, env=None, **kwargs):
     e = merge(os.environ, env)
     child = subprocess.Popen(args, env=e, **kwargs)
