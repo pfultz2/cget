@@ -15,6 +15,7 @@ Contents:
    src/package_src
    src/requirements
    src/commands
+   src/building
 
 
 Indices and tables

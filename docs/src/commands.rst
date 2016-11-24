@@ -142,11 +142,11 @@ A package can be installed using the ``install`` command. When a package is inst
 
     mkdir build
     cd build
-    cmake ..
+    cmake -DCMAKE_TOOLCHAIN_FILE=$CGET_PREFIX/cget/cget.cmake -DCMAKE_INSTALL_PREFIX=$CGET_PREFIX ..
     cmake --build .
     cmake --build . --target install
 
-However, ``cget`` will always create the build directory out of source. It will also setup cmake to point to the correct prefix and install directories.
+However, ``cget`` will always create the build directory out of source. The ``cget.cmake`` is a toolchain file that is setup by ``cget``, so that cmake can find the installed packages. Other setting can be added about the toolchain as well(see :ref:`init`).
 
 .. option:: <package-source>
 

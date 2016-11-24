@@ -21,7 +21,9 @@ Or installed directly with python::
 
     python setup.py install
 
-On windows, you may want to install pkgconfig-lite to support packages that use pkgconfig.
+On windows, you may want to install pkgconfig-lite to support packages that use pkgconfig. This can be installed with ``cget`` as well:
+
+    cget install pfultz2/pkgconfig
 
 ----------
 Quickstart
