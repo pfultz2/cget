@@ -200,7 +200,7 @@ def test_build_dir_custom_build_path(d):
     d.cmds(build_cmds(get_exists_path('libsimple'), build_path=d.get_path('my_build')))
 
 def test_build_dir_custom_build_path2(d):
-    d.cmds(build_cmds(get_exists_path('basicapp'), build_path=d.get_path('my_build')))
+    d.cmds(build_cmds(get_exists_path('basicapp'), build_path=d.get_path('my_build'), size=1))
 
 def test_build_current_dir(d):
     cwd = get_exists_path('libsimple')
