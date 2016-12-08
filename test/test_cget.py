@@ -35,6 +35,9 @@ class DirForTests:
     def __init__(self, tmp_dir):
         self.tmp_dir = tmp_dir
 
+    def dir(self, *args):
+        return DirForTests(os.path.join(self.tmp_dir, *args))
+
     def cmd(self, *args, **kwargs):
         print(args)
         if 'cwd' not in kwargs: kwargs['cwd'] = self.tmp_dir
@@ -201,6 +204,12 @@ def test_build_dir_custom_build_path(d):
 
 def test_build_dir_custom_build_path2(d):
     d.cmds(build_cmds(get_exists_path('basicapp'), build_path=d.get_path('my_build'), size=1))
+
+def test_tmp_build_dir_custom_build_path(d):
+    d.dir('tmp').cmds(build_cmds(get_exists_path('libsimple'), build_path=d.get_path('my_build')))
+
+def test_tmp_build_dir_custom_build_path2(d):
+    d.dir('tmp').cmds(build_cmds(get_exists_path('basicapp'), build_path=d.get_path('my_build'), size=1))
 
 def test_build_current_dir(d):
     cwd = get_exists_path('libsimple')
