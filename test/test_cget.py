@@ -77,31 +77,32 @@ class CGetCmd:
 def cget_cmd(*args):
     return CGetCmd()(*args)
 
-def install_cmds(url, lib=None, alias=None, init=None, remove='remove', list_='list', size=1, prefix=None, build_path=None):
+def install_cmds(url, lib=None, alias=None, init=None, remove='remove', list_='list', size=1, prefix=None, build_path=None, variants=None):
     cg = CGetCmd(prefix=prefix, build_path=build_path)
     yield cg('init', init)
-    yield cg(list_)
-    yield cg('clean', '-y')
-    yield cg('init', init)
-    yield cg(list_)
-    yield cg('size', '0')
-    yield cg('install', '--verbose --test', url)
-    yield cg('size', str(size))
-    yield cg(list_)
-    if __has_pkg_config__ and lib is not None:
-        yield cg('pkg-config', '--list-all')
-        yield cg('pkg-config', '--exists', lib)
-        yield cg('pkg-config', '--cflags --libs', lib)
-    if alias is None: yield cg(remove, '--verbose -y', url)
-    else: yield cg(remove, '--verbose -y', alias)
-    yield cg('size', '0')
-    yield cg(list_)
-    yield cg('install', '--verbose --test', url)
-    yield cg(list_)
-    yield cg('size', str(size))
-    yield cg('clean', '-y')
-    yield cg(list_)
-    yield cg('size', '0')
+    for variant in variants or ['--debug', '--release', '']:
+        yield cg(list_)
+        yield cg('clean', '-y')
+        yield cg('init', init)
+        yield cg(list_)
+        yield cg('size', '0')
+        yield cg('install', '--verbose --test', variant, url)
+        yield cg('size', str(size))
+        yield cg(list_)
+        if __has_pkg_config__ and lib is not None:
+            yield cg('pkg-config', '--list-all')
+            yield cg('pkg-config', '--exists', lib)
+            yield cg('pkg-config', '--cflags --libs', lib)
+        if alias is None: yield cg(remove, '--verbose -y', url)
+        else: yield cg(remove, '--verbose -y', alias)
+        yield cg('size', '0')
+        yield cg(list_)
+        yield cg('install', '--verbose --test', variant, url)
+        yield cg(list_)
+        yield cg('size', str(size))
+        yield cg('clean', '-y')
+        yield cg(list_)
+        yield cg('size', '0')
 
 def build_cmds(url=None, init=None, size=0, defines=None, prefix=None, build_path=None):
     cg = CGetCmd(prefix=prefix, build_path=build_path)
@@ -131,6 +132,13 @@ def test_tar_alias(d):
 
 def test_dir(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple'))
+
+@pytest.mark.xfail(strict=True)
+def test_debug_dir_fail(d):
+    d.cmds(install_cmds(url=get_exists_path('libsimpledebug'), lib='simple', variants=['--debug']))
+
+def test_debug_dir_pass(d):
+    d.cmds(install_cmds(url=get_exists_path('libsimpledebug'), lib='simple', variants=['--release', '']))
 
 if cget.util.USE_SYMLINKS:
     def test_local_dir(d):
