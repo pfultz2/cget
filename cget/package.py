@@ -38,7 +38,7 @@ def fname_to_pkg(fname):
     else: return PackageSource(name=fname.replace('__', '/'), fname=fname)
 
 class PackageBuild:
-    def __init__(self, pkg_src=None, define=None, parent=None, test=False, hash=None, build=None, cmake=None):
+    def __init__(self, pkg_src=None, define=None, parent=None, test=False, hash=None, build=None, cmake=None, variant=None):
         self.pkg_src = pkg_src
         self.define = define or []
         self.parent = parent
@@ -46,6 +46,7 @@ class PackageBuild:
         self.build = build
         self.hash = hash
         self.cmake = cmake
+        self.variant = variant or 'Release'
 
     def merge(self, define):
         result = copy.copy(self)
@@ -74,5 +75,7 @@ def parse_pkg_build_tokens(args):
     parser.add_argument('-X', '--cmake')
     parser.add_argument('-t', '--test', action='store_true')
     parser.add_argument('-b', '--build', action='store_true')
+    parser.add_argument('--release', action='store_const', dest='variant', const='Release')
+    parser.add_argument('--debug', action='store_const', dest='variant', const='Debug')
     return parser.parse_args(args=args, namespace=PackageBuild())
 

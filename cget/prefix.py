@@ -208,12 +208,12 @@ class CGetPrefix:
                 target = os.path.join(src_dir, 'CMakeLists.txt')
                 shutil.copyfile(pb.cmake, target)
             # Confirue and build
-            builder.configure(src_dir, defines=pb.define, generator=generator, install_prefix=install_dir, test=test)
-            builder.build(config='Release')
+            builder.configure(src_dir, defines=pb.define, generator=generator, install_prefix=install_dir, test=test, variant=pb.variant)
+            builder.build(variant=pb.variant)
             # Run tests if enabled
-            if test or test_all: builder.test(config='Release')
+            if test or test_all: builder.test(variant=pb.variant)
             # Install
-            builder.build(target='install', config='Release')
+            builder.build(target='install', variant=pb.variant)
             if util.USE_SYMLINKS: util.symlink_dir(install_dir, self.prefix)
             else: 
                 print("util.copy_dir: ", install_dir, self.prefix)
@@ -230,9 +230,9 @@ class CGetPrefix:
             self.install_deps(pb, src_dir, generator=generator, test=test)
             # Configure and build
             if not builder.exists: builder.configure(src_dir, defines=pb.define, generator=generator)
-            builder.build(config='Release', target=target)
+            builder.build(variant='Release', target=target)
             # Run tests if enabled
-            if test: builder.test(config='Release')
+            if test: builder.test(variant='Release')
 
     @params(pb=PACKAGE_SOURCE_TYPES)
     def build_path(self, pb):

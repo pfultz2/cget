@@ -40,7 +40,7 @@ class Builder:
             util.extract_ar(archive=f, dst=self.top_dir)
         return next(util.get_dirs(self.top_dir))
 
-    def configure(self, src_dir, defines=None, generator=None, install_prefix=None, test=True):
+    def configure(self, src_dir, defines=None, generator=None, install_prefix=None, test=True, variant=None):
         self.prefix.log("configure")
         util.mkdir(self.build_dir)
         args = [src_dir]
@@ -48,6 +48,7 @@ class Builder:
         if self.prefix.verbose: args.extend(['-DCMAKE_VERBOSE_MAKEFILE=On'])
         if test: args.extend(['-DBUILD_TESTING=On'])
         else: args.extend(['-DBUILD_TESTING=Off'])
+        args.extend(['-DCMAKE_BUILD_TYPE={}'.format(variant or 'Release')])
         if install_prefix is not None: args.insert(0, '-DCMAKE_INSTALL_PREFIX=' + install_prefix)
         for d in defines or []:
             args.append('-D{0}'.format(d))
@@ -57,19 +58,19 @@ class Builder:
             self.show_logs()
             raise
 
-    def build(self, target=None, config=None, cwd=None):
+    def build(self, target=None, variant=None, cwd=None):
         self.prefix.log("build")
         args = ['--build', self.build_dir]
-        if config is not None: args.extend(['--config', config])
+        if variant is not None: args.extend(['--config', variant])
         if target is not None: args.extend(['--target', target])
         if self.is_make_generator(): 
             args.extend(['--', '-j', str(multiprocessing.cpu_count())])
             if self.prefix.verbose: args.append('VERBOSE=1')
         self.cmake(args=args, cwd=cwd)
 
-    def test(self, config='Release'):
+    def test(self, variant=None):
         self.prefix.log("test")
         util.try_until(
-            lambda: self.build(target='check', config=config),
-            lambda: self.prefix.cmd.ctest((self.prefix.verbose and ['-VV'] or []) + ['-C', config], cwd=self.build_dir)
+            lambda: self.build(target='check', variant=variant or 'Release'),
+            lambda: self.prefix.cmd.ctest((self.prefix.verbose and ['-VV'] or []) + ['-C', variant], cwd=self.build_dir)
         )
