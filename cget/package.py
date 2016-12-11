@@ -57,6 +57,7 @@ class PackageBuild:
         result = copy.copy(self)
         result.parent = parent.to_fname()
         result.define.extend(parent.define)
+        result.variant = parent.variant
         return result
 
     def to_fname(self):
@@ -75,7 +76,5 @@ def parse_pkg_build_tokens(args):
     parser.add_argument('-X', '--cmake')
     parser.add_argument('-t', '--test', action='store_true')
     parser.add_argument('-b', '--build', action='store_true')
-    parser.add_argument('--release', action='store_const', dest='variant', const='Release')
-    parser.add_argument('--debug', action='store_const', dest='variant', const='Debug')
     return parser.parse_args(args=args, namespace=PackageBuild())
 

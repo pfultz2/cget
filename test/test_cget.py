@@ -281,6 +281,13 @@ if __has_pkg_config__:
     def test_xapp_dir(d):
         d.cmds(install_cmds(url=get_exists_path('basicappx'), lib='simple', alias='simple', size=2))
 
+    def test_appdebug_dir_pass(d):
+        d.cmds(install_cmds(url=get_exists_path('basicappdebug'), lib='simple', alias='simple', size=2, variants=['--release', '']))
+
+    @pytest.mark.xfail(strict=True)
+    def test_appdebug_dir_fail(d):
+        d.cmds(install_cmds(url=get_exists_path('basicappdebug'), lib='simple', alias='simple', size=2, variants=['--debug']))
+
     def test_build_flag_child(d):
         d.cmds([
             cget_cmd('install', '--verbose', get_exists_path('basicappbuild')),
