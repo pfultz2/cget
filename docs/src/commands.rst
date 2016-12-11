@@ -192,6 +192,14 @@ This specifies the package source (see :ref:`pkg-src`) that will be installed.
 
     This specifies an alternative cmake file to be used to build the library. This is useful for packages that don't have a cmake file.
 
+.. option::  --debug
+
+    Install the debug version of the package.
+
+.. option::  --release
+
+    Install the release version of the package.
+
 ----
 list
 ----
