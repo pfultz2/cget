@@ -65,3 +65,19 @@ Binaries
 For binaries, ``cget`` provides a cmake file ``binary`` which will install all the files in the package without building any source files. For example, the clang binaries for ubuntu can be installed like this::
 
     cget install clang,http://llvm.org/releases/3.9.0/clang+llvm-3.9.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz  --cmake binary
+
+"""""
+Boost
+"""""
+
+A cmake ``boost`` is provided to install boost libraries as well::
+
+    cget install boost,http://downloads.sourceforge.net/project/boost/boost/1.62.0/boost_1_62_0.tar.bz2 --cmake boost
+
+Libraries can be selected with cmake variables ``BOOST_WITH_`` and ``BOOST_WITHOUT_``. For example, just Boost.Filesystem(and it dependencies) can be built as::
+
+    cget install boost,http://downloads.sourceforge.net/project/boost/boost/1.62.0/boost_1_62_0.tar.bz2 --cmake boost -DBOOST_WITH_FILESYSTEM=1
+
+Also, everthing cam be built except Boost.Python like the following::
+
+    cget install boost,http://downloads.sourceforge.net/project/boost/boost/1.62.0/boost_1_62_0.tar.bz2 --cmake boost -DBOOST_WITHOUT_PYTHON=1
