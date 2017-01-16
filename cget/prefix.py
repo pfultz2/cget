@@ -138,6 +138,21 @@ class CGetPrefix:
     def get_deps_directory(self, name, *dirs):
         return self.get_package_directory(name, 'deps', *dirs)
 
+    def parse_src_file(self, name, url, start=None):
+        f = util.actual_path(url, start)
+        self.log('parse_src_file atual_path:', start, f)
+        if os.path.exists(f): return PackageSource(name=name, url='file://' + f)
+        return None
+
+    def parse_src_github(self, name, url):
+        x = url.split('@')
+        p = x[0]
+        v = 'HEAD'
+        if len(x) > 1: v = x[1]
+        if '/' in p: url = 'https://github.com/{0}/archive/{1}.tar.gz'.format(p, v)
+        if name is None: name = p
+        return PackageSource(name=name, url=url)
+
     @returns(PackageSource)
     @params(pkg=PACKAGE_SOURCE_TYPES)
     def parse_pkg_src(self, pkg, start=None):
@@ -146,18 +161,7 @@ class CGetPrefix:
         name, url = parse_alias(pkg)
         self.log('parse_pkg_src:', name, url, pkg)
         if '://' not in url:
-            f = util.actual_path(url, start)
-            self.log('parse_pkg_src atual_path:', start, f)
-            # f = os.path.abspath(os.path.expanduser(url))
-            if os.path.exists(f):
-                url = 'file://' + f
-            else:
-                x = url.split('@')
-                p = x[0]
-                v = 'HEAD'
-                if len(x) > 1: v = x[1]
-                if '/' in p: url = 'https://github.com/{0}/archive/{1}.tar.gz'.format(p, v)
-                if name is None: name = p
+            return self.parse_src_file(name, url, start) or self.parse_src_github(name, url)
         return PackageSource(name=name, url=url)
 
     @returns(PackageBuild)
