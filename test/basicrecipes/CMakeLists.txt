@@ -1,0 +1,15 @@
+
+file(GLOB_RECURSE RECIPES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} recipes/*.txt)
+
+get_filename_component(CGET_TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR} DIRECTORY CACHE)
+message(STATUS "CGET_TEST_DIR: ${CGET_TEST_DIR}")
+
+foreach(RECIPE ${RECIPES})
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${RECIPE} ${CMAKE_CURRENT_BINARY_DIR}/${RECIPE})
+    get_filename_component(RECIPE_DIR ${RECIPE} DIRECTORY)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${RECIPE} DESTINATION etc/cget/${RECIPE_DIR})
+    message(STATUS "RECIPE: ${RECIPE}")
+    message(STATUS "RECIPE_DIR: ${RECIPE_DIR}")
+endforeach()
+
+enable_testing()

@@ -9,10 +9,11 @@ def decode_url(url):
     return base64.urlsafe_b64decode(str(s)).decode('utf-8')
 
 class PackageSource:
-    def __init__(self, name=None, url=None, fname=None):
+    def __init__(self, name=None, url=None, fname=None, recipe=None):
         self.name = name
         self.url = url
         self.fname = fname
+        self.recipe = recipe
 
     def to_name(self):
         return self.name or self.url or self.to_fname()
@@ -36,7 +37,7 @@ def fname_to_pkg(fname):
     else: return PackageSource(name=fname.replace('__', '/'), fname=fname)
 
 class PackageBuild:
-    def __init__(self, pkg_src=None, define=None, parent=None, test=False, hash=None, build=None, cmake=None, variant=None):
+    def __init__(self, pkg_src=None, define=None, parent=None, test=False, hash=None, build=None, cmake=None, variant=None, requirements=None):
         self.pkg_src = pkg_src
         self.define = define or []
         self.parent = parent
@@ -45,6 +46,7 @@ class PackageBuild:
         self.hash = hash
         self.cmake = cmake
         self.variant = variant or 'Release'
+        self.requirements = requirements
 
     def merge_defines(self, defines):
         result = copy.copy(self)
@@ -53,9 +55,10 @@ class PackageBuild:
 
     def merge(self, other):
         result = copy.copy(self)
-        result.define.extend(other)
+        if result.define: result.define.extend(other)
+        else: result.define = other.define
         for field in dir(self):
-            if not callable(getattr(self, field)) and not field.startswith("__") and field != 'define':
+            if not callable(getattr(self, field)) and not field.startswith("__") and not field in ['define', 'pkg_src']:
                 x = getattr(self, field)
                 y = getattr(other, field)
                 setattr(result, field, y or x)

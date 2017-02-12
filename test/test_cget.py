@@ -85,8 +85,11 @@ class CGetCmd:
 def cget_cmd(*args):
     return CGetCmd()(*args)
 
-def install_cmds(url, lib=None, alias=None, init=None, remove='remove', list_='list', size=1, prefix=None, build_path=None, variants=None):
+def install_cmds(url, lib=None, alias=None, init=None, remove='remove', list_='list', size=1, recipes=None, prefix=None, build_path=None, variants=None):
     cg = CGetCmd(prefix=prefix, build_path=build_path)
+    base_size = 0
+    if recipes: base_size = 1
+    n = str(size + base_size)
     yield cg('init', init)
     for variant in variants or ['--debug', '--release', '']:
         yield cg(list_)
@@ -94,8 +97,9 @@ def install_cmds(url, lib=None, alias=None, init=None, remove='remove', list_='l
         yield cg('init', init)
         yield cg(list_)
         yield cg('size', '0')
+        if recipes: yield cg('install', recipes)
         yield cg('install', '--verbose --test', variant, url)
-        yield cg('size', str(size))
+        yield cg('size', n)
         yield cg(list_)
         if __has_pkg_config__ and lib is not None:
             yield cg('pkg-config', '--list-all')
@@ -103,11 +107,11 @@ def install_cmds(url, lib=None, alias=None, init=None, remove='remove', list_='l
             yield cg('pkg-config', '--cflags --libs', lib)
         if alias is None: yield cg(remove, '--verbose -y', url)
         else: yield cg(remove, '--verbose -y', alias)
-        yield cg('size', '0')
+        yield cg('size', str(base_size))
         yield cg(list_)
         yield cg('install', '--verbose --test', variant, url)
         yield cg(list_)
-        yield cg('size', str(size))
+        yield cg('size', n)
         yield cg('clean', '-y')
         yield cg(list_)
         yield cg('size', '0')
@@ -155,6 +159,14 @@ if cget.util.USE_SYMLINKS:
 
 def test_dir_custom_build_path(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', build_path=d.get_path('my_build')))
+
+def test_recipe_simple(d):
+    recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
+    d.cmds(install_cmds(url='simple', lib='simple', recipes=recipes))
+
+def test_recipe_basicapp(d):
+    recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
+    d.cmds(install_cmds(url='basicapp', lib='simple', alias='simple', size=2, recipes=recipes))
 
 def test_prefix(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', prefix=d.get_path('usr')))

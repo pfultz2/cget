@@ -82,6 +82,11 @@ class CGetPrefix:
     def log(self, *args):
         if self.verbose: click.secho(' '.join([str(arg) for arg in args]), bold=True)
 
+    def check(self, f, *args):
+        if self.verbose and not f(*args):
+            raise util.BuildError('ASSERTION FAILURE: ', ' '.join([str(arg) for arg in args]))
+
+
     def get_env(self):
         return {
             'PKG_CONFIG_PATH': self.pkg_config_path()
@@ -154,15 +159,16 @@ class CGetPrefix:
 
     def parse_src_file(self, name, url, start=None):
         f = util.actual_path(url, start)
-        self.log('parse_src_file atual_path:', start, f)
+        self.log('parse_src_file actual_path:', start, f)
         if os.path.exists(f): return PackageSource(name=name, url='file://' + f)
         return None
 
-    # def parse_src_recipe(self, name, url):
-
-    #     for rpath in self.get_recipe_paths():
-
-    #     pass
+    def parse_src_recipe(self, name, url):
+        for rpath in self.get_recipe_paths():
+            p = os.path.join(rpath, url)
+            if os.path.exists(os.path.join(rpath, url)):
+                return PackageSource(name=name or url, recipe=p)
+        return None
 
     def parse_src_github(self, name, url):
         p, v = parse_src_name(url)
@@ -178,7 +184,7 @@ class CGetPrefix:
         name, url = parse_alias(pkg)
         self.log('parse_pkg_src:', name, url, pkg)
         if '://' not in url:
-            return self.parse_src_file(name, url, start) or self.parse_src_github(name, url)
+            return self.parse_src_file(name, url, start) or self.parse_src_recipe(name, url) or self.parse_src_github(name, url)
         return PackageSource(name=name, url=url)
 
     @returns(PackageBuild)
@@ -186,9 +192,26 @@ class CGetPrefix:
     def parse_pkg_build(self, pkg, start=None):
         if isinstance(pkg, PackageBuild): 
             pkg.pkg_src = self.parse_pkg_src(pkg.pkg_src, start)
+            if pkg.pkg_src.recipe: pkg = self.from_recipe(pkg.pkg_src.recipe, pkg)
             if pkg.cmake: pkg.cmake = find_cmake(pkg.cmake, start)
             return pkg
-        else: return PackageBuild(self.parse_pkg_src(pkg, start))
+        else:
+            pkg_src = self.parse_pkg_src(pkg, start)
+            if pkg_src.recipe: return self.from_recipe(pkg_src.recipe, pkg_src.name)
+            else: return PackageBuild(pkg_src)
+
+    def from_recipe(self, recipe, pkg=None, name=None):
+        p = next(iter(self.from_file(os.path.join(recipe, "package.txt"))))
+        self.check(lambda:p.pkg_src is not None)
+        requirements = os.path.join(recipe, "requirements.txt")
+        if os.path.exists(requirements): p.requirements = requirements
+        p.pkg_src.recipe = None
+        # Use original name
+        if pkg: p.pkg_src.name = pkg.pkg_src.name
+        elif name: p.pkg_src.name = name
+
+        if pkg: return p.merge(pkg)
+        else: return p
 
     def from_file(self, file, url=None):
         if file is not None and os.path.exists(file):
@@ -205,7 +228,7 @@ class CGetPrefix:
         if track and pb.parent is not None: util.mkfile(self.get_deps_directory(pb.to_fname()), pb.parent, pb.parent)
 
     def install_deps(self, pb, d, test=False, test_all=False, generator=None):
-        for dependent in self.from_file(os.path.join(d, 'requirements.txt'), pb.pkg_src.url):
+        for dependent in self.from_file(pb.requirements or os.path.join(d, 'requirements.txt'), pb.pkg_src.url):
             transient = dependent.test or dependent.build
             testing = test or test_all
             installable = not dependent.test or dependent.test == testing
