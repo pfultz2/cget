@@ -106,7 +106,7 @@ def install_command(prefix, pkgs, define, file, test, test_all, update, generato
 @click.argument('pkg', nargs=1, default='.', type=click.STRING)
 def build_command(prefix, pkg, define, test, configure, clean, path, yes, target, generator):
     """ Build package """
-    pb = PackageBuild(pkg).merge(define)
+    pb = PackageBuild(pkg).merge_defines(define)
     with prefix.try_("Failed to build package {}".format(pb.to_name())):
         if configure: prefix.build_configure(pb)
         elif path: click.echo(prefix.build_path(pb))

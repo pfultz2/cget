@@ -15,9 +15,7 @@ class PackageSource:
         self.fname = fname
 
     def to_name(self):
-        if self.name is not None: return self.name
-        if self.url is not None: return self.url
-        return self.to_fname()
+        return self.name or self.url or self.to_fname()
 
     def to_fname(self):
         if self.fname is None: self.fname = self.get_encoded_name_url()
@@ -48,9 +46,19 @@ class PackageBuild:
         self.cmake = cmake
         self.variant = variant or 'Release'
 
-    def merge(self, define):
+    def merge_defines(self, defines):
         result = copy.copy(self)
-        result.define.extend(define)
+        result.define.extend(defines)
+        return result
+
+    def merge(self, other):
+        result = copy.copy(self)
+        result.define.extend(other)
+        for field in dir(self):
+            if not callable(getattr(self, field)) and not field.startswith("__") and field != 'define':
+                x = getattr(self, field)
+                y = getattr(other, field)
+                setattr(result, field, y or x)
         return result
 
     def of(self, parent):

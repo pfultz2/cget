@@ -25,6 +25,14 @@ def parse_alias(s):
     if i > 0: return s[0:i], s[i+1:]
     else: return parse_deprecated_alias(s)
 
+@params(s=six.string_types)
+def parse_src_name(url):
+    x = url.split('@')
+    p = x[0]
+    v = 'HEAD'
+    if len(x) > 1: v = x[1]
+    return (p, v)
+
 def cmake_set(var, val, quote=True, cache=None, description=None):
     x = val
     if quote: x = util.quote(val)
@@ -118,6 +126,12 @@ class CGetPrefix:
     def get_private_path(self, *paths):
         return self.get_path('cget', *paths)
 
+    def get_public_path(self, *paths):
+        return self.get_path('etc', 'cget', *paths)
+
+    def get_recipe_paths(self):
+        return [self.get_public_path('recipes')]
+
     def get_builder_path(self, *paths):
         if self.build_path_var: return os.path.join(self.build_path_var, *paths)
         else: return self.get_private_path('build', *paths)
@@ -144,11 +158,14 @@ class CGetPrefix:
         if os.path.exists(f): return PackageSource(name=name, url='file://' + f)
         return None
 
+    # def parse_src_recipe(self, name, url):
+
+    #     for rpath in self.get_recipe_paths():
+
+    #     pass
+
     def parse_src_github(self, name, url):
-        x = url.split('@')
-        p = x[0]
-        v = 'HEAD'
-        if len(x) > 1: v = x[1]
+        p, v = parse_src_name(url)
         if '/' in p: url = 'https://github.com/{0}/archive/{1}.tar.gz'.format(p, v)
         if name is None: name = p
         return PackageSource(name=name, url=url)
@@ -222,9 +239,7 @@ class CGetPrefix:
             # Install
             builder.build(target='install', variant=pb.variant)
             if util.USE_SYMLINKS: util.symlink_dir(install_dir, self.prefix)
-            else: 
-                print("util.copy_dir: ", install_dir, self.prefix)
-                util.copy_dir(install_dir, self.prefix)
+            else: util.copy_dir(install_dir, self.prefix)
         self.write_parent(pb, track=track)
         return "Successfully installed {}".format(pb.to_name())
 
