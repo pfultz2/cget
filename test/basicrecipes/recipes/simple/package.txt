@@ -1,1 +1,1 @@
-${CGET_TEST_DIR}/libsimple
+${TEST_DIR}/libsimple
