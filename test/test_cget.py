@@ -168,6 +168,10 @@ def test_recipe_basicapp(d):
     recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
     d.cmds(install_cmds(url='basicapp', lib='simple', alias='simple', size=2, recipes=recipes))
 
+def test_recipe_basicappnoreq(d):
+    recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
+    d.cmds(install_cmds(url='basicappnoreq', lib='simple', alias='simple', size=2, recipes=recipes))
+
 def test_prefix(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', prefix=d.get_path('usr')))
 
