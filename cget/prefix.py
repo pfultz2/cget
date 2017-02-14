@@ -26,10 +26,10 @@ def parse_alias(s):
     else: return parse_deprecated_alias(s)
 
 @params(s=six.string_types)
-def parse_src_name(url):
+def parse_src_name(url, default=None):
     x = url.split('@')
     p = x[0]
-    v = 'HEAD'
+    v = default
     if len(x) > 1: v = x[1]
     return (p, v)
 
@@ -164,14 +164,15 @@ class CGetPrefix:
         return None
 
     def parse_src_recipe(self, name, url):
+        p, v = parse_src_name(url)
         for rpath in self.get_recipe_paths():
-            p = os.path.join(rpath, url)
-            if os.path.exists(os.path.join(rpath, url)):
-                return PackageSource(name=name or url, recipe=p)
+            rp = os.path.join(rpath, p, v or '')
+            if os.path.exists(os.path.join(rpath, p)):
+                return PackageSource(name=name or p, recipe=rp)
         return None
 
     def parse_src_github(self, name, url):
-        p, v = parse_src_name(url)
+        p, v = parse_src_name(url, 'HEAD')
         if '/' in p: url = 'https://github.com/{0}/archive/{1}.tar.gz'.format(p, v)
         if name is None: name = p
         return PackageSource(name=name, url=url)

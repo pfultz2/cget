@@ -164,6 +164,15 @@ def test_recipe_simple(d):
     recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
     d.cmds(install_cmds(url='simple', lib='simple', recipes=recipes))
 
+def test_recipe_simple_branch(d):
+    recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
+    d.cmds(install_cmds(url='simple@master', lib='simple', recipes=recipes))
+
+@pytest.mark.xfail(strict=True)
+def test_recipe_simple_branch_fail(d):
+    recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
+    d.cmds(install_cmds(url='simple@nonexistent', lib='simple', recipes=recipes))
+
 def test_recipe_basicapp(d):
     recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
     d.cmds(install_cmds(url='basicapp', lib='simple', alias='simple', size=2, recipes=recipes))
