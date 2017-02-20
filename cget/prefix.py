@@ -179,30 +179,32 @@ class CGetPrefix:
 
     @returns(PackageSource)
     @params(pkg=PACKAGE_SOURCE_TYPES)
-    def parse_pkg_src(self, pkg, start=None):
+    def parse_pkg_src(self, pkg, start=None, no_recipe=False):
         if isinstance(pkg, PackageSource): return pkg
         if isinstance(pkg, PackageBuild): return self.parse_pkg_src(pkg.pkg_src, start)
         name, url = parse_alias(pkg)
         self.log('parse_pkg_src:', name, url, pkg)
         if '://' not in url:
-            return self.parse_src_file(name, url, start) or self.parse_src_recipe(name, url) or self.parse_src_github(name, url)
+            return self.parse_src_file(name, url, start) or \
+                (None if no_recipe else self.parse_src_recipe(name, url)) or \
+                self.parse_src_github(name, url)
         return PackageSource(name=name, url=url)
 
     @returns(PackageBuild)
     @params(pkg=PACKAGE_SOURCE_TYPES)
-    def parse_pkg_build(self, pkg, start=None):
+    def parse_pkg_build(self, pkg, start=None, no_recipe=False):
         if isinstance(pkg, PackageBuild): 
-            pkg.pkg_src = self.parse_pkg_src(pkg.pkg_src, start)
+            pkg.pkg_src = self.parse_pkg_src(pkg.pkg_src, start, no_recipe)
             if pkg.pkg_src.recipe: pkg = self.from_recipe(pkg.pkg_src.recipe, pkg)
             if pkg.cmake: pkg.cmake = find_cmake(pkg.cmake, start)
             return pkg
         else:
-            pkg_src = self.parse_pkg_src(pkg, start)
+            pkg_src = self.parse_pkg_src(pkg, start, no_recipe)
             if pkg_src.recipe: return self.from_recipe(pkg_src.recipe, pkg_src.name)
             else: return PackageBuild(pkg_src)
 
     def from_recipe(self, recipe, pkg=None, name=None):
-        p = next(iter(self.from_file(os.path.join(recipe, "package.txt"))))
+        p = next(iter(self.from_file(os.path.join(recipe, "package.txt"), no_recipe=True)))
         self.check(lambda:p.pkg_src is not None)
         requirements = os.path.join(recipe, "requirements.txt")
         if os.path.exists(requirements): p.requirements = requirements
@@ -214,7 +216,7 @@ class CGetPrefix:
         if pkg: return p.merge(pkg)
         else: return p
 
-    def from_file(self, file, url=None):
+    def from_file(self, file, url=None, no_recipe=False):
         if file is not None and os.path.exists(file):
             start = file
             if url is not None and url.startswith('file://'):
@@ -223,7 +225,7 @@ class CGetPrefix:
                 for line in f.readlines():
                     tokens = shlex.split(line, comments=True)
                     if len(tokens) > 0: 
-                        yield self.parse_pkg_build(parse_pkg_build_tokens(tokens), start=start)
+                        yield self.parse_pkg_build(parse_pkg_build_tokens(tokens), start=start, no_recipe=no_recipe)
 
     def write_parent(self, pb, track=True):
         if track and pb.parent is not None: util.mkfile(self.get_deps_directory(pb.to_fname()), pb.parent, pb.parent)
