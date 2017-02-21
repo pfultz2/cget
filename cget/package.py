@@ -55,7 +55,7 @@ class PackageBuild:
 
     def merge(self, other):
         result = copy.copy(self)
-        if result.define: result.define.extend(other)
+        if result.define: result.define.extend(other.define)
         else: result.define = other.define
         for field in dir(self):
             if not callable(getattr(self, field)) and not field.startswith("__") and not field in ['define', 'pkg_src']:
