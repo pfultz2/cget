@@ -1,1 +1,1 @@
-${TEST_DIR}/basicapp
+@TEST_DIR@/basicapp

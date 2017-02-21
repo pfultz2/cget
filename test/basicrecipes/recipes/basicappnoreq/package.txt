@@ -1,1 +1,1 @@
-${TEST_DIR}/basicappnoreq
+@TEST_DIR@/basicappnoreq

@@ -181,6 +181,10 @@ def test_recipe_basicappnoreq(d):
     recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
     d.cmds(install_cmds(url='basicappnoreq', lib='simple', alias='simple', size=2, recipes=recipes))
 
+def test_recipe_simple_x(d):
+    recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
+    d.cmds(install_cmds(url='simpleheader', recipes=recipes))
+
 def test_prefix(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', prefix=d.get_path('usr')))
 
@@ -292,6 +296,10 @@ def test_reqs_alias_f(d):
 def test_reqs_f(d):
     reqs_file = d.write_to('reqs', [shlex_quote(get_exists_path('libsimple'))])
     d.cmds(install_cmds(url='-f {}'.format(reqs_file), lib='simple', alias=get_exists_path('libsimple')))
+
+def test_reqs_f2(d):
+    reqs_file = get_exists_path('basicapp', 'requirements.txt')
+    d.cmds(install_cmds(url='-f {}'.format(reqs_file), lib='simple', alias='simple'))
 
 def test_reqs_hash(d):
     ar = d.get_path('libsimple.tar.gz')

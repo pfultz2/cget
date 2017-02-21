@@ -60,6 +60,7 @@ def parse_cmake_var_type(key, value):
 def find_cmake(p, start):
     if p and not os.path.isabs(p):
         absp = util.actual_path(p, start)
+        print("find_cmake", absp)
         if os.path.exists(absp): return absp
         else:
             x = os.path.join(__CGET_DIR__, 'cmake', p)
@@ -218,7 +219,7 @@ class CGetPrefix:
 
     def from_file(self, file, url=None, no_recipe=False):
         if file is not None and os.path.exists(file):
-            start = file
+            start = os.path.dirname(file)
             if url is not None and url.startswith('file://'):
                 start = url[7:]
             with open(file) as f:
@@ -306,6 +307,7 @@ class CGetPrefix:
     def remove(self, pkg):
         pkg = self.parse_pkg_src(pkg)
         pkg_dir = self.get_package_directory(pkg.to_fname())
+        self.log("Remove:", pkg_dir)
         if os.path.exists(pkg_dir):
             if util.USE_SYMLINKS:
                 shutil.rmtree(pkg_dir)
