@@ -1,4 +1,4 @@
-import os, shutil, shlex, six, inspect, click, contextlib, uuid, sys
+import os, shutil, shlex, six, inspect, click, contextlib, uuid, sys, functools
 
 from cget.builder import Builder
 from cget.package import fname_to_pkg
@@ -29,6 +29,11 @@ def parse_alias(s):
 def parse_src_name(url, default=None):
     x = url.split('@')
     p = x[0]
+    # If the same name is used, then reduce to the same name
+    if '/' in p:
+        ps = p.split('/')
+        if functools.reduce(lambda x, y: x == y, ps):
+            p = ps[0]
     v = default
     if len(x) > 1: v = x[1]
     return (p, v)
@@ -175,6 +180,7 @@ class CGetPrefix:
     def parse_src_github(self, name, url):
         p, v = parse_src_name(url, 'HEAD')
         if '/' in p: url = 'https://github.com/{0}/archive/{1}.tar.gz'.format(p, v)
+        else: url = 'https://github.com/{0}/{0}/archive/{1}.tar.gz'.format(p, v)
         if name is None: name = p
         return PackageSource(name=name, url=url)
 
