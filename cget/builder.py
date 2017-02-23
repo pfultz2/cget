@@ -30,8 +30,9 @@ class Builder:
         self.show_log(self.get_build_path('CMakeFiles', 'CMakeOutput.log'))
         self.show_log(self.get_build_path('CMakeFiles', 'CMakeError.log'))
 
-    def fetch(self, url, hash=None, copy=False):
+    def fetch(self, url, hash=None, copy=False, insecure=False):
         self.prefix.log("fetch:", url)
+        if insecure: url = url.replace('https', 'http')
         f = util.retrieve_url(url, self.top_dir, copy=copy)
         if os.path.isfile(f):
             if hash and not util.check_hash(f, hash):

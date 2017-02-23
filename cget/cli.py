@@ -80,8 +80,9 @@ def init_command(prefix, toolchain, cxx, cxxflags, ldflags, std, define, shared,
 @click.option('-X', '--cmake', help='Set cmake file to use to build project')
 @click.option('--debug', is_flag=True, help="Install debug version")
 @click.option('--release', is_flag=True, help="Install release version")
+@click.option('--insecure', is_flag=True, help="Don't use https urls")
 @click.argument('pkgs', nargs=-1, type=click.STRING)
-def install_command(prefix, pkgs, define, file, test, test_all, update, generator, cmake, debug, release):
+def install_command(prefix, pkgs, define, file, test, test_all, update, generator, cmake, debug, release, insecure):
     """ Install packages """
     if debug and release:
         click.echo("ERROR: debug and release are not supported together")
@@ -91,7 +92,7 @@ def install_command(prefix, pkgs, define, file, test, test_all, update, generato
     pbs = [PackageBuild(pkg, define=define, cmake=cmake, variant=variant) for pkg in pkgs]
     for pb in list(prefix.from_file(file))+pbs:
         with prefix.try_("Failed to build package {}".format(pb.to_name()), on_fail=lambda: prefix.remove(pb)):
-            click.echo(prefix.install(pb, test=test, test_all=test_all, update=update, generator=generator))
+            click.echo(prefix.install(pb, test=test, test_all=test_all, update=update, generator=generator, insecure=insecure))
 
 @cli.command(name='build')
 @use_prefix

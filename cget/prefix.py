@@ -237,17 +237,17 @@ class CGetPrefix:
     def write_parent(self, pb, track=True):
         if track and pb.parent is not None: util.mkfile(self.get_deps_directory(pb.to_fname()), pb.parent, pb.parent)
 
-    def install_deps(self, pb, d, test=False, test_all=False, generator=None):
+    def install_deps(self, pb, d, test=False, test_all=False, generator=None, insecure=False):
         for dependent in self.from_file(pb.requirements or os.path.join(d, 'requirements.txt'), pb.pkg_src.url):
             transient = dependent.test or dependent.build
             testing = test or test_all
             installable = not dependent.test or dependent.test == testing
             if installable: 
-                self.install(dependent.of(pb), test_all=test_all, generator=generator, track=not transient)
+                self.install(dependent.of(pb), test_all=test_all, generator=generator, track=not transient, insecure=insecure)
 
     @returns(six.string_types)
     @params(pb=PACKAGE_SOURCE_TYPES, test=bool, test_all=bool, update=bool, track=bool)
-    def install(self, pb, test=False, test_all=False, generator=None, update=False, track=True):
+    def install(self, pb, test=False, test_all=False, generator=None, update=False, track=True, insecure=False):
         pb = self.parse_pkg_build(pb)
         pkg_dir = self.get_package_directory(pb.to_fname())
         install_dir = self.get_package_directory(pb.to_fname(), 'install')
@@ -257,9 +257,9 @@ class CGetPrefix:
             else: return "Package {} already installed".format(pb.to_name())
         with self.create_builder(uuid.uuid4().hex, tmp=True) as builder:
             # Fetch package
-            src_dir = builder.fetch(pb.pkg_src.url, pb.hash, (pb.cmake != None))
+            src_dir = builder.fetch(pb.pkg_src.url, pb.hash, (pb.cmake != None), insecure=insecure)
             # Install any dependencies first
-            self.install_deps(pb, src_dir, test=test, test_all=test_all, generator=generator)
+            self.install_deps(pb, src_dir, test=test, test_all=test_all, generator=generator, insecure=insecure)
             # Setup cmake file
             if pb.cmake: 
                 target = os.path.join(src_dir, 'CMakeLists.txt')
