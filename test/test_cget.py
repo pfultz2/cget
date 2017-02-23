@@ -542,6 +542,22 @@ def test_flags_reqs_f(d):
     reqs_file = d.write_to('reqs', [shlex_quote(p) + ' -DCGET_FLAG=On'])
     d.cmds(install_cmds(url='-f {}'.format(reqs_file), alias=p))
 
+def test_multiflags(d):
+    p = get_exists_path('libsimplemultiflag')
+    d.cmds(install_cmds(url='-DCGET_FLAG1=On -DCGET_FLAG2=On {}'.format(p), alias=p))
+
+@pytest.mark.xfail(strict=True)
+def test_multiflags_fail1(d):
+    d.cmds([cget_cmd('install', '--verbose --test -DCGET_FLAG1=Off -DCGET_FLAG2=Off', get_path('libsimplemultiflag'))])
+
+@pytest.mark.xfail(strict=True)
+def test_multiflags_fail2(d):
+    d.cmds([cget_cmd('install', '--verbose --test -DCGET_FLAG1=Off -DCGET_FLAG2=On', get_path('libsimplemultiflag'))])
+
+@pytest.mark.xfail(strict=True)
+def test_multiflags_fail3(d):
+    d.cmds([cget_cmd('install', '--verbose --test -DCGET_FLAG1=On', get_path('libsimplemultiflag'))])
+
 def test_comments_reqs_f(d):
     p = get_exists_path('libsimple')
     reqs_file = d.write_to('reqs', [shlex_quote(p) + ' #A comment', '# Another comment'])
