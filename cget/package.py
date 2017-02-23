@@ -82,7 +82,7 @@ class PackageBuild:
 def parse_pkg_build_tokens(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('pkg_src')
-    parser.add_argument('-D', '--define', nargs='+')
+    parser.add_argument('-D', '--define', action='append', default=[])
     parser.add_argument('-H', '--hash')
     parser.add_argument('-X', '--cmake')
     parser.add_argument('-t', '--test', action='store_true')
