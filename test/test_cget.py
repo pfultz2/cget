@@ -196,6 +196,9 @@ def test_recipe_simple_x(d):
 def test_prefix(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', prefix=d.get_path('usr')))
 
+def test_relative_prefix(d):
+    d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', prefix='usr'))
+
 @pytest.mark.xfail(strict=True)
 def test_xcmake_fail(d):
     d.cmds(install_cmds(url=get_exists_path('libsimplebare'), lib='simple'))
