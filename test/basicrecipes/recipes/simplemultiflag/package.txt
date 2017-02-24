@@ -1,0 +1,1 @@
+@TEST_DIR@/libsimplemultiflag -DCGET_FLAG1=On -DCGET_FLAG2=On
