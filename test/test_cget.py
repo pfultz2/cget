@@ -145,6 +145,10 @@ def test_tar_alias(d):
 def test_dir(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple'))
 
+def test_relative_dir(d):
+    p = os.path.relpath(get_exists_path('libsimple'), d.get_path())
+    d.cmds(install_cmds(url=p, lib='simple'))
+
 @pytest.mark.xfail(strict=True)
 def test_debug_dir_fail(d):
     d.cmds(install_cmds(url=get_exists_path('libsimpledebug'), lib='simple', variants=['--debug']))
@@ -252,17 +256,37 @@ def test_update_reqs(d):
 def test_build_dir(d):
     d.cmds(build_cmds(get_exists_path('libsimple')))
 
+def test_build_relative_dir(d):
+    p = os.path.relpath(get_exists_path('libsimple'), d.get_path())
+    d.cmds(build_cmds(p))
+
 def test_build_dir_custom_build_path(d):
     d.cmds(build_cmds(get_exists_path('libsimple'), build_path=d.get_path('my_build')))
 
 def test_build_dir_custom_build_path2(d):
     d.cmds(build_cmds(get_exists_path('basicapp'), build_path=d.get_path('my_build'), size=1))
 
+def test_build_relative_dir_custom_build_path(d):
+    p = os.path.relpath(get_exists_path('libsimple'), d.get_path())
+    d.cmds(build_cmds(p, build_path=d.get_path('my_build')))
+
+def test_build_relative_dir_custom_build_path2(d):
+    p = os.path.relpath(get_exists_path('basicapp'), d.get_path())
+    d.cmds(build_cmds(p, build_path=d.get_path('my_build'), size=1))
+
 def test_tmp_build_dir_custom_build_path(d):
     d.mkdir('tmp').cmds(build_cmds(get_exists_path('libsimple'), build_path=d.get_path('my_build')))
 
 def test_tmp_build_dir_custom_build_path2(d):
     d.mkdir('tmp').cmds(build_cmds(get_exists_path('basicapp'), build_path=d.get_path('my_build'), size=1))
+
+def test_tmp_relative_build_dir_custom_build_path(d):
+    p = os.path.relpath(get_exists_path('libsimple'), d.get_path('tmp'))
+    d.mkdir('tmp').cmds(build_cmds(p, build_path=d.get_path('my_build')))
+
+def test_tmp_relative_build_dir_custom_build_path2(d):
+    p = os.path.relpath(get_exists_path('basicapp'), d.get_path('tmp'))
+    d.mkdir('tmp').cmds(build_cmds(p, build_path=d.get_path('my_build'), size=1))
 
 def test_build_current_dir(d):
     cwd = get_exists_path('libsimple')
