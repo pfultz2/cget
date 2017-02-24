@@ -203,6 +203,14 @@ def test_prefix(d):
 def test_relative_prefix(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', prefix='usr'))
 
+def test_recipe_prefix(d):
+    recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
+    d.cmds(install_cmds(url='simple', lib='simple', recipes=recipes, prefix=d.get_path('usr')))
+
+def test_recipe_relative_prefix(d):
+    recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
+    d.cmds(install_cmds(url='simple', lib='simple', recipes=recipes, prefix='usr'))
+
 @pytest.mark.xfail(strict=True)
 def test_xcmake_fail(d):
     d.cmds(install_cmds(url=get_exists_path('libsimplebare'), lib='simple'))
