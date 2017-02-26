@@ -20,6 +20,11 @@ from six.moves.urllib import request
 
 USE_SYMLINKS=(os.name == 'posix')
 
+__CGET_DIR__ = os.path.dirname(os.path.realpath(__file__))
+
+def cget_dir(*args):
+    return os.path.join(__CGET_DIR__, *args)
+
 def is_string(obj):
     return isinstance(obj, six.string_types)
 

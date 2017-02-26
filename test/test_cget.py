@@ -235,6 +235,10 @@ def test_binary_xcmake(d):
     url = get_exists_path('simpleinclude') + ' --cmake binary'
     d.cmds(install_cmds(url=url, lib='simple', alias=get_exists_path('simpleinclude')))
 
+def test_header_xcmake_dir(d):
+    url = get_exists_path('simpleinclude') + ' --cmake ' + get_exists_path('cmake', 'header_cmake_dir.cmake')
+    d.cmds(install_cmds(url=url, alias=get_exists_path('simpleinclude')))
+
 def test_rm(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', remove='rm'))
 

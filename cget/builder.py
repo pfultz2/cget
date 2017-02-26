@@ -44,7 +44,7 @@ class Builder:
     def configure(self, src_dir, defines=None, generator=None, install_prefix=None, test=True, variant=None):
         self.prefix.log("configure")
         util.mkdir(self.build_dir)
-        args = [src_dir]
+        args = [src_dir, '-DCGET_CMAKE_DIR={}'.format(util.cget_dir('cmake'))]
         if generator is not None: args = ['-G', util.quote(generator)] + args
         if self.prefix.verbose: args.extend(['-DCMAKE_VERBOSE_MAKEFILE=On'])
         if test: args.extend(['-DBUILD_TESTING=On'])

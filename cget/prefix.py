@@ -10,6 +10,7 @@ from cget.types import returns
 from cget.types import params
 
 __CGET_DIR__ = os.path.dirname(os.path.realpath(__file__))
+__CGET_CMAKE_DIR__ = os.path.join(__CGET_DIR__, 'cmake')
 
 @params(s=six.string_types)
 def parse_deprecated_alias(s):
@@ -68,7 +69,7 @@ def find_cmake(p, start):
         print("find_cmake", absp)
         if os.path.exists(absp): return absp
         else:
-            x = os.path.join(__CGET_DIR__, 'cmake', p)
+            x = util.cget_dir('cmake', p)
             if os.path.exists(x): return x
             elif os.path.exists(x + '.cmake'): return x + '.cmake'
     return p
