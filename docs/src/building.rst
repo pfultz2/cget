@@ -38,6 +38,8 @@ For projects that don't use cmake, then its matter of searching for the dependen
 Installing non-cmake packages
 -----------------------------
 
+.. _custom-cmake:
+
 """"""""""""""""""
 Using custom cmake
 """"""""""""""""""
@@ -65,6 +67,8 @@ Binaries
 For binaries, ``cget`` provides a cmake file ``binary`` which will install all the files in the package without building any source files. For example, the clang binaries for ubuntu can be installed like this::
 
     cget install clang,http://llvm.org/releases/3.9.0/clang+llvm-3.9.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz  --cmake binary
+
+.. _boost-cmake:
 
 """""
 Boost

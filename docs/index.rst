@@ -16,6 +16,7 @@ Contents:
    src/requirements
    src/commands
    src/building
+   src/recipe
 
 
 Indices and tables

@@ -28,7 +28,7 @@ The archive will be unpacked and installed.
 URL
 """
 
-An url to the package::
+A url to the package::
 
     cget install http://zlib.net/zlib-1.2.8.tar.gz
 
@@ -46,6 +46,11 @@ A tag or branch can specified using the ``@`` symbol::
 
     cget install jgm/cmark@0.24.1
 
+""""""
+Recipe
+""""""
+
+A recipe name can also be installed. See :doc:`recipe` for more info.
 
 """"""""
 Aliasing

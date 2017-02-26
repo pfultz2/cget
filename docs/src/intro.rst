@@ -21,13 +21,33 @@ Or installed directly with python::
 
     python setup.py install
 
-On windows, you may want to install pkgconfig-lite to support packages that use pkgconfig. This can be installed with ``cget`` as well:
+On windows, you may want to install pkgconfig-lite to support packages that use pkgconfig. This can be installed with ``cget`` as well::
 
     cget install pfultz2/pkgconfig
 
 ----------
 Quickstart
 ----------
+
+We can also install cmake packages directly from source files, for example zlib::
+
+    cget install http://zlib.net/zlib-1.2.8.tar.gz
+
+However, its much easier to install recipes so we don't have to remember urls::
+
+    cget install pfultz2/cget-recipes
+
+Then we can install packages such as boost::
+
+    cget install boost
+
+Or curl::
+
+    cget install curl
+
+-----
+Usage
+-----
 
 """"""""""""""""""""
 Installing a package
