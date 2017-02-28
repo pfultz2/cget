@@ -34,7 +34,7 @@ class Builder:
     def fetch(self, url, hash=None, copy=False, insecure=False):
         self.prefix.log("fetch:", url)
         if insecure: url = url.replace('https', 'http')
-        f = util.retrieve_url(url, self.top_dir, copy=copy)
+        f = util.retrieve_url(url, self.top_dir, copy=copy, insecure=insecure)
         if os.path.isfile(f):
             if hash and not util.check_hash(f, hash):
                 raise util.BuildError("Hash doesn't match for {0}: {1}".format(url, hash))

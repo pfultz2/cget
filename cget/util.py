@@ -1,4 +1,4 @@
-import click, os, sys, shutil, json, six, hashlib
+import click, os, sys, shutil, json, six, hashlib, ssl
 
 if sys.version_info[0] < 3:
     try:
@@ -153,7 +153,7 @@ def symlink_to(src, dst_dir):
     os.symlink(src, target)
     return target
 
-def download_to(url, download_dir):
+def download_to(url, download_dir, insecure=False):
     name = url.split('/')[-1]
     file = os.path.join(download_dir, name)
     click.echo("Downloading {0}".format(url))
@@ -161,14 +161,16 @@ def download_to(url, download_dir):
         def hook(count, block_size, total_size):
             percent = int(count*block_size*100/total_size)
             if percent > 0 and percent < 100: bar.update(percent)
-        request.FancyURLopener().retrieve(url, filename=file, reporthook=hook, data=None)
+        context = None
+        if insecure: context = ssl._create_unverified_context()
+        request.FancyURLopener(context=context).retrieve(url, filename=file, reporthook=hook, data=None)
     return file
 
-def retrieve_url(url, dst, copy=False):
+def retrieve_url(url, dst, copy=False, insecure=False):
     if url.startswith('file://'): 
         if USE_SYMLINKS and not copy: return symlink_to(url[7:], dst)
         else: return copy_to(url[7:], dst)
-    else: return download_to(url, dst)
+    else: return download_to(url, dst, insecure=insecure)
 
 def extract_ar(archive, dst):
     if sys.version_info[0] < 3 and archive.endswith('.xz'):
