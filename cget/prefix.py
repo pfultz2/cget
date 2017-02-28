@@ -379,7 +379,7 @@ class CGetPrefix:
     def list(self, pkg=None, recursive=False, top=True):
         for d in self._list_files(pkg, top):
             p = fname_to_pkg(d)
-            yield p
+            if os.path.exists(self.get_package_directory(d)): yield p
             if recursive:
                 for child in self.list(p, recursive=recursive, top=False):
                     yield child
