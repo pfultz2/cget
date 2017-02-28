@@ -265,6 +265,14 @@ def test_update_reqs(d):
         cget_cmd('size', '1')
     ])
 
+def test_rm_all(d):
+    d.cmds([
+        cget_cmd('install', '--verbose --test --update', 'app,'+get_exists_path('basicapp')),
+        cget_cmd('size', '2'),
+        cget_cmd('rm', '--verbose -y --all'),
+        cget_cmd('size', '0')
+    ])
+
 def test_unlink1(d):
     d.cmds([
         cget_cmd('install', '--verbose --test', 'simple,'+get_exists_path('libsimple')),

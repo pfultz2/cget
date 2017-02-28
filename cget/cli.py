@@ -120,9 +120,11 @@ def build_command(prefix, pkg, define, test, configure, clean, path, yes, target
 @use_prefix
 @click.argument('pkgs', nargs=-1, type=click.STRING)
 @click.option('-y', '--yes', is_flag=True, default=False)
-@click.option('-U', '--unlink', is_flag=True, default=False)
-def remove_command(prefix, pkgs, yes, unlink, help="Unlink package but don't remove it"):
+@click.option('-U', '--unlink', is_flag=True, default=False, help="Unlink package but don't remove it")
+@click.option('-A', '--all', is_flag=True, default=False, help="Select all packages installed")
+def remove_command(prefix, pkgs, yes, unlink, all):
     """ Remove packages """
+    if all: pkgs = [None]
     pkgs_set = set((dep.name for pkg in pkgs for dep in prefix.list(pkg, recursive=True)))
     click.echo("The following packages will be removed:")
     for pkg in pkgs_set: click.echo(pkg)
