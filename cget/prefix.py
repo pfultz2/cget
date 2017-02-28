@@ -331,7 +331,7 @@ class CGetPrefix:
                 shutil.rmtree(pkg_dir)
                 util.rm_symlink_dir(self.prefix)
             else:
-                util.rm_dup_dir(os.path.join(pkg_dir, 'install'), os.path.abspath(self.prefix))
+                util.rm_dup_dir(os.path.join(pkg_dir, 'install'), self.prefix)
                 shutil.rmtree(pkg_dir)
             util.rm_empty_dirs(self.prefix)
             return "Removed package {}".format(pkg.name)
@@ -346,9 +346,9 @@ class CGetPrefix:
         self.log("Unlink:", pkg_dir)
         if os.path.exists(pkg_dir):
             if util.USE_SYMLINKS:
-                util.rm_symlink_from(self.prefix, os.path.join(pkg_dir, 'install'))
+                util.rm_symlink_from(os.path.join(pkg_dir, 'install'), self.prefix)
             else:
-                util.rm_dup_dir(os.path.join(pkg_dir, 'install'), os.path.abspath(self.prefix))
+                util.rm_dup_dir(os.path.join(pkg_dir, 'install'), self.prefix, remove_both=False)
             util.rm_empty_dirs(self.prefix)
             util.mkdir(self.get_unlink_directory())
             os.rename(pkg_dir, unlink_dir)
