@@ -258,6 +258,7 @@ class CGetPrefix:
         pkg_dir = self.get_package_directory(pb.to_fname())
         unlink_dir = self.get_unlink_directory(pb.to_fname())
         install_dir = self.get_package_directory(pb.to_fname(), 'install')
+        # If its been unlinked, then link it in
         if os.path.exists(unlink_dir):
             if update: shutil.rmtree(unlink_dir)
             else:
@@ -275,8 +276,10 @@ class CGetPrefix:
             # Setup cmake file
             if pb.cmake: 
                 target = os.path.join(src_dir, 'CMakeLists.txt')
+                if os.path.exists(target):
+                    os.rename(target, os.path.join(src_dir, builder.cmake_original_file))
                 shutil.copyfile(pb.cmake, target)
-            # Confirue and build
+            # Configure and build
             builder.configure(src_dir, defines=pb.define, generator=generator, install_prefix=install_dir, test=test, variant=pb.variant)
             builder.build(variant=pb.variant)
             # Run tests if enabled

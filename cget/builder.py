@@ -8,6 +8,7 @@ class Builder:
         self.top_dir = top_dir
         self.build_dir = self.get_path('build')
         self.exists = exists
+        self.cmake_original_file = '__cget_original_cmake_file__.cmake'
 
     def get_path(self, *args):
         return os.path.join(self.top_dir, *args)
@@ -44,7 +45,11 @@ class Builder:
     def configure(self, src_dir, defines=None, generator=None, install_prefix=None, test=True, variant=None):
         self.prefix.log("configure")
         util.mkdir(self.build_dir)
-        args = [src_dir, '-DCGET_CMAKE_DIR={}'.format(util.cget_dir('cmake'))]
+        args = [
+            src_dir, 
+            '-DCGET_CMAKE_DIR={}'.format(util.cget_dir('cmake')), 
+            '-DCGET_CMAKE_ORIGINAL_SOURCE_FILE={}'.format(os.path.join(src_dir, self.cmake_original_file))
+        ]
         if generator is not None: args = ['-G', util.quote(generator)] + args
         if self.prefix.verbose: args.extend(['-DCMAKE_VERBOSE_MAKEFILE=On'])
         if test: args.extend(['-DBUILD_TESTING=On'])
