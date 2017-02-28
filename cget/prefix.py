@@ -66,7 +66,6 @@ def parse_cmake_var_type(key, value):
 def find_cmake(p, start):
     if p and not os.path.isabs(p):
         absp = util.actual_path(p, start)
-        print("find_cmake", absp)
         if os.path.exists(absp): return absp
         else:
             x = util.cget_dir('cmake', p)
@@ -161,8 +160,14 @@ class CGetPrefix:
     def get_package_directory(self, *dirs):
         return self.get_private_path('pkg', *dirs)
 
+    def get_unlink_directory(self, *dirs):
+        return self.get_private_path('unlink', *dirs)
+
     def get_deps_directory(self, name, *dirs):
         return self.get_package_directory(name, 'deps', *dirs)
+
+    def get_unlink_deps_directory(self, name, *dirs):
+        return self.get_unlink_directory(name, 'deps', *dirs)
 
     def parse_src_file(self, name, url, start=None):
         f = util.actual_path(url, start)
@@ -251,7 +256,13 @@ class CGetPrefix:
     def install(self, pb, test=False, test_all=False, generator=None, update=False, track=True, insecure=False):
         pb = self.parse_pkg_build(pb)
         pkg_dir = self.get_package_directory(pb.to_fname())
+        unlink_dir = self.get_unlink_directory(pb.to_fname())
         install_dir = self.get_package_directory(pb.to_fname(), 'install')
+        if os.path.exists(unlink_dir):
+            if update: shutil.rmtree(unlink_dir)
+            else:
+                self.link(pb)
+                return "Linking package {}".format(pb.to_name())
         if os.path.exists(pkg_dir): 
             self.write_parent(pb, track=track)
             if update: self.remove(pb)
@@ -326,6 +337,35 @@ class CGetPrefix:
             return "Removed package {}".format(pkg.name)
         else:
             return "Package doesn't exists"
+
+    @params(pkg=PACKAGE_SOURCE_TYPES)
+    def unlink(self, pkg):
+        pkg = self.parse_pkg_src(pkg)
+        pkg_dir = self.get_package_directory(pkg.to_fname())
+        unlink_dir = self.get_unlink_directory(pkg.to_fname())
+        self.log("Unlink:", pkg_dir)
+        if os.path.exists(pkg_dir):
+            if util.USE_SYMLINKS:
+                util.rm_symlink_from(self.prefix, os.path.join(pkg_dir, 'install'))
+            else:
+                util.rm_dup_dir(os.path.join(pkg_dir, 'install'), os.path.abspath(self.prefix))
+            util.rm_empty_dirs(self.prefix)
+            util.mkdir(self.get_unlink_directory())
+            os.rename(pkg_dir, unlink_dir)
+
+    @params(pkg=PACKAGE_SOURCE_TYPES)
+    def link(self, pkg):
+        pkg = self.parse_pkg_src(pkg)
+        pkg_dir = self.get_package_directory(pkg.to_fname())
+        unlink_dir = self.get_unlink_directory(pkg.to_fname())
+        if os.path.exists(unlink_dir):
+            os.rename(unlink_dir, pkg_dir)
+            if util.USE_SYMLINKS: util.symlink_dir(os.path.join(pkg_dir, 'install'), self.prefix)
+            else: util.copy_dir(os.path.join(pkg_dir, 'install'), self.prefix)
+        # Relink dependencies
+        for dep in util.ls(self.get_unlink_directory(), os.path.isdir):
+            ls = util.ls(self.get_unlink_deps_directory(dep), os.path.isfile)
+            if pkg.to_fname() in ls: self.link(dep)
 
     def _list_files(self, pkg=None, top=True):
         if pkg is None:
