@@ -160,10 +160,14 @@ def download_to(url, download_dir, insecure=False):
     with click.progressbar(length=100) as bar:
         def hook(count, block_size, total_size):
             percent = int(count*block_size*100/total_size)
-            if percent > 0 and percent < 100: bar.update(percent)
+            if percent > 0 and percent < 100: 
+                # Hack because we can't set the position
+                bar.pos = percent
+                bar.update(0)
         context = None
         if insecure: context = ssl._create_unverified_context()
         request.FancyURLopener(context=context).retrieve(url, filename=file, reporthook=hook, data=None)
+        bar.update(100)
     return file
 
 def retrieve_url(url, dst, copy=False, insecure=False):

@@ -36,8 +36,10 @@ class Builder:
         if insecure: url = url.replace('https', 'http')
         f = util.retrieve_url(url, self.top_dir, copy=copy, insecure=insecure)
         if os.path.isfile(f):
-            if hash and not util.check_hash(f, hash):
-                raise util.BuildError("Hash doesn't match for {0}: {1}".format(url, hash))
+            if hash:
+                click.echo("Computing hash: {}".format(hash))
+                if not util.check_hash(f, hash): 
+                    raise util.BuildError("Hash doesn't match for {0}: {1}".format(url, hash))
             click.echo("Extracting archive {0} ...".format(f))
             util.extract_ar(archive=f, dst=self.top_dir)
         return next(util.get_dirs(self.top_dir))
