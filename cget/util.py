@@ -172,12 +172,12 @@ def retrieve_url(url, dst, copy=False, insecure=False):
         else: return copy_to(url[7:], dst)
     else: return download_to(url, dst, insecure=insecure)
 
-def extract_ar(archive, dst):
+def extract_ar(archive, dst, *kwargs):
     if sys.version_info[0] < 3 and archive.endswith('.xz'):
         with contextlib.closing(lzma.LZMAFile(archive)) as xz:
-            with tarfile.open(fileobj=xz) as f:
+            with tarfile.open(fileobj=xz, *kwargs) as f:
                 f.extractall(dst)
-    else: tarfile.open(archive).extractall(dst)
+    else: tarfile.open(archive, *kwargs).extractall(dst)
 
 def hash_file(f, t):
     h = hashlib.new(t)
