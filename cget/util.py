@@ -1,4 +1,4 @@
-import click, os, sys, shutil, json, six, hashlib
+import click, os, sys, shutil, json, six, hashlib, ssl
 
 if sys.version_info[0] < 3:
     try:
@@ -19,6 +19,11 @@ else:
 from six.moves.urllib import request
 
 USE_SYMLINKS=(os.name == 'posix')
+
+__CGET_DIR__ = os.path.dirname(os.path.realpath(__file__))
+
+def cget_dir(*args):
+    return os.path.join(__CGET_DIR__, *args)
 
 def is_string(obj):
     return isinstance(obj, six.string_types)
@@ -100,12 +105,22 @@ def rm_symlink(file):
         f = os.readlink(file)
         if not os.path.exists(f): os.remove(file)
 
+def rm_symlink_in(file, prefix):
+    if os.path.islink(file):
+        f = os.readlink(file)
+        if f.startswith(prefix): os.remove(file)
+
 def rm_symlink_dir(d):
     for root, dirs, files in os.walk(d):
         for file in files:
             rm_symlink(os.path.join(root, file))
 
-def rm_dup_dir(d, prefix):
+def rm_symlink_from(d, prefix):
+    for root, dirs, files in os.walk(prefix):
+        for file in files:
+            rm_symlink_in(os.path.join(root, file), d)
+
+def rm_dup_dir(d, prefix, remove_both=True):
     for root, dirs, files in os.walk(d):
         for file in files:
             fullpath = os.path.join(root, file)
@@ -113,7 +128,7 @@ def rm_dup_dir(d, prefix):
             if '..' in relpath: 
                 raise BuildError('Trying to remove link outside of prefix directory: ' + relpath)
             os.remove(os.path.join(prefix, relpath))
-            os.remove(fullpath)
+            if remove_both: os.remove(fullpath)
 
 def rm_empty_dirs(d):
     has_files = False
@@ -138,7 +153,7 @@ def symlink_to(src, dst_dir):
     os.symlink(src, target)
     return target
 
-def download_to(url, download_dir):
+def download_to(url, download_dir, insecure=False):
     name = url.split('/')[-1]
     file = os.path.join(download_dir, name)
     click.echo("Downloading {0}".format(url))
@@ -146,14 +161,16 @@ def download_to(url, download_dir):
         def hook(count, block_size, total_size):
             percent = int(count*block_size*100/total_size)
             if percent > 0 and percent < 100: bar.update(percent)
-        request.FancyURLopener().retrieve(url, filename=file, reporthook=hook, data=None)
+        context = None
+        if insecure: context = ssl._create_unverified_context()
+        request.FancyURLopener(context=context).retrieve(url, filename=file, reporthook=hook, data=None)
     return file
 
-def retrieve_url(url, dst, copy=False):
+def retrieve_url(url, dst, copy=False, insecure=False):
     if url.startswith('file://'): 
         if USE_SYMLINKS and not copy: return symlink_to(url[7:], dst)
         else: return copy_to(url[7:], dst)
-    else: return download_to(url, dst)
+    else: return download_to(url, dst, insecure=insecure)
 
 def extract_ar(archive, dst):
     if sys.version_info[0] < 3 and archive.endswith('.xz'):
