@@ -140,7 +140,7 @@ def test_tar(d):
 def test_tar_alias(d):
     ar = d.get_path('libsimple.tar.gz')
     create_ar(archive=ar, src=get_exists_path('libsimple'))
-    d.cmds(install_cmds(url='simple:'+ar, lib='simple', alias='simple'))
+    d.cmds(install_cmds(url='simple,'+ar, lib='simple', alias='simple'))
 
 def test_dir(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple'))
@@ -235,6 +235,19 @@ def test_binary_xcmake(d):
     url = get_exists_path('simpleinclude') + ' --cmake binary'
     d.cmds(install_cmds(url=url, lib='simple', alias=get_exists_path('simpleinclude')))
 
+def test_header_xcmake_dir(d):
+    url = get_exists_path('simpleinclude') + ' --cmake ' + get_exists_path('cmake', 'header_cmake_dir.cmake')
+    d.cmds(install_cmds(url=url, alias=get_exists_path('simpleinclude')))
+
+def test_xcmake_ref_original(d):
+    url = get_exists_path('libsimple') + ' --cmake ' + get_exists_path('cmake', 'use_original_cmake.cmake')
+    d.cmds(install_cmds(url=url, lib='simple', alias=get_exists_path('libsimple')))
+
+@pytest.mark.xfail(strict=True)
+def test_xcmake_ref_original_fail(d):
+    url = get_exists_path('libsimplebare') + ' --cmake ' + get_exists_path('cmake', 'use_original_cmake.cmake')
+    d.cmds(install_cmds(url=url, lib='simple', alias=get_exists_path('libsimplebare')))
+
 def test_rm(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', remove='rm'))
 
@@ -243,9 +256,9 @@ def test_ls(d):
 
 def test_update(d):
     d.cmds([
-        cget_cmd('install', '--verbose --test', 'app:'+get_exists_path('simpleapp')),
+        cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('simpleapp')),
         cget_cmd('size', '1'),
-        cget_cmd('install', '--verbose --test --update', 'app:'+get_exists_path('simpleapp')),
+        cget_cmd('install', '--verbose --test --update', 'app,'+get_exists_path('simpleapp')),
         cget_cmd('size', '1'),
         cget_cmd('rm', '--verbose -y', 'app'),
         cget_cmd('size', '0')
@@ -253,9 +266,64 @@ def test_update(d):
 
 def test_update_reqs(d):
     d.cmds([
-        cget_cmd('install', '--verbose --test', 'app:'+get_exists_path('simpleapp')),
+        cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('simpleapp')),
         cget_cmd('size', '1'),
-        cget_cmd('install', '--verbose --test --update', 'app:'+get_exists_path('basicapp')),
+        cget_cmd('install', '--verbose --test --update', 'app,'+get_exists_path('basicapp')),
+        cget_cmd('size', '2'),
+        cget_cmd('rm', '--verbose -y', 'app'),
+        cget_cmd('size', '1')
+    ])
+
+def test_rm_all(d):
+    d.cmds([
+        cget_cmd('install', '--verbose --test --update', 'app,'+get_exists_path('basicapp')),
+        cget_cmd('size', '2'),
+        cget_cmd('rm', '--verbose -y --all'),
+        cget_cmd('size', '0')
+    ])
+
+def test_unlink1(d):
+    d.cmds([
+        cget_cmd('install', '--verbose --test', 'simple,'+get_exists_path('libsimple')),
+        cget_cmd('size', '1'),
+        cget_cmd('rm', '--verbose -y --unlink', 'simple'),
+        cget_cmd('size', '0'),
+        cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('basicapp')),
+        cget_cmd('size', '2'),
+        cget_cmd('rm', '--verbose -y', 'app'),
+        cget_cmd('size', '1')
+    ])
+
+def test_unlink2(d):
+    d.cmds([
+        cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('basicapp')),
+        cget_cmd('size', '2'),
+        cget_cmd('rm', '--verbose -y --unlink', 'simple'),
+        cget_cmd('size', '0'),
+        cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('basicapp')),
+        cget_cmd('size', '2'),
+        cget_cmd('rm', '--verbose -y', 'app'),
+        cget_cmd('size', '1')
+    ])
+
+def test_unlink3(d):
+    d.cmds([
+        cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('basicapp')),
+        cget_cmd('size', '2'),
+        cget_cmd('rm', '--verbose -y --unlink', 'app'),
+        cget_cmd('size', '1'),
+        cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('basicapp')),
+        cget_cmd('size', '2'),
+        cget_cmd('rm', '--verbose -y', 'app'),
+        cget_cmd('size', '1')
+    ])
+
+def test_unlink_update(d):
+    d.cmds([
+        cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('simpleapp')),
+        cget_cmd('size', '1'),
+        cget_cmd('rm', '--verbose -y --unlink', 'app'),
+        cget_cmd('install', '--verbose --test --update', 'app,'+get_exists_path('basicapp')),
         cget_cmd('size', '2'),
         cget_cmd('rm', '--verbose -y', 'app'),
         cget_cmd('size', '1')
@@ -313,7 +381,7 @@ def test_build_target_fail(d):
     d.cmds([cget_cmd('build', '--verbose', '--target xyz', get_exists_path('simpleapp'))])
 
 def test_dir_deprecated_alias(d):
-    d.cmds(install_cmds(url='simple:'+get_exists_path('libsimple'), lib='simple', alias='simple'))
+    d.cmds(install_cmds(url='simple,'+get_exists_path('libsimple'), lib='simple', alias='simple'))
 
 def test_dir_alias(d):
     d.cmds(install_cmds(url='simple,'+get_exists_path('libsimple'), lib='simple', alias='simple'))
@@ -325,7 +393,7 @@ def test_init_cpp11(d):
     ])
 
 def test_reqs_alias_file(d):
-    reqs_file = d.write_to('reqs', [shlex_quote('simple:'+get_exists_path('libsimple'))])
+    reqs_file = d.write_to('reqs', [shlex_quote('simple,'+get_exists_path('libsimple'))])
     d.cmds(install_cmds(url='--file {}'.format(reqs_file), lib='simple', alias='simple'))
 
 def test_reqs_file(d):
@@ -333,7 +401,7 @@ def test_reqs_file(d):
     d.cmds(install_cmds(url='--file {}'.format(reqs_file), lib='simple', alias=get_exists_path('libsimple')))
 
 def test_reqs_alias_f(d):
-    reqs_file = d.write_to('reqs', [shlex_quote('simple:'+get_exists_path('libsimple'))])
+    reqs_file = d.write_to('reqs', [shlex_quote('simple,'+get_exists_path('libsimple'))])
     d.cmds(install_cmds(url='-f {}'.format(reqs_file), lib='simple', alias='simple'))
 
 def test_reqs_f(d):
