@@ -397,6 +397,9 @@ class CGetPrefix:
                 self.remove(p)
             util.delete_dir(self.get_private_path())
 
+    def clean_cache(self):
+        p = util.get_cache_path()
+        if os.path.exists(p): shutil.rmtree(util.get_cache_path())
 
     def pkg_config_path(self):
         libs = []
