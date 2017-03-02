@@ -178,8 +178,8 @@ class CGetPrefix:
     def parse_src_recipe(self, name, url):
         p, v = parse_src_name(url)
         for rpath in self.get_recipe_paths():
-            rp = os.path.join(rpath, p, v or '')
-            if os.path.exists(os.path.join(rpath, p)):
+            rp = os.path.normcase(os.path.join(rpath, p, v or ''))
+            if os.path.exists(rp):
                 return PackageSource(name=name or p, recipe=rp)
         return None
 
@@ -217,7 +217,9 @@ class CGetPrefix:
             else: return PackageBuild(pkg_src)
 
     def from_recipe(self, recipe, pkg=None, name=None):
-        p = next(iter(self.from_file(os.path.join(recipe, "package.txt"), no_recipe=True)))
+        recipe_pkg = os.path.join(recipe, "package.txt")
+        util.ensure_exists(recipe_pkg)
+        p = next(iter(self.from_file(recipe_pkg, no_recipe=True)))
         self.check(lambda:p.pkg_src is not None)
         requirements = os.path.join(recipe, "requirements.txt")
         if os.path.exists(requirements): p.requirements = requirements

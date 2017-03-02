@@ -39,6 +39,12 @@ class BuildError(Exception):
         if None: return "Build failed"
         else: return self.msg
 
+def ensure_exists(f):
+    if not f:
+        raise BuildError("Invalid file path")
+    if not os.path.exists(f):
+        raise BuildError("File does not exists: " + f)
+
 def can(f):
     try:
         f()
