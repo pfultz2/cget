@@ -156,10 +156,14 @@ def size_command(prefix, n):
 @cli.command(name='clean')
 @use_prefix
 @click.option('-y', '--yes', is_flag=True, default=False)
-def clean_command(prefix, yes):
+@click.option('--cache', is_flag=True, default=False, help="Removes any cache files")
+def clean_command(prefix, yes, cache):
     """ Clear directory """
-    if not yes: yes = click.confirm("Are you sure you want to delete all cget packages in {}?".format(prefix.prefix))
-    if yes: prefix.clean()
+    if cache:
+        prefix.clean_cache()
+    else:
+        if not yes: yes = click.confirm("Are you sure you want to delete all cget packages in {}?".format(prefix.prefix))
+        if yes: prefix.clean()
 
 @cli.command(name='pkg-config', context_settings=dict(
     ignore_unknown_options=True,

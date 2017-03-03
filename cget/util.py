@@ -87,6 +87,23 @@ def ls(p, predicate=lambda x:True):
     else:
         return []
 
+def get_app_dir(*args):
+    return os.path.join(click.get_app_dir('cget'), *args)
+
+def get_cache_path(*args):
+    return get_app_dir('cache', *args)
+
+def add_cache_file(key, f):
+    mkdir(get_cache_path(key))
+    shutil.copy2(f, get_cache_path(key, os.path.basename(f)))
+
+def get_cache_file(key):
+    p = get_cache_path(key)
+    if os.path.exists(p):
+        return os.path.join(p, next(ls(p)))
+    else:
+        return None
+
 def delete_dir(path):
     if path is not None and os.path.exists(path): shutil.rmtree(path)
 
@@ -177,11 +194,24 @@ def download_to(url, download_dir, insecure=False):
         bar.update(bar_len)
     return file
 
-def retrieve_url(url, dst, copy=False, insecure=False):
-    if url.startswith('file://'): 
-        if USE_SYMLINKS and not copy: return symlink_to(url[7:], dst)
-        else: return copy_to(url[7:], dst)
-    else: return download_to(url, dst, insecure=insecure)
+def transfer_to(f, dst, copy=False):
+    if USE_SYMLINKS and not copy: return symlink_to(f, dst)
+    else: return copy_to(f, dst)
+
+def retrieve_url(url, dst, copy=False, insecure=False, hash=None):
+    remote = not url.startswith('file://')
+    # Retrieve from cache
+    if remote and hash:
+        f = get_cache_file(hash.replace(':', '-'))
+        if f: return f
+    f = download_to(url, dst, insecure=insecure) if remote else transfer_to(url[7:], dst, copy=copy)
+    if os.path.isfile(f) and hash:
+        click.echo("Computing hash: {}".format(hash))
+        if check_hash(f, hash): 
+            if remote: add_cache_file(hash.replace(':', '-'), f)
+        else:
+            raise BuildError("Hash doesn't match for {0}: {1}".format(url, hash))
+    return f
 
 def extract_ar(archive, dst, *kwargs):
     if sys.version_info[0] < 3 and archive.endswith('.xz'):

@@ -34,12 +34,8 @@ class Builder:
     def fetch(self, url, hash=None, copy=False, insecure=False):
         self.prefix.log("fetch:", url)
         if insecure: url = url.replace('https', 'http')
-        f = util.retrieve_url(url, self.top_dir, copy=copy, insecure=insecure)
+        f = util.retrieve_url(url, self.top_dir, copy=copy, insecure=insecure, hash=hash)
         if os.path.isfile(f):
-            if hash:
-                click.echo("Computing hash: {}".format(hash))
-                if not util.check_hash(f, hash): 
-                    raise util.BuildError("Hash doesn't match for {0}: {1}".format(url, hash))
             click.echo("Extracting archive {0} ...".format(f))
             util.extract_ar(archive=f, dst=self.top_dir)
         return next(util.get_dirs(self.top_dir))
