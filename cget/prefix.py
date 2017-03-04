@@ -414,6 +414,7 @@ class CGetPrefix:
         try:
             yield
         except util.BuildError as err:
+            if err.msg: click.echo(err.msg)
             if msg: click.echo(msg)
             if on_fail: on_fail()
             if self.verbose: 
@@ -421,6 +422,9 @@ class CGetPrefix:
                 raise
             sys.exit(1)
         except:
+            extype, exvalue, extraceback = sys.exc_info()
+            click.echo("Unexpected error: ", extype)
+            click.echo(str(exvalue))
             if msg: click.echo(msg)
             if on_fail: on_fail()
             if self.verbose: raise
