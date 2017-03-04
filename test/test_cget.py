@@ -197,6 +197,13 @@ def test_recipe_simple_x(d):
     recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
     d.cmds(install_cmds(url='simpleheader', recipes=recipes))
 
+def test_symlink_in_prefix(d):
+    p = d.get_path('usr')
+    if cget.util.USE_SYMLINKS:
+        cget.util.mkdir(os.path.join(p, 'share', 'man'))
+        os.symlink(os.path.join(p, 'share', 'man'), os.path.join(p, 'man'))
+    d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', prefix=p))
+
 def test_prefix(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', prefix=d.get_path('usr')))
 

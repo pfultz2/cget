@@ -157,8 +157,10 @@ def rm_empty_dirs(d):
     has_files = False
     for x in os.listdir(d):
         p = os.path.join(d, x)
-        if os.path.isdir(p): has_files = has_files or rm_empty_dirs(p)
-        else: has_files = True
+        if os.path.isdir(p) and not os.path.islink(p): 
+            has_files = has_files or rm_empty_dirs(p)
+        else: 
+            has_files = True
     if not has_files: os.rmdir(d)
     return has_files
 
