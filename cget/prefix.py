@@ -423,7 +423,7 @@ class CGetPrefix:
             sys.exit(1)
         except:
             extype, exvalue, extraceback = sys.exc_info()
-            click.echo("Unexpected error: ", extype)
+            click.echo("Unexpected error: " + str(extype))
             click.echo(str(exvalue))
             if msg: click.echo(msg)
             if on_fail: on_fail()
