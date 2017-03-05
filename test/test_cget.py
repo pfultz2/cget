@@ -298,7 +298,9 @@ def test_unlink1(d):
         cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('basicapp')),
         cget_cmd('size', '2'),
         cget_cmd('rm', '--verbose -y', 'app'),
-        cget_cmd('size', '1')
+        cget_cmd('size', '1'),
+        cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('basicapp')),
+        cget_cmd('size', '2'),
     ])
 
 def test_unlink2(d):
@@ -310,7 +312,9 @@ def test_unlink2(d):
         cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('basicapp')),
         cget_cmd('size', '2'),
         cget_cmd('rm', '--verbose -y', 'app'),
-        cget_cmd('size', '1')
+        cget_cmd('size', '1'),
+        cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('basicapp')),
+        cget_cmd('size', '2'),
     ])
 
 def test_unlink3(d):
@@ -322,7 +326,23 @@ def test_unlink3(d):
         cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('basicapp')),
         cget_cmd('size', '2'),
         cget_cmd('rm', '--verbose -y', 'app'),
-        cget_cmd('size', '1')
+        cget_cmd('size', '1'),
+        cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('basicapp')),
+        cget_cmd('size', '2'),
+    ])
+
+def test_unlink4(d):
+    d.cmds([
+        cget_cmd('install', '--verbose --test', 'simple,'+get_exists_path('libsimple')),
+        cget_cmd('size', '1'),
+        cget_cmd('rm', '--verbose -y --unlink', 'simple'),
+        cget_cmd('size', '0'),
+        cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('basicapp')),
+        cget_cmd('size', '2'),
+        cget_cmd('rm', '--verbose -y', 'simple'),
+        cget_cmd('size', '0'),
+        cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('basicapp')),
+        cget_cmd('size', '2'),
     ])
 
 def test_unlink_update(d):
