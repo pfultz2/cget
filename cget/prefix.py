@@ -265,6 +265,7 @@ class CGetPrefix:
             if update: shutil.rmtree(unlink_dir)
             else:
                 self.link(pb)
+                self.write_parent(pb, track=track)
                 return "Linking package {}".format(pb.to_name())
         if os.path.exists(pkg_dir): 
             self.write_parent(pb, track=track)
