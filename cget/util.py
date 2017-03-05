@@ -9,7 +9,7 @@ if sys.version_info[0] < 3:
             from backports import lzma
         except:
             pass
-import tarfile
+import tarfile, zipfile
 
 if os.name == 'posix' and sys.version_info[0] < 3:
     import subprocess32 as subprocess
@@ -220,7 +220,11 @@ def extract_ar(archive, dst, *kwargs):
         with contextlib.closing(lzma.LZMAFile(archive)) as xz:
             with tarfile.open(fileobj=xz, *kwargs) as f:
                 f.extractall(dst)
-    else: tarfile.open(archive, *kwargs).extractall(dst)
+    elif archive.endswith('.zip'):
+        with zipfile.ZipFile(archive,'r') as f:
+            f.extractall(dst)
+    else:
+        tarfile.open(archive, *kwargs).extractall(dst)
 
 def hash_file(f, t):
     h = hashlib.new(t)
