@@ -82,6 +82,6 @@ Libraries can be selected with cmake variables ``BOOST_WITH_`` and ``BOOST_WITHO
 
     cget install boost,http://downloads.sourceforge.net/project/boost/boost/1.62.0/boost_1_62_0.tar.bz2 --cmake boost -DBOOST_WITH_FILESYSTEM=1
 
-Also, everthing cam be built except Boost.Python like the following::
+Also, everthing can be built except Boost.Python like the following::
 
     cget install boost,http://downloads.sourceforge.net/project/boost/boost/1.62.0/boost_1_62_0.tar.bz2 --cmake boost -DBOOST_WITHOUT_PYTHON=1

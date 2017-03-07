@@ -255,3 +255,11 @@ This will remove a package. If other packages depends on the package to be remov
 .. option:: -y, --yes
 
     Affirm all questions.
+
+.. option:: -A, --all
+
+    Select all packages installed.
+
+.. option:: -U, --unlink
+
+    Unlink the package but don't remove it. The ``install`` command can be used to relink the package. 
