@@ -131,7 +131,8 @@ def rm_symlink(file):
 def rm_symlink_in(file, prefix):
     if os.path.islink(file):
         f = os.readlink(file)
-        if f.startswith(prefix): os.remove(file)
+        if f.startswith(prefix): 
+            os.remove(file)
 
 def rm_symlink_dir(d):
     for root, dirs, files in os.walk(d):

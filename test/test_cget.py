@@ -258,6 +258,7 @@ def test_xcmake_ref_original_fail(d):
 def test_rm(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', remove='rm'))
 
+
 def test_ls(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', list_='ls'))
 
@@ -281,6 +282,26 @@ def test_update_reqs(d):
         cget_cmd('size', '1')
     ])
 
+def test_rm_with_symlink(d):
+    p = d.get_path('usr')
+    share = os.path.join(p, 'share')
+    cget.util.mkfile(share, 'data.txt', 'data')
+    if cget.util.USE_SYMLINKS:
+        os.symlink(os.path.join(share, 'data.txt'), os.path.join(share, 'data.sym'))
+    else:
+        cget.util.mkfile(share, 'data.sym', 'data')
+    os.remove(os.path.join(share, 'data.txt'))
+    cg = CGetCmd(prefix=p)
+    d.cmds([
+        cg('install', '--verbose --test', 'simple,'+get_exists_path('libsimple')),
+        cg('size', '1'),
+        cg('rm', '--verbose -y', 'simple'),
+        cg('size', '0')
+    ])
+    assert os.path.exists(os.path.join(share))
+    assert not os.path.exists(os.path.join(share, 'data.txt'))
+    assert os.path.lexists(os.path.join(share, 'data.sym'))
+
 def test_rm_all(d):
     d.cmds([
         cget_cmd('install', '--verbose --test --update', 'app,'+get_exists_path('basicapp')),
@@ -300,7 +321,7 @@ def test_unlink1(d):
         cget_cmd('rm', '--verbose -y', 'app'),
         cget_cmd('size', '1'),
         cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('basicapp')),
-        cget_cmd('size', '2'),
+        cget_cmd('size', '2')
     ])
 
 def test_unlink2(d):
@@ -314,7 +335,7 @@ def test_unlink2(d):
         cget_cmd('rm', '--verbose -y', 'app'),
         cget_cmd('size', '1'),
         cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('basicapp')),
-        cget_cmd('size', '2'),
+        cget_cmd('size', '2')
     ])
 
 def test_unlink3(d):
@@ -328,7 +349,7 @@ def test_unlink3(d):
         cget_cmd('rm', '--verbose -y', 'app'),
         cget_cmd('size', '1'),
         cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('basicapp')),
-        cget_cmd('size', '2'),
+        cget_cmd('size', '2')
     ])
 
 def test_unlink4(d):
@@ -342,7 +363,7 @@ def test_unlink4(d):
         cget_cmd('rm', '--verbose -y', 'simple'),
         cget_cmd('size', '0'),
         cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('basicapp')),
-        cget_cmd('size', '2'),
+        cget_cmd('size', '2')
     ])
 
 def test_unlink_update(d):

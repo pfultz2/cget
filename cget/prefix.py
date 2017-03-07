@@ -329,23 +329,10 @@ class CGetPrefix:
 
     @params(pkg=PACKAGE_SOURCE_TYPES)
     def remove(self, pkg):
-        pkg = self.parse_pkg_src(pkg)
-        pkg_dir = self.get_package_directory(pkg.to_fname())
-        self.log("Remove:", pkg_dir)
-        if os.path.exists(pkg_dir):
-            if util.USE_SYMLINKS:
-                shutil.rmtree(pkg_dir)
-                util.rm_symlink_dir(self.prefix)
-            else:
-                util.rm_dup_dir(os.path.join(pkg_dir, 'install'), self.prefix)
-                shutil.rmtree(pkg_dir)
-            util.rm_empty_dirs(self.prefix)
-            return "Removed package {}".format(pkg.name)
-        else:
-            return "Package doesn't exists"
+        self.unlink(pkg, delete=True)
 
     @params(pkg=PACKAGE_SOURCE_TYPES)
-    def unlink(self, pkg):
+    def unlink(self, pkg, delete=False):
         pkg = self.parse_pkg_src(pkg)
         pkg_dir = self.get_package_directory(pkg.to_fname())
         unlink_dir = self.get_unlink_directory(pkg.to_fname())
@@ -356,8 +343,10 @@ class CGetPrefix:
             else:
                 util.rm_dup_dir(os.path.join(pkg_dir, 'install'), self.prefix, remove_both=False)
             util.rm_empty_dirs(self.prefix)
-            util.mkdir(self.get_unlink_directory())
-            os.rename(pkg_dir, unlink_dir)
+            if delete: shutil.rmtree(pkg_dir)
+            else:
+                util.mkdir(self.get_unlink_directory())
+                os.rename(pkg_dir, unlink_dir)
 
     @params(pkg=PACKAGE_SOURCE_TYPES)
     def link(self, pkg):

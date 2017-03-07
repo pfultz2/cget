@@ -133,8 +133,7 @@ def remove_command(prefix, pkgs, yes, unlink, all):
     if yes:
         for pkg in pkgs_set:
             with prefix.try_("Failed to {} package {}".format(verb, pkg)):
-                if unlink: prefix.unlink(pkg)
-                else: prefix.remove(pkg)
+                prefix.unlink(pkg, delete=not unlink)
                 click.echo("{} package {}".format(verb, pkg))
 
 @cli.command(name='list')
