@@ -48,7 +48,7 @@ class Builder:
             '-DCGET_CMAKE_DIR={}'.format(util.cget_dir('cmake')), 
             '-DCGET_CMAKE_ORIGINAL_SOURCE_FILE={}'.format(os.path.join(src_dir, self.cmake_original_file))
         ]
-        if generator is not None: args = ['-G', util.quote(generator)] + args
+        if generator is not None: args = ['-G', generator] + args
         if self.prefix.verbose: args.extend(['-DCMAKE_VERBOSE_MAKEFILE=On'])
         if test: args.extend(['-DBUILD_TESTING=On'])
         else: args.extend(['-DBUILD_TESTING=Off'])
