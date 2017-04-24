@@ -48,14 +48,14 @@ class Builder:
             '-DCGET_CMAKE_DIR={}'.format(util.cget_dir('cmake')), 
             '-DCGET_CMAKE_ORIGINAL_SOURCE_FILE={}'.format(os.path.join(src_dir, self.cmake_original_file))
         ]
+        for d in defines or []:
+            args.append('-D{0}'.format(d))
         if generator is not None: args = ['-G', generator] + args
         if self.prefix.verbose: args.extend(['-DCMAKE_VERBOSE_MAKEFILE=On'])
         if test: args.extend(['-DBUILD_TESTING=On'])
         else: args.extend(['-DBUILD_TESTING=Off'])
         args.extend(['-DCMAKE_BUILD_TYPE={}'.format(variant or 'Release')])
-        if install_prefix is not None: args.insert(0, '-DCMAKE_INSTALL_PREFIX=' + install_prefix)
-        for d in defines or []:
-            args.append('-D{0}'.format(d))
+        if install_prefix is not None: args.extend(['-DCMAKE_INSTALL_PREFIX=' + install_prefix])
         try:
             self.cmake(args=args, cwd=self.build_dir, use_toolchain=True)
         except:
