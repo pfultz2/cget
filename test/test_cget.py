@@ -85,10 +85,9 @@ class CGetCmd:
 def cget_cmd(*args):
     return CGetCmd()(*args)
 
-def install_cmds(url, lib=None, alias=None, init=None, remove='remove', list_='list', size=1, recipes=None, prefix=None, build_path=None, variants=None):
+def install_cmds(url, lib=None, alias=None, init=None, remove='remove', list_='list', size=1, recipes=None, prefix=None, build_path=None, variants=None, base_size=0):
     cg = CGetCmd(prefix=prefix, build_path=build_path)
-    base_size = 0
-    if recipes: base_size = 1
+    if recipes: base_size = base_size + 1
     n = str(size + base_size)
     yield cg('init', init)
     for variant in variants or ['--debug', '--release', '']:
@@ -171,6 +170,7 @@ def test_recipe_simple(d):
 def test_recipe_simple_branch(d):
     recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
     d.cmds(install_cmds(url='simple@master', lib='simple', recipes=recipes))
+
 
 @pytest.mark.xfail(strict=True)
 def test_recipe_simple_branch_fail(d):
@@ -474,6 +474,11 @@ def test_reqs_hash_fail(d):
     h = 'xxx'
     reqs_file = d.write_to('reqs', ["{0} --hash=sha1:{1}".format(shlex_quote(ar), h)])
     d.cmds(install_cmds(url='--file {}'.format(reqs_file), lib='simple', alias=ar))
+
+def test_reqs_recipe(d):
+    recipes=shlex_quote(get_exists_path('basicrecipes')) + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
+    reqs_file = d.write_to('reqs', [recipes, 'simple'])
+    d.cmds(install_cmds(url='--file {}'.format(reqs_file), lib='simple', alias='simple', base_size=1))
 
 def test_app_include_dir(d):
     d.cmds(install_cmds(url=get_exists_path('basicapp-include'), lib='simple', alias='simple', size=2))

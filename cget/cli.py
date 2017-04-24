@@ -90,7 +90,7 @@ def install_command(prefix, pkgs, define, file, test, test_all, update, generato
     variant = 'Release'
     if debug: variant = 'Debug'
     pbs = [PackageBuild(pkg, define=define, cmake=cmake, variant=variant) for pkg in pkgs]
-    for pb in list(prefix.from_file(file))+pbs:
+    for pb in util.flat([prefix.from_file(file), pbs]):
         with prefix.try_("Failed to build package {}".format(pb.to_name()), on_fail=lambda: prefix.remove(pb)):
             click.echo(prefix.install(pb, test=test, test_all=test_all, update=update, generator=generator, insecure=insecure))
 
