@@ -423,6 +423,13 @@ def test_build_target(d):
         cget_cmd('size', '0')
     ])
 
+def test_build_install_target(d):
+    # d.mkdir('app')
+    d.mkdir('tmp').cmds([
+        cget_cmd('build', '--verbose', '--target install', '-DCMAKE_INSTALL_PREFIX="' + d.get_path('app') + '"', get_exists_path('basicapp')),
+        cget_cmd('size', '1')
+    ])
+
 
 @pytest.mark.xfail(strict=True)
 def test_build_target_fail(d):
