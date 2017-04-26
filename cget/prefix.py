@@ -117,10 +117,10 @@ class CGetPrefix:
         yield set_('CGET_PREFIX', self.prefix)
         yield set_('CMAKE_PREFIX_PATH', self.prefix)
         yield ['include_directories(SYSTEM ${CMAKE_PREFIX_PATH}/include)']
+        if toolchain: yield ['include({})'.format(util.quote(os.path.abspath(toolchain)))]
         yield if_('CMAKE_CROSSCOMPILING',
             append_('CMAKE_FIND_ROOT_PATH', self.prefix)
         )
-        if toolchain: yield ['include({})'.format(util.quote(os.path.abspath(toolchain)))]
         yield if_('CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT',
             set_('CMAKE_INSTALL_PREFIX', self.prefix)
         )
