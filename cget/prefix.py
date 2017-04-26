@@ -47,6 +47,13 @@ def cmake_set(var, val, quote=True, cache=None, description=None):
     else:
         yield 'set({0} {1} CACHE {2} "{3}")'.format(var, x, cache, description or '')
 
+def cmake_append(var, *vals, **kwargs):
+    quote = True
+    if 'quote' in kwargs: quote = kwargs['quote']
+    x = ' '.join(vals)
+    if quote: x = ' '.join([util.quote(val) for val in vals])
+    yield 'list(APPEND {0} {1})'.format(var, x)
+
 def cmake_if(cond, *args):
     yield 'if ({})'.format(cond)
     for arg in args:
@@ -106,9 +113,13 @@ class CGetPrefix:
     def generate_cmake_toolchain(self, toolchain=None, cxx=None, cxxflags=None, ldflags=None, std=None, defines=None):
         set_ = cmake_set
         if_ = cmake_if
+        append_ = cmake_append
         yield set_('CGET_PREFIX', self.prefix)
         yield set_('CMAKE_PREFIX_PATH', self.prefix)
         yield ['include_directories(SYSTEM ${CMAKE_PREFIX_PATH}/include)']
+        yield if_('CMAKE_CROSSCOMPILING',
+            append_('CMAKE_FIND_ROOT_PATH', self.prefix)
+        )
         if toolchain: yield ['include({})'.format(util.quote(os.path.abspath(toolchain)))]
         yield if_('CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT',
             set_('CMAKE_INSTALL_PREFIX', self.prefix)
