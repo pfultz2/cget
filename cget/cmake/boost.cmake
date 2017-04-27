@@ -91,19 +91,19 @@ file(WRITE ${B2_CONFIG} ${B2_CONFIG_CONTENT})
 
 find_program(B2_EXE b2)
 if(NOT ${B2_EXE})
-    # TODO: Check for windows host not target
     if(CMAKE_HOST_WIN32)
         add_custom_target(bootstrap
             COMMAND cmd /c ${CMAKE_CURRENT_SOURCE_DIR}/tools/build/bootstrap.bat
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tools/build/
         )
+        set(B2_EXE "${CMAKE_CURRENT_SOURCE_DIR}/tools/build/b2.exe")
     else()
         add_custom_target(bootstrap
             COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/build/bootstrap.sh
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tools/build/
         )
+        set(B2_EXE "${CMAKE_CURRENT_SOURCE_DIR}/tools/build/b2")
     endif()
-    set(B2_EXE "${CMAKE_CURRENT_SOURCE_DIR}/tools/build/b2${CMAKE_EXECUTABLE_SUFFIX}")
     install(PROGRAMS ${B2_EXE} DESTINATION bin)
 endif()
 
