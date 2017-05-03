@@ -743,3 +743,9 @@ def test_static_init(d):
 @pytest.mark.xfail(strict=True)
 def test_shared_static_init(d):
     d.cmds(install_cmds(init='--shared --static', url=get_exists_path('libsimple'), lib='simple'))
+
+def test_symlink_dir(d):
+    d.cmds([
+        cget_cmd('install', get_path('symlinkdir'))
+    ])
+    assert os.path.exists(d.get_path('cget', 'data', 'sdir', 'file.txt'))

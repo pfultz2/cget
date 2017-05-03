@@ -109,7 +109,13 @@ def delete_dir(path):
 
 def symlink_dir(src, dst):
     for root, dirs, files in os.walk(src):
-        for file in files:
+        all_files = (
+            file 
+            for x in [dirs, files] 
+            for file in x 
+            if os.path.islink(os.path.join(root, file)) or os.path.isfile(os.path.join(root, file))
+        )
+        for file in all_files:
             path = os.path.relpath(root, src)
             d = os.path.join(dst, path)
             mkdir(d)
