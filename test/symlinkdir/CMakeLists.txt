@@ -1,0 +1,3 @@
+
+install(SCRIPT install.cmake)
+
