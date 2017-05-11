@@ -8,7 +8,9 @@ Many times a package doesn't list its dependencies in a requirements.txt file, o
 Structure of a recipe
 ---------------------
 
-A recipe is a directoy which contains a 'package.txt' file and an optional 'requirements.txt' file. Both files follow the format describe in :any:`requirements`. The 'package.txt' file list only one package, which is the package to be installed. The 'requirements.txt' list packages to be installed as dependecies, which can also reference other recipes. 
+A recipe is a directoy which contains a 'package.txt' file and an optional 'requirements.txt' file. If a 'requirements.txt' is not provided, then the requirements file in the package will be used otherwise the requirements file in the recipe will be used and the package's requirements.txt will be ignored.
+
+Both files follow the format describe in :any:`requirements`. The 'package.txt' file list only one package, which is the package to be installed. The 'requirements.txt' list packages to be installed as dependecies, which can also reference other recipes. 
 
 All recipe directories are searched under the ``$CGET_PREFIX/etc/cget/recipes/`` directory. A cmake package can install additional recipes through cget. 
 

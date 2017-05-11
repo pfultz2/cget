@@ -4,7 +4,7 @@ Requirements file
 
 .. program:: requirements.txt
 
-``cget`` will install all packages listed in the ``requirements.txt`` file. Each requirement is listed on a new line.
+``cget`` will install all packages listed in the top-level ``requirements.txt`` file in the package. Each requirement is listed on a new line.
 
 .. option:: <package-source>
 
