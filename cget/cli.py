@@ -101,20 +101,22 @@ def install_command(prefix, pkgs, define, file, test, test_all, update, generato
 @click.option('-C', '--clean', is_flag=True, help="Remove build directory")
 @click.option('-P', '--path', is_flag=True, help="Show path to build directory")
 @click.option('-D', '--define', multiple=True, help="Extra configuration variables to pass to CMake")
+@click.option('-F', '--fetch', default=None, help="Retrieve sources from package source")
 @click.option('-T', '--target', default=None, help="Cmake target to build")
 @click.option('-y', '--yes', is_flag=True, default=False)
 @click.option('-G', '--generator', envvar='CGET_GENERATOR', help='Set the generator for CMake to use')
-@click.argument('pkg', nargs=1, default='.', type=click.STRING)
-def build_command(prefix, pkg, define, test, configure, clean, path, yes, target, generator):
+@click.argument('src_dir', nargs=1, default='.', type=click.STRING)
+def build_command(prefix, src_dir, define, fetch, test, configure, clean, path, yes, target, generator):
     """ Build package """
-    pb = PackageBuild(pkg).merge_defines(define)
-    with prefix.try_("Failed to build package {}".format(pb.to_name())):
-        if configure: prefix.build_configure(pb)
-        elif path: click.echo(prefix.build_path(pb))
+    src_pb = PackageBuild(src_dir).merge_defines(define)
+    with prefix.try_("Failed to build package {}".format(src_pb.to_name())):
+        if fetch: prefix.build_fetch(src_dir, PackageBuild(fetch).merge_defines(define), test=test, generator=generator)
+        if configure: prefix.build_configure(src_pb)
+        elif path: click.echo(prefix.build_path(src_pb))
         elif clean: 
             if not yes: yes = click.confirm("Are you sure you want to delete the build directory?")
-            if yes: prefix.build_clean(pb)
-        else: prefix.build(pb, test=test, target=target, generator=generator)
+            if yes: prefix.build_clean(src_pb)
+        else: prefix.build(src_pb, test=test, target=target, generator=generator)
 
 @cli.command(name='remove')
 @use_prefix

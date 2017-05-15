@@ -319,6 +319,22 @@ class CGetPrefix:
             if test: builder.test(variant='Release')
 
     @params(pb=PACKAGE_SOURCE_TYPES)
+    def build_fetch(self, src_dir, pb, test=False, generator=None, insecure=False):
+        pb = self.parse_pkg_build(pb)
+        src_dir = util.actual_path(src_dir)
+        if os.path.exists(src_dir): return
+        with self.create_builder(pb.to_fname()) as builder:
+            # Fetch package
+            tmp_src_dir = builder.fetch(pb.pkg_src.url, pb.hash, (pb.cmake != None), insecure=insecure)
+            util.mkdir(os.path.dirname(src_dir))
+            os.rename(tmp_src_dir, src_dir)
+            # Install any dependencies first
+            self.install_deps(pb, src_dir, generator=generator, test=test)
+            # Configure
+            if not builder.exists: builder.configure(src_dir, defines=pb.define, generator=generator)
+        
+
+    @params(pb=PACKAGE_SOURCE_TYPES)
     def build_path(self, pb):
         pb = self.parse_pkg_build(pb)
         return self.get_builder_path(pb.to_fname(), 'build')

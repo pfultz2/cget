@@ -380,6 +380,11 @@ def test_unlink_update(d):
 def test_build_dir(d):
     d.cmds(build_cmds(get_exists_path('libsimple')))
 
+def test_build_dir_fetch_tar(d):
+    ar = d.get_path('libsimple.tar.gz')
+    create_ar(archive=ar, src=get_exists_path('libsimple'))
+    d.cmds(build_cmds(d.get_path('src') + ' --fetch ' + ar))
+
 def test_build_relative_dir(d):
     p = os.path.relpath(get_exists_path('libsimple'), d.get_path())
     d.cmds(build_cmds(p))
