@@ -14,7 +14,7 @@ install:
   - ps: Invoke-WebRequest "https://bootstrap.pypa.io/get-pip.py" -OutFile "c:\\get-pip.py"
   - "c:\\Python34\\python c:\\ez_setup.py"
   - "c:\\Python34\\python c:\\get-pip.py"
-  - "c:\\Python34\\Scripts\\pip install tox cget"
+  - "c:\\Python34\\Scripts\\pip install tox cget pypiwin32"
   # Install pkgconfig using cget
   - "c:\\Python34\\Scripts\\cget install --verbose -p c:\\cget pfultz2/pkgconfig"
 build_script:

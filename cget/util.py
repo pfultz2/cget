@@ -16,6 +16,11 @@ if os.name == 'posix' and sys.version_info[0] < 3:
 else:
     import subprocess
 
+try:
+    import win32api
+except:
+    pass
+
 from six.moves.urllib import request
 
 USE_SYMLINKS=(os.name == 'posix')
@@ -233,6 +238,12 @@ def extract_ar(archive, dst, *kwargs):
     else:
         tarfile.open(archive, *kwargs).extractall(dst)
 
+def get_short_path(p):
+    try:
+        return win32api.GetShortPathName(p)
+    except:
+        return p
+
 def hash_file(f, t):
     h = hashlib.new(t)
     h.update(open(f, 'rb').read())
@@ -297,7 +308,7 @@ def as_dict_str(d):
     return result
 
 def actual_path(path, start=None):
-    return os.path.normpath(os.path.join(start or os.getcwd(), os.path.expanduser(path)))
+    return get_short_path(os.path.normpath(os.path.join(start or os.getcwd(), os.path.expanduser(path))))
 
 class Commander:
     def __init__(self, paths=None, env=None, verbose=False):
