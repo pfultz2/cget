@@ -143,7 +143,7 @@ class CGetPrefix:
 
 
     def get_path(self, *paths):
-        return os.path.join(self.prefix, *paths)
+        return util.get_short_path(os.path.join(self.prefix, *paths))
 
     def get_private_path(self, *paths):
         return self.get_path('cget', *paths)
