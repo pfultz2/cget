@@ -165,6 +165,7 @@ class CGetPrefix:
         d = self.get_builder_path(pre + name)
         exists = os.path.exists(d)
         util.mkdir(d)
+        d = util.get_short_path(d)
         yield Builder(self, d, exists)
         if tmp: shutil.rmtree(d, ignore_errors=True)
 
