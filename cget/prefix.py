@@ -189,6 +189,7 @@ class CGetPrefix:
     def parse_src_recipe(self, name, url):
         p, v = parse_src_name(url)
         for rpath in self.get_recipe_paths():
+            if v: v = '@' + v
             rp = os.path.normcase(os.path.join(rpath, p, v or ''))
             if os.path.exists(rp):
                 return PackageSource(name=name or p, recipe=rp)
