@@ -26,9 +26,8 @@ test_script:
   - "c:\\Python34\\Scripts\\tox -- -x"
 
 after_test:
-  ps:
-    - "$wc = New-Object 'System.Net.WebClient'"
-    - "$wc.UploadFile(\"https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)\", (Resolve-Path .\tests.xml))"
+  ps: "$wc = New-Object 'System.Net.WebClient'"
+  ps: "$wc.UploadFile(\"https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)\", (Resolve-Path .\tests.xml))"
   
 
 
