@@ -82,8 +82,11 @@ endforeach()
 set(B2_TOOLCHAIN_VERSION cget)
 set(B2_CONFIG ${CMAKE_CURRENT_BINARY_DIR}/user-config.jam)
 
-# TODO: Set threadapi:
-# threadapi=win32
+# TODO: Make this configurable
+set(B2_THREAD_API "pthread")
+if(WIN32)
+    set(B2_THREAD_API "win32")
+endif()
 set(B2_CONFIG_CONTENT 
 "using ${B2_TOOLCHAIN_TYPE} : ${B2_TOOLCHAIN_VERSION} : \"${B2_COMPILER}\" : 
 <rc>${CMAKE_RC_COMPILER}
@@ -139,6 +142,7 @@ set(BUILD_FLAGS
     address-model=${B2_ADDRESS_MODEL}
     link=${B2_LINK}
     threading=multi
+    threadapi=${B2_THREAD_API}
     toolset=${B2_TOOLCHAIN_TYPE}-${B2_TOOLCHAIN_VERSION}
     target-os=${B2_TARGET}
     --layout=system
