@@ -141,7 +141,7 @@ set(BUILD_FLAGS
     threading=multi
     toolset=${B2_TOOLCHAIN_TYPE}-${B2_TOOLCHAIN_VERSION}
     target-os=${B2_TARGET}
-    --layout=tagged
+    --layout=system
     --disable-icu
     ${BOOST_LIBS}
     --prefix=${CMAKE_INSTALL_PREFIX}
