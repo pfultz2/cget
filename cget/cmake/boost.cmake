@@ -26,6 +26,11 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 4)
     set(B2_ADDRESS_MODEL "32")
 endif()
 
+set(PIC_FLAG)
+if(CMAKE_POSITION_INDEPENDENT_CODE AND NOT MSVC)
+    set(PIC_FLAG "-fPIC")
+endif()
+
 set(B2_COMPILER ${CMAKE_CXX_COMPILER})
 if (MSVC)
     set(B2_TOOLCHAIN_TYPE "msvc")
@@ -65,13 +70,21 @@ else()
     message(SEND_ERROR "Unsupported platform")
 endif()
 
+set(SEARCH_PATHS)
+foreach(PATHS ${CMAKE_PREFIX_PATH})
+    set(SEARCH_PATHS "${SEARCH_PATHS}
+<include>${CMAKE_PREFIX_PATH}/include
+<library-path>${CMAKE_PREFIX_PATH}/lib
+")
+endforeach()
+
 # set(B2_TOOLCHAIN_VERSION ${CMAKE_CXX_COMPILER_VERSION})
 set(B2_TOOLCHAIN_VERSION cget)
 set(B2_CONFIG ${CMAKE_CURRENT_BINARY_DIR}/user-config.jam)
 
 # TODO: Set threadapi:
 # threadapi=win32
-string(CONFIGURE 
+set(B2_CONFIG_CONTENT 
 "using ${B2_TOOLCHAIN_TYPE} : ${B2_TOOLCHAIN_VERSION} : \"${B2_COMPILER}\" : 
 <rc>${CMAKE_RC_COMPILER}
 <archiver>${CMAKE_AR}
@@ -79,12 +92,12 @@ string(CONFIGURE
 <address-model>${B2_ADDRESS_MODEL}
 <link>${B2_LINK}
 <variant>${B2_VARIANT}
-<cxxflags>${CMAKE_CXX_FLAGS}
-<cflags>${CMAKE_C_FLAGS}
-<linkflags>${B2_LINK_FLAGS} 
+<cxxflags>${CMAKE_CXX_FLAGS} ${PIC_FLAG}
+<cflags>${CMAKE_C_FLAGS} ${PIC_FLAG}
+<linkflags>${B2_LINK_FLAGS} ${PIC_FLAG}
+${SEARCH_PATHS}
 \;
-"
-B2_CONFIG_CONTENT)
+")
 message("${B2_CONFIG_CONTENT}")
 
 file(WRITE ${B2_CONFIG} ${B2_CONFIG_CONTENT})
