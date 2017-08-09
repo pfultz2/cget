@@ -9,10 +9,22 @@ if(BUILD_SHARED_LIBS)
     set(B2_LINK "shared")
 endif()
 
+set(B2_PIC_FLAG)
+if(CMAKE_POSITION_INDEPENDENT_CODE AND NOT MSVC)
+    set(B2_PIC_FLAG "-fPIC")
+endif()
 set(B2_LINK_FLAGS ${CMAKE_STATIC_LINKER_FLAGS})
 if(BUILD_SHARED_LIBS)
     set(B2_LINK_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
 endif()
+set(B2_C_FLAGS "${CMAKE_C_FLAGS} ${B2_PIC_FLAG}")
+set(B2_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${B2_PIC_FLAG}")
+
+# Compensate for extra spaces in the flags, which can cause build failures
+foreach(VAR B2_C_FLAGS B2_CXX_FLAGS B2_LINK_FLAGS)
+    string(REGEX REPLACE "  +" " " ${VAR} "${${VAR}}")
+    string(STRIP "${${VAR}}" ${VAR})
+endforeach()
 
 string(TOLOWER "${CMAKE_BUILD_TYPE}" BUILD_TYPE)
 if(BUILD_TYPE STREQUAL "debug")
@@ -24,11 +36,6 @@ endif()
 set(B2_ADDRESS_MODEL "64")
 if(CMAKE_SIZEOF_VOID_P EQUAL 4)
     set(B2_ADDRESS_MODEL "32")
-endif()
-
-set(PIC_FLAG)
-if(CMAKE_POSITION_INDEPENDENT_CODE AND NOT MSVC)
-    set(PIC_FLAG "-fPIC")
 endif()
 
 set(B2_COMPILER ${CMAKE_CXX_COMPILER})
@@ -87,8 +94,8 @@ set(B2_THREAD_API "pthread")
 if(WIN32)
     set(B2_THREAD_API "win32")
 endif()
-set(B2_CONFIG_CONTENT 
-"using ${B2_TOOLCHAIN_TYPE} : ${B2_TOOLCHAIN_VERSION} : \"${B2_COMPILER}\" : 
+set(B2_CONFIG_CONTENT "
+using ${B2_TOOLCHAIN_TYPE} : ${B2_TOOLCHAIN_VERSION} : \"${B2_COMPILER}\" : 
 <rc>${CMAKE_RC_COMPILER}
 <archiver>${CMAKE_AR}
 <ranlib>${CMAKE_RANLIB}
@@ -97,7 +104,7 @@ ${SEARCH_PATHS}
 ")
 message("${B2_CONFIG_CONTENT}")
 
-file(WRITE ${B2_CONFIG} ${B2_CONFIG_CONTENT})
+file(WRITE ${B2_CONFIG} "${B2_CONFIG_CONTENT}")
 
 find_program(B2_EXE b2)
 if(NOT ${B2_EXE})
@@ -128,21 +135,35 @@ foreach (VAR ${_variableNames})
     endif()
 endforeach()
 
+# Only add these arguments if they are not empty
+if(NOT "${B2_C_FLAGS}" STREQUAL "")
+    set(B2_C_FLAGS_ARG cflags="${B2_C_FLAGS}")
+endif()
+
+if(NOT "${B2_CXX_FLAGS}" STREQUAL "")
+    set(B2_CXX_FLAGS_ARG cxxflags="${B2_CXX_FLAGS}")
+endif()
+
+if(NOT "${B2_LINK_FLAGS}" STREQUAL "")
+    set(B2_LINK_FLAGS_ARG linkflags="${B2_LINK_FLAGS}")
+endif()
+
 set(BUILD_FLAGS
     -q
+    # -d+2
     -j ${B2_JOBS}
     --ignore-site-config
     --user-config=${B2_CONFIG}
     address-model=${B2_ADDRESS_MODEL}
-    cflags=\"${CMAKE_C_FLAGS} ${PIC_FLAG}\"
-    cxxflags=\"${CMAKE_CXX_FLAGS} ${PIC_FLAG}\"
     link=${B2_LINK}
-    linkflags=\"${B2_LINK_FLAGS} ${PIC_FLAG}\"
     target-os=${B2_TARGET}
     threadapi=${B2_THREAD_API}
     threading=multi
     toolset=${B2_TOOLCHAIN_TYPE}-${B2_TOOLCHAIN_VERSION}
     variant=${B2_VARIANT}
+    ${B2_C_FLAGS_ARG}
+    ${B2_CXX_FLAGS_ARG}
+    ${B2_LINK_FLAGS_ARG}
     --layout=system
     --disable-icu
     ${BOOST_LIBS}
@@ -152,9 +173,12 @@ set(BUILD_FLAGS
     --includedir=${CMAKE_INSTALL_PREFIX}/include
 )
 
+string(REPLACE ";" " " BUILD_FLAGS_STR "${BUILD_FLAGS}")
+
 add_custom_target(boost ALL
     COMMAND ${B2_EXE}
     ${BUILD_FLAGS}
+    COMMENT "${B2_EXE} ${BUILD_FLAGS_STR}"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
