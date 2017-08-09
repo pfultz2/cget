@@ -92,9 +92,6 @@ set(B2_CONFIG_CONTENT
 <rc>${CMAKE_RC_COMPILER}
 <archiver>${CMAKE_AR}
 <ranlib>${CMAKE_RANLIB}
-<address-model>${B2_ADDRESS_MODEL}
-<link>${B2_LINK}
-<variant>${B2_VARIANT}
 <cxxflags>${CMAKE_CXX_FLAGS} ${PIC_FLAG}
 <cflags>${CMAKE_C_FLAGS} ${PIC_FLAG}
 <linkflags>${B2_LINK_FLAGS} ${PIC_FLAG}
@@ -141,10 +138,11 @@ set(BUILD_FLAGS
     --user-config=${B2_CONFIG}
     address-model=${B2_ADDRESS_MODEL}
     link=${B2_LINK}
-    threading=multi
-    threadapi=${B2_THREAD_API}
-    toolset=${B2_TOOLCHAIN_TYPE}-${B2_TOOLCHAIN_VERSION}
     target-os=${B2_TARGET}
+    threadapi=${B2_THREAD_API}
+    threading=multi
+    toolset=${B2_TOOLCHAIN_TYPE}-${B2_TOOLCHAIN_VERSION}
+    variant=${B2_VARIANT}
     --layout=system
     --disable-icu
     ${BOOST_LIBS}
