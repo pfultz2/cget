@@ -94,7 +94,8 @@ def install_cmds(url, lib=None, alias=None, init=None, remove='remove', list_='l
     if recipes: base_size = base_size + 1
     n = str(size + base_size)
     yield cg('init', init)
-    for variant in variants or ['--debug', '--release', '']:
+    default_variants = ['--debug', '--release', ''] if not __windows__ else ['--release']
+    for variant in variants or default_variants:
         yield cg(list_)
         yield cg('clean', '-y')
         yield cg('init', init)
@@ -197,6 +198,7 @@ def test_recipe_basicappnoreq(d):
     recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
     d.cmds(install_cmds(url='basicappnoreq', lib='simple', alias='simple', size=2, recipes=recipes))
 
+@winmark
 def test_recipe_simple_x(d):
     recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
     d.cmds(install_cmds(url='simpleheader', recipes=recipes))
