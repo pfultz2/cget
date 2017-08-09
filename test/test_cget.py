@@ -311,7 +311,6 @@ def test_rm_with_symlink(d):
     assert not os.path.exists(os.path.join(share, 'data.txt'))
     assert os.path.lexists(os.path.join(share, 'data.sym'))
 
-@winmark
 def test_rm_all(d):
     d.cmds([
         cget_cmd('install', '--verbose --test --update', 'app,'+get_exists_path('basicapp')),
@@ -320,7 +319,6 @@ def test_rm_all(d):
         cget_cmd('size', '0')
     ])
 
-@winmark
 def test_unlink1(d):
     d.cmds([
         cget_cmd('install', '--verbose --test', 'simple,'+get_exists_path('libsimple')),
@@ -402,9 +400,11 @@ def test_build_relative_dir(d):
 def test_build_dir_custom_build_path(d):
     d.cmds(build_cmds(get_exists_path('libsimple'), build_path=d.get_path('my_build')))
 
+@winmark
 def test_build_dir_custom_build_path2(d):
     d.cmds(build_cmds(get_exists_path('basicapp'), build_path=d.get_path('my_build'), size=1))
 
+@winmark
 def test_build_relative_dir_custom_build_path(d):
     p = os.path.relpath(get_exists_path('libsimple'), d.get_path())
     d.cmds(build_cmds(p, build_path=d.get_path('my_build')))
@@ -413,12 +413,14 @@ def test_build_relative_dir_custom_build_path2(d):
     p = os.path.relpath(get_exists_path('basicapp'), d.get_path())
     d.cmds(build_cmds(p, build_path=d.get_path('my_build'), size=1))
 
+@winmark
 def test_tmp_build_dir_custom_build_path(d):
     d.mkdir('tmp').cmds(build_cmds(get_exists_path('libsimple'), build_path=d.get_path('my_build')))
 
 def test_tmp_build_dir_custom_build_path2(d):
     d.mkdir('tmp').cmds(build_cmds(get_exists_path('basicapp'), build_path=d.get_path('my_build'), size=1))
 
+@winmark
 def test_tmp_relative_build_dir_custom_build_path(d):
     p = os.path.relpath(get_exists_path('libsimple'), d.get_path('tmp'))
     d.mkdir('tmp').cmds(build_cmds(p, build_path=d.get_path('my_build')))
@@ -511,9 +513,11 @@ def test_app_header_dep(d):
 # Basic app needs pkg-config
 if __has_pkg_config__:
 
+    @winmark
     def test_app_dir(d):
         d.cmds(install_cmds(url=get_exists_path('basicapp'), lib='simple', alias='simple', size=2))
 
+    @winmark
     def test_xapp_dir(d):
         d.cmds(install_cmds(url=get_exists_path('basicappx'), lib='simple', alias='simple', size=2))
 
@@ -758,6 +762,7 @@ def test_shared_init(d):
 def test_static_init(d):
     d.cmds(install_cmds(init='--static', url=get_exists_path('libsimple'), lib='simple'))
 
+@winmark
 @pytest.mark.xfail(strict=True)
 def test_shared_static_init(d):
     d.cmds(install_cmds(init='--shared --static', url=get_exists_path('libsimple'), lib='simple'))
