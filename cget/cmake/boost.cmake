@@ -92,9 +92,6 @@ set(B2_CONFIG_CONTENT
 <rc>${CMAKE_RC_COMPILER}
 <archiver>${CMAKE_AR}
 <ranlib>${CMAKE_RANLIB}
-<cxxflags>${CMAKE_CXX_FLAGS} ${PIC_FLAG}
-<cflags>${CMAKE_C_FLAGS} ${PIC_FLAG}
-<linkflags>${B2_LINK_FLAGS} ${PIC_FLAG}
 ${SEARCH_PATHS}
 \;
 ")
@@ -137,7 +134,10 @@ set(BUILD_FLAGS
     --ignore-site-config
     --user-config=${B2_CONFIG}
     address-model=${B2_ADDRESS_MODEL}
+    cflags=\"${CMAKE_C_FLAGS} ${PIC_FLAG}\"
+    cxxflags=\"${CMAKE_CXX_FLAGS} ${PIC_FLAG}\"
     link=${B2_LINK}
+    linkflags=\"${B2_LINK_FLAGS} ${PIC_FLAG}\"
     target-os=${B2_TARGET}
     threadapi=${B2_THREAD_API}
     threading=multi
