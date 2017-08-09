@@ -10,7 +10,7 @@ if(BUILD_SHARED_LIBS)
 endif()
 
 set(B2_PIC_FLAG)
-if(CMAKE_POSITION_INDEPENDENT_CODE AND NOT MSVC)
+if(CMAKE_POSITION_INDEPENDENT_CODE AND NOT WIN32)
     set(B2_PIC_FLAG "-fPIC")
 endif()
 set(B2_LINK_FLAGS ${CMAKE_STATIC_LINKER_FLAGS})
@@ -137,20 +137,24 @@ endforeach()
 
 # Only add these arguments if they are not empty
 if(NOT "${B2_C_FLAGS}" STREQUAL "")
-    set(B2_C_FLAGS_ARG cflags="${B2_C_FLAGS}")
+    set(B2_C_FLAGS_ARG "cflags=${B2_C_FLAGS}")
 endif()
 
 if(NOT "${B2_CXX_FLAGS}" STREQUAL "")
-    set(B2_CXX_FLAGS_ARG cxxflags="${B2_CXX_FLAGS}")
+    set(B2_CXX_FLAGS_ARG "cxxflags=${B2_CXX_FLAGS}")
 endif()
 
 if(NOT "${B2_LINK_FLAGS}" STREQUAL "")
-    set(B2_LINK_FLAGS_ARG linkflags="${B2_LINK_FLAGS}")
+    set(B2_LINK_FLAGS_ARG "linkflags=${B2_LINK_FLAGS}")
+endif()
+
+set(B2_QUIET_FLAG -q)
+if(CMAKE_VERBOSE_MAKEFILE)
+    set(B2_QUIET_FLAG -d+2)
 endif()
 
 set(BUILD_FLAGS
-    -q
-    # -d+2
+    ${B2_QUIET_FLAG}
     -j ${B2_JOBS}
     --ignore-site-config
     --user-config=${B2_CONFIG}
@@ -161,9 +165,9 @@ set(BUILD_FLAGS
     threading=multi
     toolset=${B2_TOOLCHAIN_TYPE}-${B2_TOOLCHAIN_VERSION}
     variant=${B2_VARIANT}
-    ${B2_C_FLAGS_ARG}
-    ${B2_CXX_FLAGS_ARG}
-    ${B2_LINK_FLAGS_ARG}
+    "${B2_C_FLAGS_ARG}"
+    "${B2_CXX_FLAGS_ARG}"
+    "${B2_LINK_FLAGS_ARG}"
     --layout=system
     --disable-icu
     ${BOOST_LIBS}
@@ -179,6 +183,16 @@ add_custom_target(boost ALL
     COMMAND ${B2_EXE}
     ${BUILD_FLAGS}
     COMMENT "${B2_EXE} ${BUILD_FLAGS_STR}"
+    VERBATIM
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+add_custom_target(boost_install
+    COMMAND ${B2_EXE}
+    ${BUILD_FLAGS}
+    install
+    COMMENT "${B2_EXE} ${BUILD_FLAGS_STR} install"
+    VERBATIM
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
@@ -188,9 +202,7 @@ endif()
 
 install(CODE "
 execute_process(
-    COMMAND ${B2_EXE} 
-    ${BUILD_FLAGS}
-    install
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND ${CMAKE_COMMAND} --build . --target boost_install
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 ")
