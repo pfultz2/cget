@@ -93,7 +93,7 @@ set(B2_CONFIG_CONTENT
 <archiver>${CMAKE_AR}
 <ranlib>${CMAKE_RANLIB}
 ${SEARCH_PATHS}
-\;
+;
 ")
 message("${B2_CONFIG_CONTENT}")
 
