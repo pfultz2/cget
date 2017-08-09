@@ -4,6 +4,10 @@ import os, tarfile, cget.util
 
 from six.moves import shlex_quote
 
+import platform
+__windows__ = platform.system().lower().startswith("win")
+winmark = pytest.mark.skipif(__windows__, reason="Trimmed windows tests for appveyor")
+
 __test_dir__ = os.path.dirname(os.path.realpath(__file__))
 
 __cget_exe__ = cget.util.which('cget')
@@ -226,6 +230,7 @@ def test_xcmake(d):
     url = get_exists_path('libsimplebare') + ' --cmake ' + get_exists_path('libsimple', 'CMakeLists.txt')
     d.cmds(install_cmds(url=url, lib='simple', alias=get_exists_path('libsimplebare')))
 
+@winmark
 def test_xcmake_s(d):
     url = get_exists_path('libsimplebare') + ' -X ' + get_exists_path('libsimple', 'CMakeLists.txt')
     d.cmds(install_cmds(url=url, lib='simple', alias=get_exists_path('libsimplebare')))
@@ -282,6 +287,8 @@ def test_update_reqs(d):
         cget_cmd('size', '1')
     ])
 
+
+@winmark
 def test_rm_with_symlink(d):
     p = d.get_path('usr')
     share = os.path.join(p, 'share')
@@ -302,6 +309,7 @@ def test_rm_with_symlink(d):
     assert not os.path.exists(os.path.join(share, 'data.txt'))
     assert os.path.lexists(os.path.join(share, 'data.sym'))
 
+@winmark
 def test_rm_all(d):
     d.cmds([
         cget_cmd('install', '--verbose --test --update', 'app,'+get_exists_path('basicapp')),
@@ -310,6 +318,7 @@ def test_rm_all(d):
         cget_cmd('size', '0')
     ])
 
+@winmark
 def test_unlink1(d):
     d.cmds([
         cget_cmd('install', '--verbose --test', 'simple,'+get_exists_path('libsimple')),
@@ -324,6 +333,7 @@ def test_unlink1(d):
         cget_cmd('size', '2')
     ])
 
+@winmark
 def test_unlink2(d):
     d.cmds([
         cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('basicapp')),
@@ -338,6 +348,7 @@ def test_unlink2(d):
         cget_cmd('size', '2')
     ])
 
+@winmark
 def test_unlink3(d):
     d.cmds([
         cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('basicapp')),
@@ -352,6 +363,7 @@ def test_unlink3(d):
         cget_cmd('size', '2')
     ])
 
+@winmark
 def test_unlink4(d):
     d.cmds([
         cget_cmd('install', '--verbose --test', 'simple,'+get_exists_path('libsimple')),
@@ -366,6 +378,7 @@ def test_unlink4(d):
         cget_cmd('size', '2')
     ])
 
+@winmark
 def test_unlink_update(d):
     d.cmds([
         cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('simpleapp')),
@@ -744,6 +757,7 @@ def test_static_init(d):
 def test_shared_static_init(d):
     d.cmds(install_cmds(init='--shared --static', url=get_exists_path('libsimple'), lib='simple'))
 
+@winmark
 def test_symlink_dir(d):
     d.cmds([
         cget_cmd('install', get_path('symlinkdir'))
