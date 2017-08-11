@@ -129,8 +129,11 @@ class CGetPrefix:
             yield if_('NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC"',
                 set_('CMAKE_CXX_STD_FLAG', "-std={}".format(std))
             )
+        yield if_('"${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC"',
+            set_('CMAKE_CXX_ENABLE_PARALLEL_BUILD_FLAG', "/MP".format(std))
+        )
         if cxxflags or std:
-            yield set_('CMAKE_CXX_FLAGS', "$ENV{{CXXFLAGS}} ${{CMAKE_CXX_FLAGS_INIT}} ${{CMAKE_CXX_STD_FLAG}} {}".format(cxxflags or ''), cache='STRING')
+            yield set_('CMAKE_CXX_FLAGS', "$ENV{{CXXFLAGS}} ${{CMAKE_CXX_FLAGS_INIT}} ${{CMAKE_CXX_STD_FLAG}} ${{CMAKE_CXX_STD_FLAG}} {}".format(cxxflags or ''), cache='STRING')
         if ldflags:
             for link_type in ['STATIC', 'SHARED', 'MODULE', 'EXE']:
                 yield set_('CMAKE_{}_LINKER_FLAGS'.format(link_type), "$ENV{{LDFLAGS}} {0}".format(ldflags), cache='STRING')
