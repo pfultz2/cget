@@ -4,6 +4,11 @@ import os, tarfile, cget.util
 
 from six.moves import shlex_quote
 
+import platform
+__appveyor__ = platform.system().lower().startswith("win")
+# __appveyor__ = 'APPVEYOR' in os.environ
+appveyor_skip = pytest.mark.skipif(__appveyor__, reason="Trimmed windows tests for appveyor")
+
 __test_dir__ = os.path.dirname(os.path.realpath(__file__))
 
 __cget_exe__ = cget.util.which('cget')
@@ -90,7 +95,8 @@ def install_cmds(url, lib=None, alias=None, init=None, remove='remove', list_='l
     if recipes: base_size = base_size + 1
     n = str(size + base_size)
     yield cg('init', init)
-    for variant in variants or ['--debug', '--release', '']:
+    default_variants = ['--debug', '--release', ''] if not __appveyor__ else ['--release']
+    for variant in variants or default_variants:
         yield cg(list_)
         yield cg('clean', '-y')
         yield cg('init', init)
@@ -193,6 +199,7 @@ def test_recipe_basicappnoreq(d):
     recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
     d.cmds(install_cmds(url='basicappnoreq', lib='simple', alias='simple', size=2, recipes=recipes))
 
+@appveyor_skip
 def test_recipe_simple_x(d):
     recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
     d.cmds(install_cmds(url='simpleheader', recipes=recipes))
@@ -226,6 +233,7 @@ def test_xcmake(d):
     url = get_exists_path('libsimplebare') + ' --cmake ' + get_exists_path('libsimple', 'CMakeLists.txt')
     d.cmds(install_cmds(url=url, lib='simple', alias=get_exists_path('libsimplebare')))
 
+@appveyor_skip
 def test_xcmake_s(d):
     url = get_exists_path('libsimplebare') + ' -X ' + get_exists_path('libsimple', 'CMakeLists.txt')
     d.cmds(install_cmds(url=url, lib='simple', alias=get_exists_path('libsimplebare')))
@@ -282,6 +290,8 @@ def test_update_reqs(d):
         cget_cmd('size', '1')
     ])
 
+
+@appveyor_skip
 def test_rm_with_symlink(d):
     p = d.get_path('usr')
     share = os.path.join(p, 'share')
@@ -324,6 +334,7 @@ def test_unlink1(d):
         cget_cmd('size', '2')
     ])
 
+@appveyor_skip
 def test_unlink2(d):
     d.cmds([
         cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('basicapp')),
@@ -338,6 +349,7 @@ def test_unlink2(d):
         cget_cmd('size', '2')
     ])
 
+@appveyor_skip
 def test_unlink3(d):
     d.cmds([
         cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('basicapp')),
@@ -352,6 +364,7 @@ def test_unlink3(d):
         cget_cmd('size', '2')
     ])
 
+@appveyor_skip
 def test_unlink4(d):
     d.cmds([
         cget_cmd('install', '--verbose --test', 'simple,'+get_exists_path('libsimple')),
@@ -366,6 +379,7 @@ def test_unlink4(d):
         cget_cmd('size', '2')
     ])
 
+@appveyor_skip
 def test_unlink_update(d):
     d.cmds([
         cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('simpleapp')),
@@ -387,9 +401,11 @@ def test_build_relative_dir(d):
 def test_build_dir_custom_build_path(d):
     d.cmds(build_cmds(get_exists_path('libsimple'), build_path=d.get_path('my_build')))
 
+@appveyor_skip
 def test_build_dir_custom_build_path2(d):
     d.cmds(build_cmds(get_exists_path('basicapp'), build_path=d.get_path('my_build'), size=1))
 
+@appveyor_skip
 def test_build_relative_dir_custom_build_path(d):
     p = os.path.relpath(get_exists_path('libsimple'), d.get_path())
     d.cmds(build_cmds(p, build_path=d.get_path('my_build')))
@@ -398,12 +414,14 @@ def test_build_relative_dir_custom_build_path2(d):
     p = os.path.relpath(get_exists_path('basicapp'), d.get_path())
     d.cmds(build_cmds(p, build_path=d.get_path('my_build'), size=1))
 
+@appveyor_skip
 def test_tmp_build_dir_custom_build_path(d):
     d.mkdir('tmp').cmds(build_cmds(get_exists_path('libsimple'), build_path=d.get_path('my_build')))
 
 def test_tmp_build_dir_custom_build_path2(d):
     d.mkdir('tmp').cmds(build_cmds(get_exists_path('basicapp'), build_path=d.get_path('my_build'), size=1))
 
+@appveyor_skip
 def test_tmp_relative_build_dir_custom_build_path(d):
     p = os.path.relpath(get_exists_path('libsimple'), d.get_path('tmp'))
     d.mkdir('tmp').cmds(build_cmds(p, build_path=d.get_path('my_build')))
@@ -496,14 +514,19 @@ def test_app_header_dep(d):
 # Basic app needs pkg-config
 if __has_pkg_config__:
 
+    @appveyor_skip
     def test_app_dir(d):
         d.cmds(install_cmds(url=get_exists_path('basicapp'), lib='simple', alias='simple', size=2))
 
+    @appveyor_skip
     def test_xapp_dir(d):
         d.cmds(install_cmds(url=get_exists_path('basicappx'), lib='simple', alias='simple', size=2))
 
-    def test_appdebug_dir_pass(d):
-        d.cmds(install_cmds(url=get_exists_path('basicappdebug'), lib='simple', alias='simple', size=2, variants=['--release', '']))
+    def test_appdebug_dir_pass1(d):
+        d.cmds(install_cmds(url=get_exists_path('basicappdebug'), lib='simple', alias='simple', size=2, variants=['--release']))
+
+    def test_appdebug_dir_pass2(d):
+        d.cmds(install_cmds(url=get_exists_path('basicappdebug'), lib='simple', alias='simple', size=2, variants=['']))
 
     @pytest.mark.xfail(strict=True)
     def test_appdebug_dir_fail(d):
@@ -740,10 +763,12 @@ def test_shared_init(d):
 def test_static_init(d):
     d.cmds(install_cmds(init='--static', url=get_exists_path('libsimple'), lib='simple'))
 
+@appveyor_skip
 @pytest.mark.xfail(strict=True)
 def test_shared_static_init(d):
     d.cmds(install_cmds(init='--shared --static', url=get_exists_path('libsimple'), lib='simple'))
 
+@appveyor_skip
 def test_symlink_dir(d):
     d.cmds([
         cget_cmd('install', get_path('symlinkdir'))
