@@ -56,7 +56,13 @@ class DirForTests:
     def cmds(self, g, **kwargs):
         for x in g:
             print(x)
-            self.cmd(x, **kwargs)
+            if x.startswith('assert_path'):
+                p = x[11:].strip()
+                if not os.path.isabs(p):
+                    p = os.path.join(self.tmp_dir, p)
+                assert os.path.exists(p)
+            else:
+                self.cmd(x, **kwargs)
 
     def write_to(self, f, content):
         p = self.get_path(f)
@@ -90,7 +96,7 @@ class CGetCmd:
 def cget_cmd(*args):
     return CGetCmd()(*args)
 
-def install_cmds(url, lib=None, alias=None, init=None, remove='remove', list_='list', size=1, recipes=None, prefix=None, build_path=None, variants=None, base_size=0):
+def install_cmds(url, lib=None, alias=None, init=None, remove='remove', list_='list', size=1, recipes=None, prefix=None, build_path=None, variants=None, base_size=0, files=None):
     cg = CGetCmd(prefix=prefix, build_path=build_path)
     if recipes: base_size = base_size + 1
     n = str(size + base_size)
@@ -105,6 +111,8 @@ def install_cmds(url, lib=None, alias=None, init=None, remove='remove', list_='l
         if recipes: yield cg('install', recipes)
         yield cg('install', '--verbose --test', variant, url)
         yield cg('size', n)
+        for f in files or []:
+            yield 'assert_path ' + f
         yield cg(list_)
         if __has_pkg_config__ and lib is not None:
             yield cg('pkg-config', '--list-all')
@@ -244,7 +252,15 @@ def test_header_xcmake_fail(d):
 
 def test_header_xcmake(d):
     url = get_exists_path('simpleinclude') + ' --cmake header'
-    d.cmds(install_cmds(url=url, alias=get_exists_path('simpleinclude')))
+    d.cmds(install_cmds(url=url, alias=get_exists_path('simpleinclude'), files=['cget/include/simple.h']))
+
+def test_header_xcmake_include(d):
+    url = get_exists_path('simpleheader') + ' --cmake header -DINCLUDE_DIR=inc'
+    d.cmds(install_cmds(url=url, alias=get_exists_path('simpleheader'), files=['cget/include/simple/simple.h']))
+
+def test_header_xcmake_header(d):
+    url = get_exists_path('simpleheader') + ' --cmake header -DHEADER_DIR=inc/simple'
+    d.cmds(install_cmds(url=url, alias=get_exists_path('simpleheader'), files=['cget/include/simple/simple.h']))
 
 def test_binary_xcmake(d):
     url = get_exists_path('simpleinclude') + ' --cmake binary'
