@@ -77,6 +77,13 @@ else()
     message(SEND_ERROR "Unsupported platform")
 endif()
 
+set(B2_DEFAULT_LAYOUT system)
+if(CMAKE_CONFIGURATION_TYPES)
+    set(B2_DEFAULT_LAYOUT tagged)
+endif()
+
+set(BOOST_LAYOUT ${B2_DEFAULT_LAYOUT} CACHE STRING "")
+
 set(SEARCH_PATHS)
 foreach(PATHS ${CMAKE_PREFIX_PATH})
     set(SEARCH_PATHS "${SEARCH_PATHS}
@@ -148,13 +155,14 @@ if(NOT "${B2_LINK_FLAGS}" STREQUAL "")
     set(B2_LINK_FLAGS_ARG "linkflags=${B2_LINK_FLAGS}")
 endif()
 
-set(B2_QUIET_FLAG -q)
+set(B2_VERBOSE_FLAG)
 if(CMAKE_VERBOSE_MAKEFILE)
-    set(B2_QUIET_FLAG -d+2)
+    set(B2_VERBOSE_FLAG -d+2)
 endif()
 
 set(BUILD_FLAGS
-    ${B2_QUIET_FLAG}
+    -q
+    ${B2_VERBOSE_FLAG}
     -j ${B2_JOBS}
     --ignore-site-config
     --user-config=${B2_CONFIG}
@@ -168,7 +176,7 @@ set(BUILD_FLAGS
     "${B2_C_FLAGS_ARG}"
     "${B2_CXX_FLAGS_ARG}"
     "${B2_LINK_FLAGS_ARG}"
-    --layout=system
+    --layout=${BOOST_LAYOUT}
     --disable-icu
     ${BOOST_LIBS}
     --prefix=${CMAKE_INSTALL_PREFIX}
