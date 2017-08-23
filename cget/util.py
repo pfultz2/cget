@@ -19,6 +19,7 @@ else:
 from six.moves.urllib import request
 
 USE_SYMLINKS=(os.name == 'posix')
+USE_CMAKE_TAR=(os.name != 'posix')
 
 __CGET_DIR__ = os.path.dirname(os.path.realpath(__file__))
 
@@ -231,7 +232,10 @@ def extract_ar(archive, dst, *kwargs):
         with zipfile.ZipFile(archive,'r') as f:
             f.extractall(dst)
     else:
-        tarfile.open(archive, *kwargs).extractall(dst)
+        if USE_CMAKE_TAR:
+            cmd([which('cmake'), '-E', 'tar', 'xzf', os.path.abspath(archive)], cwd=dst)
+        else:
+            tarfile.open(archive, *kwargs).extractall(dst)
 
 def hash_file(f, t):
     h = hashlib.new(t)
