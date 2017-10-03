@@ -143,6 +143,7 @@ class CGetPrefix:
         yield if_('BUILD_SHARED_LIBS',
             set_('CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS', 'ON', cache='BOOL')
         )
+        set_('CMAKE_FIND_FRAMEWORK', 'LAST', cache='STRING')
 
 
     def get_path(self, *paths):
