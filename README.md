@@ -27,7 +27,7 @@ Quickstart
 
 We can also install cmake packages directly from source files, for example zlib:
 
-    cget install http://zlib.net/zlib-1.2.8.tar.gz
+    cget install http://zlib.net/zlib-1.2.11.tar.gz
 
 However, its much easier to install recipes so we don't have to remember urls:
 

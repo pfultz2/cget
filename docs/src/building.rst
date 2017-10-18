@@ -30,7 +30,7 @@ By default, it will build the ``all`` target, but a target can be specified as w
 
 For projects that don't use cmake, then its matter of searching for the dependencies in ``CGET_PREFIX``. Also, it is quite common for packages to provide ``pkg-config`` files for managing dependencies. So, ``cget`` provides a ``pkg-config`` command that will search for the dependencies that ``cget`` has installed. For example, ``cget pkg-config`` can be used to link in the dependencies for zlib without needing cmake::
 
-    cget install zlib,http://zlib.net/zlib-1.2.8.tar.gz
+    cget install zlib,http://zlib.net/zlib-1.2.11.tar.gz
     g++ src.cpp `cget pkg-config zlib --cflags --libs`
 
 
