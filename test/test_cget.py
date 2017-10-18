@@ -191,6 +191,7 @@ def test_recipe_simple_branch_fail(d):
     recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
     d.cmds(install_cmds(url='simple@nonexistent', lib='simple', recipes=recipes))
 
+@appveyor_skip
 def test_recipe_simpleflag(d):
     recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
     d.cmds(install_cmds(url='simpleflag', recipes=recipes))
@@ -203,6 +204,7 @@ def test_recipe_basicapp(d):
     recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
     d.cmds(install_cmds(url='basicapp', lib='simple', alias='simple', size=2, recipes=recipes))
 
+@appveyor_skip
 def test_recipe_basicappnoreq(d):
     recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
     d.cmds(install_cmds(url='basicappnoreq', lib='simple', alias='simple', size=2, recipes=recipes))
@@ -279,10 +281,11 @@ def test_xcmake_ref_original_fail(d):
     url = get_exists_path('libsimplebare') + ' --cmake ' + get_exists_path('cmake', 'use_original_cmake.cmake')
     d.cmds(install_cmds(url=url, lib='simple', alias=get_exists_path('libsimplebare')))
 
+@appveyor_skip
 def test_rm(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', remove='rm'))
 
-
+@appveyor_skip
 def test_ls(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', list_='ls'))
 
@@ -481,10 +484,12 @@ def test_init_cpp11(d):
         cget_cmd('install', '--verbose --test', get_exists_path('libsimple11'))
     ])
 
+@appveyor_skip
 def test_reqs_alias_file(d):
     reqs_file = d.write_to('reqs', [shlex_quote('simple,'+get_exists_path('libsimple'))])
     d.cmds(install_cmds(url='--file {}'.format(reqs_file), lib='simple', alias='simple'))
 
+@appveyor_skip
 def test_reqs_file(d):
     reqs_file = d.write_to('reqs', [shlex_quote(get_exists_path('libsimple'))])
     d.cmds(install_cmds(url='--file {}'.format(reqs_file), lib='simple', alias=get_exists_path('libsimple')))
@@ -572,6 +577,7 @@ if __has_pkg_config__:
     def test_build_app_dir(d):
         d.cmds(build_cmds(get_exists_path('basicapp'), size=1))
 
+@appveyor_skip
 def test_install_simple_app_test_with_test(d):
     d.cmds([
         cget_cmd('install', '--verbose --test', get_exists_path('simpleapptest')),
@@ -582,6 +588,7 @@ def test_install_simple_app_test_with_test(d):
         cget_cmd('size', '1')
     ])
 
+@appveyor_skip
 def test_install_simple_app_test_with_test_all(d):
     d.cmds([
         cget_cmd('install', '--verbose --test-all', get_exists_path('simpleapptest')),
@@ -592,6 +599,7 @@ def test_install_simple_app_test_with_test_all(d):
         cget_cmd('size', '1')
     ])
 
+@appveyor_skip
 def test_install_simple_app_test_all_with_test_with_all(d):
     d.cmds([
         cget_cmd('install', '--verbose --test-all', get_exists_path('simpleapptestall')),
@@ -602,6 +610,7 @@ def test_install_simple_app_test_all_with_test_with_all(d):
         cget_cmd('size', '2')
     ])
 
+@appveyor_skip
 def test_install_simple_app_test_all_with_test(d):
     d.cmds([
         cget_cmd('install', '--verbose --test', get_exists_path('simpleapptestall')),
@@ -612,6 +621,7 @@ def test_install_simple_app_test_all_with_test(d):
         cget_cmd('size', '1')
     ])
 
+@appveyor_skip
 def test_install_simple_app_test_all_without_test(d):
     d.cmds([
         cget_cmd('install', '--verbose', get_exists_path('simpleapptestall')),
@@ -622,6 +632,7 @@ def test_install_simple_app_test_all_without_test(d):
         cget_cmd('size', '0')
     ])
 
+@appveyor_skip
 def test_install_simple_app_test_without_test(d):
     d.cmds([
         cget_cmd('install', '--verbose', get_exists_path('simpleapptest')),
@@ -629,15 +640,18 @@ def test_install_simple_app_test_without_test(d):
         cget_cmd('size', '1')
     ])
 
+@appveyor_skip
 def test_build_simple_app_test_with_test(d):
     d.cmds(build_cmds(get_exists_path('simpleapptest'), size=1))
 
+@appveyor_skip
 def test_build_simple_app_test_without_test(d):
     d.cmds([
         cget_cmd('build', '--verbose', get_exists_path('simpleapptest')),
         cget_cmd('size', '0')
     ])
 
+@appveyor_skip
 def test_install_simple_basic_app_test_with_test_all(d):
     d.cmds([
         cget_cmd('install', '--verbose --test-all', get_exists_path('simplebasicapptest')),
@@ -648,6 +662,7 @@ def test_install_simple_basic_app_test_with_test_all(d):
         cget_cmd('size', '1')
     ])
 
+@appveyor_skip
 def test_install_simple_basic_app_test_with_test(d):
     d.cmds([
         cget_cmd('install', '--verbose --test', get_exists_path('simplebasicapptest')),
@@ -658,6 +673,7 @@ def test_install_simple_basic_app_test_with_test(d):
         cget_cmd('size', '1')
     ])
 
+@appveyor_skip
 def test_install_simple_basic_app_test_without_test(d):
     d.cmds([
         cget_cmd('install', '--verbose ', get_exists_path('simplebasicapptest')),
@@ -669,6 +685,7 @@ def test_install_simple_basic_app_test_without_test(d):
     ])
 
 
+@appveyor_skip
 def test_install_simple_basic_app2_test_with_test_all(d):
     d.cmds([
         cget_cmd('install', '--verbose --test-all', get_exists_path('simplebasicapp')),
@@ -679,6 +696,7 @@ def test_install_simple_basic_app2_test_with_test_all(d):
         cget_cmd('size', '2')
     ])
 
+@appveyor_skip
 def test_install_simple_basic_app2_test_with_test(d):
     d.cmds([
         cget_cmd('install', '--verbose --test', get_exists_path('simplebasicapp')),
@@ -689,6 +707,7 @@ def test_install_simple_basic_app2_test_with_test(d):
         cget_cmd('size', '1')
     ])
 
+@appveyor_skip
 def test_install_simple_basic_app2_test_without_test(d):
     d.cmds([
         cget_cmd('install', '--verbose ', get_exists_path('simplebasicapp')),
