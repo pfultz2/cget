@@ -790,3 +790,9 @@ def test_symlink_dir(d):
         cget_cmd('install', get_path('symlinkdir'))
     ])
     assert os.path.exists(d.get_path('cget', 'data', 'sdir', 'file.txt'))
+
+def test_cmake_trouble(d):
+    d.cmds([
+        cget_cmd('install', get_exists_path('cmake-trouble')),
+        cget_cmd('install', get_exists_path('libsimple'))
+    ])

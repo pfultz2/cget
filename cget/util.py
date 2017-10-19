@@ -251,7 +251,7 @@ def which(p, paths=None, throws=True):
     for dirname in list(paths or [])+os.environ['PATH'].split(os.pathsep):
         for exe in exes:
             candidate = os.path.join(os.path.expanduser(dirname), exe)
-            if os.path.exists(candidate):
+            if os.path.isfile(candidate):
                 return candidate
     if throws: raise BuildError("Can't find file %s" % p)
     else: return None
