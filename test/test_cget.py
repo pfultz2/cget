@@ -475,6 +475,7 @@ def test_build_install_target(d):
 def test_build_target_fail(d):
     d.cmds([cget_cmd('build', '--verbose', '--target xyz', get_exists_path('simpleapp'))])
 
+@appveyor_skip
 def test_dir_deprecated_alias(d):
     d.cmds(install_cmds(url='simple,'+get_exists_path('libsimple'), lib='simple', alias='simple'))
 
@@ -501,6 +502,7 @@ def test_reqs_alias_f(d):
     reqs_file = d.write_to('reqs', [shlex_quote('simple,'+get_exists_path('libsimple'))])
     d.cmds(install_cmds(url='-f {}'.format(reqs_file), lib='simple', alias='simple'))
 
+@appveyor_skip
 def test_reqs_f(d):
     reqs_file = d.write_to('reqs', [shlex_quote(get_exists_path('libsimple'))])
     d.cmds(install_cmds(url='-f {}'.format(reqs_file), lib='simple', alias=get_exists_path('libsimple')))
@@ -529,6 +531,7 @@ def test_reqs_recipe(d):
     reqs_file = d.write_to('reqs', [recipes, 'simple'])
     d.cmds(install_cmds(url='--file {}'.format(reqs_file), lib='simple', alias='simple', base_size=1))
 
+@appveyor_skip
 def test_app_include_dir(d):
     d.cmds(install_cmds(url=get_exists_path('basicapp-include'), lib='simple', alias='simple', size=2))
 
@@ -790,6 +793,7 @@ def test_multiflags_fail2(d):
 def test_multiflags_fail3(d):
     d.cmds([cget_cmd('install', '--verbose --test -DCGET_FLAG1=On', get_path('libsimplemultiflag'))])
 
+@appveyor_skip
 def test_comments_reqs_f(d):
     p = get_exists_path('libsimple')
     reqs_file = d.write_to('reqs', [shlex_quote(p) + ' #A comment', '# Another comment'])
