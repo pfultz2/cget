@@ -122,12 +122,13 @@ def install_cmds(url, lib=None, alias=None, init=None, remove='remove', list_='l
         else: yield cg(remove, '--verbose -y', alias)
         yield cg('size', str(base_size))
         yield cg(list_)
-        yield cg('install', '--verbose --test', variant, url)
-        yield cg(list_)
-        yield cg('size', n)
-        yield cg('clean', '-y')
-        yield cg(list_)
-        yield cg('size', '0')
+        if not __appveyor__:
+            yield cg('install', '--verbose --test', variant, url)
+            yield cg(list_)
+            yield cg('size', n)
+            yield cg('clean', '-y')
+            yield cg(list_)
+            yield cg('size', '0')
 
 def build_cmds(url=None, init=None, size=0, defines=None, prefix=None, build_path=None):
     cg = CGetCmd(prefix=prefix, build_path=build_path)
@@ -185,7 +186,7 @@ def test_recipe_simple_branch(d):
     recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
     d.cmds(install_cmds(url='simple@master', lib='simple', recipes=recipes))
 
-
+@appveyor_skip
 @pytest.mark.xfail(strict=True)
 def test_recipe_simple_branch_fail(d):
     recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
@@ -237,6 +238,7 @@ def test_recipe_relative_prefix(d):
     recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
     d.cmds(install_cmds(url='simple', lib='simple', recipes=recipes, prefix='usr'))
 
+@appveyor_skip
 @pytest.mark.xfail(strict=True)
 def test_xcmake_fail(d):
     d.cmds(install_cmds(url=get_exists_path('libsimplebare'), lib='simple'))
@@ -292,6 +294,7 @@ def test_rm(d):
 def test_ls(d):
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple', list_='ls'))
 
+@appveyor_skip
 def test_update(d):
     d.cmds([
         cget_cmd('install', '--verbose --test', 'app,'+get_exists_path('simpleapp')),
@@ -334,6 +337,7 @@ def test_rm_with_symlink(d):
     assert not os.path.exists(os.path.join(share, 'data.txt'))
     assert os.path.lexists(os.path.join(share, 'data.sym'))
 
+@appveyor_skip
 def test_rm_all(d):
     d.cmds([
         cget_cmd('install', '--verbose --test --update', 'app,'+get_exists_path('basicapp')),
@@ -559,6 +563,7 @@ if __has_pkg_config__:
     def test_appdebug_dir_fail(d):
         d.cmds(install_cmds(url=get_exists_path('basicappdebug'), lib='simple', alias='simple', size=2, variants=['--debug']))
 
+    @appveyor_skip
     def test_build_flag_child(d):
         d.cmds([
             cget_cmd('install', '--verbose', get_exists_path('basicappbuild')),
@@ -724,6 +729,7 @@ def test_install_simple_basic_app2_test_without_test(d):
         cget_cmd('size', '0')
     ])
 
+@appveyor_skip
 @pytest.mark.xfail(strict=True)
 def test_flags_fail(d):
     d.cmds([cget_cmd('install', '--verbose --test -DCGET_FLAG=Off', get_path('libsimpleflag'))])
@@ -744,6 +750,7 @@ def test_build_flags_init(d):
 def test_flags_init_integer(d):
     d.cmds(install_cmds(init='-DCGET_FLAG=1', url=get_exists_path('libsimpleflag')))
 
+@appveyor_skip
 @pytest.mark.xfail(strict=True)
 def test_flags_fail_integer(d):
     d.cmds([cget_cmd('install --verbose --test -DCGET_FLAG=0', get_path('libsimpleflag'))])
@@ -752,6 +759,7 @@ def test_flags_integer(d):
     p = get_exists_path('libsimpleflag')
     d.cmds(install_cmds(url='-DCGET_FLAG=1 {}'.format(p), alias=p))
 
+@appveyor_skip
 @pytest.mark.xfail(strict=True)
 def test_flags_fail_define(d):
     d.cmds([cget_cmd('install', '--verbose --test --define CGET_FLAG=Off', get_path('libsimpleflag'))])
@@ -772,6 +780,7 @@ def test_flags_toolchain_prefix(d):
         cg('install', '--verbose --test', get_exists_path('libsimpleflag'))
     ])
 
+@appveyor_skip
 def test_flags_reqs_f(d):
     p = get_exists_path('libsimpleflag')
     reqs_file = d.write_to('reqs', [shlex_quote(p) + ' -DCGET_FLAG=On'])
@@ -781,10 +790,12 @@ def test_multiflags(d):
     p = get_exists_path('libsimplemultiflag')
     d.cmds(install_cmds(url='-DCGET_FLAG1=On -DCGET_FLAG2=On {}'.format(p), alias=p))
 
+@appveyor_skip
 @pytest.mark.xfail(strict=True)
 def test_multiflags_fail1(d):
     d.cmds([cget_cmd('install', '--verbose --test -DCGET_FLAG1=Off -DCGET_FLAG2=Off', get_path('libsimplemultiflag'))])
 
+@appveyor_skip
 @pytest.mark.xfail(strict=True)
 def test_multiflags_fail2(d):
     d.cmds([cget_cmd('install', '--verbose --test -DCGET_FLAG1=Off -DCGET_FLAG2=On', get_path('libsimplemultiflag'))])
@@ -802,6 +813,7 @@ def test_comments_reqs_f(d):
 def test_shared_init(d):
     d.cmds(install_cmds(init='--shared', url=get_exists_path('libsimple'), lib='simple'))
 
+@appveyor_skip
 def test_static_init(d):
     d.cmds(install_cmds(init='--static', url=get_exists_path('libsimple'), lib='simple'))
 
