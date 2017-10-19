@@ -200,6 +200,7 @@ def test_recipe_simplemultiflag(d):
     recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
     d.cmds(install_cmds(url='simplemultiflag', recipes=recipes))
 
+@appveyor_skip
 def test_recipe_basicapp(d):
     recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
     d.cmds(install_cmds(url='basicapp', lib='simple', alias='simple', size=2, recipes=recipes))
@@ -214,6 +215,7 @@ def test_recipe_simple_x(d):
     recipes=get_exists_path('basicrecipes') + ' -DCGET_TEST_DIR="' + __test_dir__ + '"'
     d.cmds(install_cmds(url='simpleheader', recipes=recipes))
 
+@appveyor_skip
 def test_symlink_in_prefix(d):
     p = d.get_path('usr')
     if cget.util.USE_SYMLINKS:
@@ -268,6 +270,7 @@ def test_binary_xcmake(d):
     url = get_exists_path('simpleinclude') + ' --cmake binary'
     d.cmds(install_cmds(url=url, lib='simple', alias=get_exists_path('simpleinclude')))
 
+@appveyor_skip
 def test_header_xcmake_dir(d):
     url = get_exists_path('simpleinclude') + ' --cmake ' + get_exists_path('cmake', 'header_cmake_dir.cmake')
     d.cmds(install_cmds(url=url, alias=get_exists_path('simpleinclude')))
