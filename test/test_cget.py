@@ -4,9 +4,7 @@ import os, tarfile, cget.util
 
 from six.moves import shlex_quote
 
-import platform
-__appveyor__ = platform.system().lower().startswith("win")
-# __appveyor__ = 'APPVEYOR' in os.environ
+__appveyor__ = 'APPVEYOR' in os.environ
 appveyor_skip = pytest.mark.skipif(__appveyor__, reason="Trimmed windows tests for appveyor")
 
 __test_dir__ = os.path.dirname(os.path.realpath(__file__))
