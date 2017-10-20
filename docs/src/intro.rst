@@ -31,7 +31,7 @@ Quickstart
 
 We can also install cmake packages directly from source files, for example zlib::
 
-    cget install http://zlib.net/zlib-1.2.8.tar.gz
+    cget install http://zlib.net/zlib-1.2.11.tar.gz
 
 However, its much easier to install recipes so we don't have to remember urls::
 
@@ -55,7 +55,7 @@ Installing a package
 
 Any library that uses cmake to build can be built and installed as a package with ``cget``. A source for package can be from many areas (see :ref:`pkg-src`). We can simply install ``zlib`` with its URL::
 
-    cget install http://zlib.net/zlib-1.2.8.tar.gz
+    cget install http://zlib.net/zlib-1.2.11.tar.gz
 
 We can install the package from github as well, using a shorten form. For example, installing John MacFarlane's implementation of CommonMark in C called `cmark <https://github.com/jgm/cmark>`_::
 
@@ -68,12 +68,12 @@ Removing a package
 
 A package can be removed by using the same source name that was used to install the package::
 
-    cget install http://zlib.net/zlib-1.2.8.tar.gz
-    cget remove http://zlib.net/zlib-1.2.8.tar.gz
+    cget install http://zlib.net/zlib-1.2.11.tar.gz
+    cget remove http://zlib.net/zlib-1.2.11.tar.gz
 
 If an alias was specified, then the name of the alias must be used instead::
 
-    cget install zlib,http://zlib.net/zlib-1.2.8.tar.gz
+    cget install zlib,http://zlib.net/zlib-1.2.11.tar.gz
     cget remove zlib
 
 """"""""""""""""
@@ -82,7 +82,7 @@ Testing packages
 
 The test suite for a package can be ran before installing it, by using the ``--test`` flag. This will either build the ``check`` target or run ``ctest``. So if we want to run the tests for zlib we can do this::
 
-    cget install --test http://zlib.net/zlib-1.2.8.tar.gz
+    cget install --test http://zlib.net/zlib-1.2.11.tar.gz
 
 
 """"""""""""""""""
@@ -91,7 +91,7 @@ Setting the prefix
 
 By default, the packages are installed in the local directory ``cget``. This can be changed by using the ``--prefix`` flag::
 
-    cget install --prefix /usr/local zlib:http://zlib.net/zlib-1.2.8.tar.gz
+    cget install --prefix /usr/local zlib:http://zlib.net/zlib-1.2.11.tar.gz
 
 The prefix can also be set with the ``CGET_PREFIX`` environment variable.
 

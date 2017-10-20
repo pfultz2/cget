@@ -16,7 +16,7 @@ All recipe directories are searched under the ``$CGET_PREFIX/etc/cget/recipes/``
 
 For example, we could build a simple recipe for zlib so we don't have to remember the url everytime. By adding the file ``$CGET_PREFIX/etc/cget/recipes/zlib/package.txt`` with the url like this::
 
-    http://zlib.net/zlib-1.2.8.tar.gz
+    http://zlib.net/zlib-1.2.11.tar.gz
 
 We can now install zlib with just ``cget install zlib``. Additionally, we can set additional options as well. For example, if we want to install boost, we can write ``$CGET_PREFIX/etc/cget/recipes/boost/package.txt`` to use the boost cmake(see :ref:`boost-cmake`)::
 
