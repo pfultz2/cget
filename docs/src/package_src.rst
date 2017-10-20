@@ -20,7 +20,7 @@ File
 
 An archived file of the package::
 
-    cget install zlib-1.2.8.tar.gz
+    cget install zlib-1.2.11.tar.gz
 
 The archive will be unpacked and installed.
 
@@ -30,7 +30,7 @@ URL
 
 A url to the package::
 
-    cget install http://zlib.net/zlib-1.2.8.tar.gz
+    cget install http://zlib.net/zlib-1.2.11.tar.gz
 
 The file will be downloaded, unpacked, and installed.
 
@@ -58,6 +58,6 @@ Aliasing
 
 Aliasing lets you pick a different name for the package. So when we are installing ``zlib``, we could alias it as ``zlib``::
 
-    cget install zlib,http://zlib.net/zlib-1.2.8.tar.gz
+    cget install zlib,http://zlib.net/zlib-1.2.11.tar.gz
 
-This way the package can be referred to as ``zlib`` instead of ``http://zlib.net/zlib-1.2.8.tar.gz``.
+This way the package can be referred to as ``zlib`` instead of ``http://zlib.net/zlib-1.2.11.tar.gz``.
