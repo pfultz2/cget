@@ -10,14 +10,13 @@ init:
 install:
   # Install pkg-config from chocolatey
   # - cinst pkgconfiglite
-  - ps: Invoke-WebRequest "https://bootstrap.pypa.io/ez_setup.py" -OutFile "c:\\ez_setup.py"
-  - ps: Invoke-WebRequest "https://bootstrap.pypa.io/get-pip.py" -OutFile "c:\\get-pip.py"
-  - "c:\\Python34\\python c:\\ez_setup.py"
-  - "c:\\Python34\\python c:\\get-pip.py"
   - "c:\\Python34\\Scripts\\pip install tox cget"
   # Install pkgconfig using cget
   - "c:\\Python34\\Scripts\\cget install --verbose -p c:\\cget pfultz2/pkgconfig"
-build_script:
+
+build: false
+
+test_script:
   - cmd: set PATH=c:\cget\bin;%PATH%
   - cmd: "set TOX_PYTEST_NTHREADS=4"
   - cmd: call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\vsvars32.bat"
