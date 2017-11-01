@@ -239,11 +239,16 @@ def extract_ar(archive, dst, *kwargs):
     elif archive.endswith('.zip'):
         with zipfile.ZipFile(archive,'r') as f:
             f.extractall(dst)
-    else:
+    elif tarfile.is_tarfile(archive):
         if USE_CMAKE_TAR:
             cmd([which('cmake'), '-E', 'tar', 'xzf', os.path.abspath(archive)], cwd=dst)
         else:
             tarfile.open(archive, *kwargs).extractall(dst)
+    else:
+        # Treat as a single source file
+        d = os.path.join(dst, 'header')
+        mkdir(d)
+        copy_to(archive, d)
 
 def hash_file(f, t):
     h = hashlib.new(t)
