@@ -526,12 +526,29 @@ def test_reqs_f2(d):
     reqs_file = get_exists_path('basicapp', 'requirements.txt')
     d.cmds(install_cmds(url='-f {}'.format(reqs_file), lib='simple', alias='simple'))
 
+@appveyor_skip
+def test_reqs_f3(d):
+    reqs_file = d.write_to('reqs', [shlex_quote(get_exists_path('libsimple'))])
+    d.write_to('requirements.txt', [shlex_quote(get_exists_path('basicapp'))])
+    d.cmds(install_cmds(url='-f {}'.format(reqs_file), lib='simple', alias=get_exists_path('libsimple')))
+
 def test_reqs_hash(d):
     ar = d.get_path('libsimple.tar.gz')
     create_ar(archive=ar, src=get_exists_path('libsimple'))
     h = cget.util.hash_file(ar, 'sha1')
     reqs_file = d.write_to('reqs', ["{0} --hash=sha1:{1}".format(shlex_quote(ar), h)])
     d.cmds(install_cmds(url='--file {}'.format(reqs_file), lib='simple', alias=ar))
+
+@appveyor_skip
+def test_without_reqs_f(d):
+    d.write_to('requirements.txt', [shlex_quote(get_exists_path('libsimple'))])
+    d.cmds(install_cmds(url='', lib='simple', alias=get_exists_path('libsimple')))
+
+@appveyor_skip
+def test_without_reqs_f2(d):
+    d.write_to('requirements.txt', [shlex_quote(get_exists_path('basicapp'))])
+    d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple'))
+
 
 @appveyor_skip
 @pytest.mark.xfail(strict=True)
