@@ -16,7 +16,9 @@ class AliasedGroup(click.Group):
         rv = click.Group.get_command(self, ctx, cmd_name)
         if rv is not None:
             return rv
-        return click.Group.get_command(self, ctx, aliases[cmd_name])
+        if cmd_name in aliases:
+            return click.Group.get_command(self, ctx, aliases[cmd_name])
+        return None
 
 
 @click.group(cls=AliasedGroup, context_settings={'help_option_names': ['-h', '--help']})
