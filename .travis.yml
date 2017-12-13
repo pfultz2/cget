@@ -33,6 +33,14 @@ matrix:
               packages:
                 - util-linux
                 - cmake
+        - env: TOXENV=py36
+          os: linux
+          python: '3.6'
+          addons:
+            apt:
+              packages:
+                - util-linux
+                - cmake
         - env: TOXENV=lint
           os: linux
           python: '3.5'
