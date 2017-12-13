@@ -150,7 +150,7 @@ However, ``cget`` will always create the build directory out of source. The ``cg
 
 .. option:: <package-source>
 
-This specifies the package source (see :ref:`pkg-src`) that will be installed.
+    This specifies the package source (see :ref:`pkg-src`) that will be installed. If no package source is provided then ``cget`` will default to using the ``requirements.txt`` file. That is ``cget install`` is equivalent to ``cget install -f requirements.txt``.
 
 .. option::  -p, --prefix PATH      
 
