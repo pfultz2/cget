@@ -14,6 +14,8 @@ if(NOT EXISTS ${_INCLUDE_DIR})
             PATTERN "*.hpp"
             PATTERN "*.hh"
             PATTERN "*.hxx"
+            PATTERN "*.ipp"
+            PATTERN "*.tcc"
         )
     else()
 
@@ -21,7 +23,9 @@ if(NOT EXISTS ${_INCLUDE_DIR})
             *.h
             *.hpp
             *.hh
-            *.hxx)
+            *.hxx
+            *.ipp
+            *.tcc)
         install(FILES ${HEADER_FILES} DESTINATION include)
     endif()
 
@@ -32,6 +36,8 @@ else()
         PATTERN "*.hpp"
         PATTERN "*.hh"
         PATTERN "*.hxx"
+        PATTERN "*.ipp"
+        PATTERN "*.tcc"
     )
 
 endif()
