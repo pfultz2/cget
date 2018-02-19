@@ -172,7 +172,7 @@ set(BUILD_FLAGS
     -j ${B2_JOBS}
     --ignore-site-config
     --user-config=${B2_CONFIG}
-    --build-dir ${B2_BUILD_DIR}
+    --build-dir=${B2_BUILD_DIR}
     address-model=${B2_ADDRESS_MODEL}
     link=${B2_LINK}
     target-os=${B2_TARGET}
