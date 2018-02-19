@@ -164,12 +164,15 @@ if(CMAKE_VERBOSE_MAKEFILE)
     set(B2_VERBOSE_FLAG -d+2)
 endif()
 
+set(B2_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/build)
+
 set(BUILD_FLAGS
     -q
     ${B2_VERBOSE_FLAG}
     -j ${B2_JOBS}
     --ignore-site-config
     --user-config=${B2_CONFIG}
+    --build-dir ${B2_BUILD_DIR}
     address-model=${B2_ADDRESS_MODEL}
     link=${B2_LINK}
     target-os=${B2_TARGET}
