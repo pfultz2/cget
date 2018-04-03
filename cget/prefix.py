@@ -318,9 +318,9 @@ class CGetPrefix:
             self.install_deps(pb, src_dir, generator=generator, test=test)
             # Configure and build
             if not builder.exists: builder.configure(src_dir, defines=pb.define, generator=generator)
-            builder.build(variant='Release', target=target)
+            builder.build(variant=pb.variant, target=target)
             # Run tests if enabled
-            if test: builder.test(variant='Release')
+            if test: builder.test(variant=pb.variant)
 
     @params(pb=PACKAGE_SOURCE_TYPES)
     def build_path(self, pb):

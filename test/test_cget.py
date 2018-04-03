@@ -128,22 +128,24 @@ def install_cmds(url, lib=None, alias=None, init=None, remove='remove', list_='l
             yield cg(list_)
             yield cg('size', '0')
 
-def build_cmds(url=None, init=None, size=0, defines=None, prefix=None, build_path=None):
+def build_cmds(url=None, init=None, size=0, defines=None, prefix=None, build_path=None, variants=None):
     cg = CGetCmd(prefix=prefix, build_path=build_path)
     yield cg('init', init)
-    yield cg('size', '0')
-    yield cg('build', '--verbose -C -y', url)
-    yield cg('size', '0')
-    yield cg('build', '--verbose --test', defines, url)
-    yield cg('size', str(size))
-    yield cg('build', '--verbose --test', defines, url)
-    yield cg('size', str(size))
-    yield cg('build', '--verbose --path', url)
-    if not __appveyor__:
-        yield cg('build', '--verbose --test -C -y', defines, url)
+    default_variants = ['--debug', '--release', ''] if not __appveyor__ else ['--release']
+    for variant in variants or default_variants:
+        yield cg('size', '0')
+        yield cg('build', '--verbose -C -y', url)
+        yield cg('size', '0')
+        yield cg('build', '--verbose --test', variant, defines, url)
         yield cg('size', str(size))
-        yield cg('build', '--verbose --test', defines, url)
+        yield cg('build', '--verbose --test', variant, defines, url)
         yield cg('size', str(size))
+        yield cg('build', '--verbose --path', url)
+        if not __appveyor__:
+            yield cg('build', '--verbose --test -C -y', variant, defines, url)
+            yield cg('size', str(size))
+            yield cg('build', '--verbose --test', variant, defines, url)
+            yield cg('size', str(size))
 
 def test_tar(d):
     ar = d.get_path('libsimple.tar.gz')
