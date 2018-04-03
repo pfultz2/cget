@@ -59,6 +59,14 @@ This specifies the package source (see :ref:`pkg-src`) that will be built.
 
     Set the generator for CMake to use.
 
+.. option::  --debug
+
+    Build the debug version of the package.
+
+.. option::  --release
+
+    Build the release version of the package.
+
 -----
 clean
 -----
