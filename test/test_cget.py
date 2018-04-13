@@ -146,6 +146,8 @@ def build_cmds(url=None, init=None, size=0, defines=None, prefix=None, build_pat
             yield cg('size', str(size))
             yield cg('build', '--verbose --test', variant, defines, url)
             yield cg('size', str(size))
+        yield cg('clean', '-y')
+        yield cg('size', '0')
 
 def test_tar(d):
     ar = d.get_path('libsimple.tar.gz')
