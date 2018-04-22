@@ -108,10 +108,17 @@ def install_command(prefix, pkgs, define, file, test, test_all, update, generato
 @click.option('-T', '--target', default=None, help="Cmake target to build")
 @click.option('-y', '--yes', is_flag=True, default=False)
 @click.option('-G', '--generator', envvar='CGET_GENERATOR', help='Set the generator for CMake to use')
+@click.option('--debug', is_flag=True, help="Build debug version")
+@click.option('--release', is_flag=True, help="Build release version")
 @click.argument('pkg', nargs=1, default='.', type=click.STRING)
-def build_command(prefix, pkg, define, test, configure, clean, path, yes, target, generator):
+def build_command(prefix, pkg, define, test, configure, clean, path, yes, target, generator, debug, release):
     """ Build package """
     pb = PackageBuild(pkg).merge_defines(define)
+    if debug and release:
+        click.echo("ERROR: debug and release are not supported together")
+        sys.exit(1)
+    pb.variant = 'Release'
+    if debug: pb.variant = 'Debug'
     with prefix.try_("Failed to build package {}".format(pb.to_name())):
         if configure: prefix.build_configure(pb)
         elif path: click.echo(prefix.build_path(pb))
