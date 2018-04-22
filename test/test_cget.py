@@ -522,6 +522,11 @@ def test_reqs_alias_f(d):
     d.cmds(install_cmds(url='-f {}'.format(reqs_file), lib='simple', alias='simple'))
 
 @appveyor_skip
+def test_reqs_file_flag(d):
+    reqs_file = d.write_to('reqs', ['-f'+shlex_quote(get_exists_path('basicapp', 'requirements.txt'))])
+    d.cmds(install_cmds(url='--file {}'.format(reqs_file), lib='simple', alias='simple'))
+
+@appveyor_skip
 def test_reqs_f(d):
     reqs_file = d.write_to('reqs', [shlex_quote(get_exists_path('libsimple'))])
     d.cmds(install_cmds(url='-f {}'.format(reqs_file), lib='simple', alias=get_exists_path('libsimple')))

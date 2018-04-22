@@ -255,7 +255,10 @@ class CGetPrefix:
                 for line in f.readlines():
                     tokens = shlex.split(line, comments=True)
                     if len(tokens) > 0: 
-                        yield self.parse_pkg_build(parse_pkg_build_tokens(tokens), start=start, no_recipe=no_recipe)
+                        pb = parse_pkg_build_tokens(tokens)
+                        # p = self.parse_pkg_build(parse_pkg_build_tokens(tokens), start=start, no_recipe=no_recipe)
+                        ps = self.from_file(pb.file, no_recipe=no_recipe) if pb.file else [self.parse_pkg_build(pb, start=start, no_recipe=no_recipe)]
+                        for p in ps: yield p
 
     def write_parent(self, pb, track=True):
         if track and pb.parent is not None: util.mkfile(self.get_deps_directory(pb.to_fname()), pb.parent, pb.parent)
