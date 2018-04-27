@@ -87,6 +87,26 @@ This will clear the directory used by cget. This will remove all packages that h
 
     Affirm all questions.
 
+------
+ignore
+------
+
+.. program:: build
+
+This will ignore a package, so if an install command or a dependency requests the package it will be treated as already installed. This is useful to ignore a dependency that may already be installed by the system.
+
+.. option:: <package-name>
+
+    This is the name of the package that will be ignored.
+
+.. option::  -p, --prefix PATH      
+
+    Set prefix where packages are installed. This defaults to a directory named ``cget`` in the current working directory. This can also be overidden by the ``CGET_PREFIX`` environment variable.
+
+.. option::  -v, --verbose          
+
+    Enable verbose mode.
+
 ----
 init
 ----
