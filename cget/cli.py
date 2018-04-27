@@ -98,6 +98,16 @@ def install_command(prefix, pkgs, define, file, test, test_all, update, generato
         with prefix.try_("Failed to build package {}".format(pb.to_name()), on_fail=lambda: prefix.remove(pb)):
             click.echo(prefix.install(pb, test=test, test_all=test_all, update=update, generator=generator, insecure=insecure))
 
+@cli.command(name='ignore')
+@use_prefix
+@click.argument('pkgs', nargs=-1, type=click.STRING)
+def ignore_command(prefix, pkgs):
+    """ Ignore packages """
+    pbs = [PackageBuild(pkg) for pkg in pkgs]
+    for pb in pbs:
+        with prefix.try_("Failed to ignore package {}".format(pb.to_name()), on_fail=lambda: prefix.remove(pb)):
+            click.echo(prefix.ignore(pb))
+
 @cli.command(name='build')
 @use_prefix
 @click.option('-t', '--test', is_flag=True, help="Test package by running ctest or check target")

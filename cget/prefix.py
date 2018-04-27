@@ -312,6 +312,18 @@ class CGetPrefix:
         self.write_parent(pb, track=track)
         return "Successfully installed {}".format(pb.to_name())
 
+    @returns(six.string_types)
+    @params(pb=PACKAGE_SOURCE_TYPES)
+    def ignore(self, pb):
+        pb = self.parse_pkg_build(pb)
+        pkg_dir = self.get_package_directory(pb.to_fname())
+        # If package doesn't exist
+        if not os.path.exists(pkg_dir):
+            util.mkfile(pkg_dir, "ignore", "ignore")
+            return "Ignore package {}".format(pb.to_name())
+        else:
+            return "Package {} already installed".format(pb.to_name())
+
     @params(pb=PACKAGE_SOURCE_TYPES, test=bool)
     def build(self, pb, test=False, target=None, generator=None):
         pb = self.parse_pkg_build(pb)

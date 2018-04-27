@@ -869,6 +869,25 @@ def test_static_init(d):
 def test_shared_static_init(d):
     d.cmds(install_cmds(init='--shared --static', url=get_exists_path('libsimple'), lib='simple'))
 
+def test_ignore(d):
+    d.cmds([
+        cget_cmd('size', '0'),
+        cget_cmd('ignore', '--verbose', get_exists_path('basicapp')),
+        cget_cmd('size', '1'),
+        cget_cmd('install', '--verbose', get_exists_path('basicapp')),
+        cget_cmd('size', '1'),
+        cget_cmd('remove', '--verbose -y', get_exists_path('basicapp')),
+        cget_cmd('size', '0')
+    ])
+
+@appveyor_skip
+@pytest.mark.xfail(strict=True)
+def test_ignore_dep(d):
+    d.cmds([
+        cget_cmd('ignore', '--verbose simple'),
+        cget_cmd('install', '--verbose', get_exists_path('basicapp'))
+    ])
+
 @appveyor_skip
 def test_symlink_dir(d):
     d.cmds([
