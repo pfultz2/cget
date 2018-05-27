@@ -148,6 +148,7 @@ def build_cmds(url=None, init=None, size=0, defines=None, prefix=None, build_pat
             yield cg('size', str(size))
         yield cg('clean', '-y')
         yield cg('size', '0')
+        if init: yield cg('init', init)
 
 def test_tar(d):
     ar = d.get_path('libsimple.tar.gz')
@@ -831,6 +832,19 @@ def test_flags_reqs_f(d):
     p = get_exists_path('libsimpleflag')
     reqs_file = d.write_to('reqs', [shlex_quote(p) + ' -DCGET_FLAG=On'])
     d.cmds(install_cmds(url='-f {}'.format(reqs_file), alias=p))
+
+@appveyor_skip
+def test_flags_reqs_f2(d):
+    p = get_exists_path('libsimpleflag')
+    reqs_file = d.write_to('reqs', [shlex_quote(p)])
+    d.cmds(install_cmds(url='-f {} -DCGET_FLAG=On'.format(reqs_file), alias=p))
+
+@appveyor_skip
+@pytest.mark.xfail(strict=True)
+def test_flags_reqs_f2_fail(d):
+    p = get_exists_path('libsimpleflag')
+    reqs_file = d.write_to('reqs', [shlex_quote(p)])
+    d.cmds(install_cmds(url='-f {} -DCGET_FLAG=Off'.format(reqs_file), alias=p))
 
 def test_multiflags(d):
     p = get_exists_path('libsimplemultiflag')
