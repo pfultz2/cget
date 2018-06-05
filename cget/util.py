@@ -120,7 +120,10 @@ def symlink_dir(src, dst):
             path = os.path.relpath(root, src)
             d = os.path.join(dst, path)
             mkdir(d)
-            os.symlink(os.path.join(root, file), os.path.join(d, file))
+            try:
+                os.symlink(os.path.join(root, file), os.path.join(d, file))
+            except:
+                raise BuildError("Failed to link: {} -> {}".format(os.path.join(root, file), os.path.join(d, file)))
 
 def copy_dir(src, dst):
     for root, dirs, files in os.walk(src):
