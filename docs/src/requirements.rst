@@ -30,4 +30,8 @@ This specifies the package source (see :ref:`pkg-src`) that will be installed.
 
     This specifies an alternative cmake file to be used to build the library. This is useful for packages that don't have a cmake file.
 
+.. option::  -f, --file
+
+    This will read the requirements from another requirements file.
+
 

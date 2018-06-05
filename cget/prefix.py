@@ -143,6 +143,7 @@ class CGetPrefix:
         yield if_('BUILD_SHARED_LIBS',
             set_('CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS', 'ON', cache='BOOL')
         )
+        set_('CMAKE_FIND_FRAMEWORK', 'LAST', cache='STRING')
 
 
     def get_path(self, *paths):
@@ -254,7 +255,10 @@ class CGetPrefix:
                 for line in f.readlines():
                     tokens = shlex.split(line, comments=True)
                     if len(tokens) > 0: 
-                        yield self.parse_pkg_build(parse_pkg_build_tokens(tokens), start=start, no_recipe=no_recipe)
+                        pb = parse_pkg_build_tokens(tokens)
+                        # p = self.parse_pkg_build(parse_pkg_build_tokens(tokens), start=start, no_recipe=no_recipe)
+                        ps = self.from_file(pb.file, no_recipe=no_recipe) if pb.file else [self.parse_pkg_build(pb, start=start, no_recipe=no_recipe)]
+                        for p in ps: yield p
 
     def write_parent(self, pb, track=True):
         if track and pb.parent is not None: util.mkfile(self.get_deps_directory(pb.to_fname()), pb.parent, pb.parent)
@@ -308,6 +312,18 @@ class CGetPrefix:
         self.write_parent(pb, track=track)
         return "Successfully installed {}".format(pb.to_name())
 
+    @returns(six.string_types)
+    @params(pb=PACKAGE_SOURCE_TYPES)
+    def ignore(self, pb):
+        pb = self.parse_pkg_build(pb)
+        pkg_dir = self.get_package_directory(pb.to_fname())
+        # If package doesn't exist
+        if not os.path.exists(pkg_dir):
+            util.mkfile(pkg_dir, "ignore", "ignore")
+            return "Ignore package {}".format(pb.to_name())
+        else:
+            return "Package {} already installed".format(pb.to_name())
+
     @params(pb=PACKAGE_SOURCE_TYPES, test=bool)
     def build(self, pb, test=False, target=None, generator=None):
         pb = self.parse_pkg_build(pb)
@@ -316,10 +332,10 @@ class CGetPrefix:
             # Install any dependencies first
             self.install_deps(pb, src_dir, generator=generator, test=test)
             # Configure and build
-            if not builder.exists: builder.configure(src_dir, defines=pb.define, generator=generator)
-            builder.build(variant='Release', target=target)
+            if not builder.exists: builder.configure(src_dir, defines=pb.define, generator=generator, variant=pb.variant)
+            builder.build(variant=pb.variant, target=target)
             # Run tests if enabled
-            if test: builder.test(variant='Release')
+            if test: builder.test(variant=pb.variant)
 
     @params(pb=PACKAGE_SOURCE_TYPES)
     def build_path(self, pb):

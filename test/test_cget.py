@@ -128,22 +128,27 @@ def install_cmds(url, lib=None, alias=None, init=None, remove='remove', list_='l
             yield cg(list_)
             yield cg('size', '0')
 
-def build_cmds(url=None, init=None, size=0, defines=None, prefix=None, build_path=None):
+def build_cmds(url=None, init=None, size=0, defines=None, prefix=None, build_path=None, variants=None):
     cg = CGetCmd(prefix=prefix, build_path=build_path)
     yield cg('init', init)
-    yield cg('size', '0')
-    yield cg('build', '--verbose -C -y', url)
-    yield cg('size', '0')
-    yield cg('build', '--verbose --test', defines, url)
-    yield cg('size', str(size))
-    yield cg('build', '--verbose --test', defines, url)
-    yield cg('size', str(size))
-    yield cg('build', '--verbose --path', url)
-    if not __appveyor__:
-        yield cg('build', '--verbose --test -C -y', defines, url)
+    default_variants = ['--debug', '--release', ''] if not __appveyor__ else ['--release']
+    for variant in variants or default_variants:
+        yield cg('size', '0')
+        yield cg('build', '--verbose -C -y', url)
+        yield cg('size', '0')
+        yield cg('build', '--verbose --test', variant, defines, url)
         yield cg('size', str(size))
-        yield cg('build', '--verbose --test', defines, url)
+        yield cg('build', '--verbose --test', variant, defines, url)
         yield cg('size', str(size))
+        yield cg('build', '--verbose --path', url)
+        if not __appveyor__:
+            yield cg('build', '--verbose --test -C -y', variant, defines, url)
+            yield cg('size', str(size))
+            yield cg('build', '--verbose --test', variant, defines, url)
+            yield cg('size', str(size))
+        yield cg('clean', '-y')
+        yield cg('size', '0')
+        if init: yield cg('init', init)
 
 def test_tar(d):
     ar = d.get_path('libsimple.tar.gz')
@@ -253,6 +258,11 @@ def test_xcmake(d):
 def test_xcmake_s(d):
     url = get_exists_path('libsimplebare') + ' -X ' + get_exists_path('libsimple', 'CMakeLists.txt')
     d.cmds(install_cmds(url=url, lib='simple', alias=get_exists_path('libsimplebare')))
+
+def test_single_header_xcmake(d):
+    f = get_exists_path('simpleinclude', 'include', 'simple.h')
+    url = f + ' --cmake header'
+    d.cmds(install_cmds(url=url, alias=f, files=['cget/include/simple.h']))
 
 @appveyor_skip
 @pytest.mark.xfail(strict=True)
@@ -513,6 +523,11 @@ def test_reqs_alias_f(d):
     d.cmds(install_cmds(url='-f {}'.format(reqs_file), lib='simple', alias='simple'))
 
 @appveyor_skip
+def test_reqs_file_flag(d):
+    reqs_file = d.write_to('reqs', ['-f'+shlex_quote(get_exists_path('basicapp', 'requirements.txt'))])
+    d.cmds(install_cmds(url='--file {}'.format(reqs_file), lib='simple', alias='simple'))
+
+@appveyor_skip
 def test_reqs_f(d):
     reqs_file = d.write_to('reqs', [shlex_quote(get_exists_path('libsimple'))])
     d.cmds(install_cmds(url='-f {}'.format(reqs_file), lib='simple', alias=get_exists_path('libsimple')))
@@ -521,12 +536,29 @@ def test_reqs_f2(d):
     reqs_file = get_exists_path('basicapp', 'requirements.txt')
     d.cmds(install_cmds(url='-f {}'.format(reqs_file), lib='simple', alias='simple'))
 
+@appveyor_skip
+def test_reqs_f3(d):
+    reqs_file = d.write_to('reqs', [shlex_quote(get_exists_path('libsimple'))])
+    d.write_to('requirements.txt', [shlex_quote(get_exists_path('basicapp'))])
+    d.cmds(install_cmds(url='-f {}'.format(reqs_file), lib='simple', alias=get_exists_path('libsimple')))
+
 def test_reqs_hash(d):
     ar = d.get_path('libsimple.tar.gz')
     create_ar(archive=ar, src=get_exists_path('libsimple'))
     h = cget.util.hash_file(ar, 'sha1')
     reqs_file = d.write_to('reqs', ["{0} --hash=sha1:{1}".format(shlex_quote(ar), h)])
     d.cmds(install_cmds(url='--file {}'.format(reqs_file), lib='simple', alias=ar))
+
+@appveyor_skip
+def test_without_reqs_f(d):
+    d.write_to('requirements.txt', [shlex_quote(get_exists_path('libsimple'))])
+    d.cmds(install_cmds(url='', lib='simple', alias=get_exists_path('libsimple')))
+
+@appveyor_skip
+def test_without_reqs_f2(d):
+    d.write_to('requirements.txt', [shlex_quote(get_exists_path('basicapp'))])
+    d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple'))
+
 
 @appveyor_skip
 @pytest.mark.xfail(strict=True)
@@ -801,6 +833,19 @@ def test_flags_reqs_f(d):
     reqs_file = d.write_to('reqs', [shlex_quote(p) + ' -DCGET_FLAG=On'])
     d.cmds(install_cmds(url='-f {}'.format(reqs_file), alias=p))
 
+@appveyor_skip
+def test_flags_reqs_f2(d):
+    p = get_exists_path('libsimpleflag')
+    reqs_file = d.write_to('reqs', [shlex_quote(p)])
+    d.cmds(install_cmds(url='-f {} -DCGET_FLAG=On'.format(reqs_file), alias=p))
+
+@appveyor_skip
+@pytest.mark.xfail(strict=True)
+def test_flags_reqs_f2_fail(d):
+    p = get_exists_path('libsimpleflag')
+    reqs_file = d.write_to('reqs', [shlex_quote(p)])
+    d.cmds(install_cmds(url='-f {} -DCGET_FLAG=Off'.format(reqs_file), alias=p))
+
 def test_multiflags(d):
     p = get_exists_path('libsimplemultiflag')
     d.cmds(install_cmds(url='-DCGET_FLAG1=On -DCGET_FLAG2=On {}'.format(p), alias=p))
@@ -838,9 +883,34 @@ def test_static_init(d):
 def test_shared_static_init(d):
     d.cmds(install_cmds(init='--shared --static', url=get_exists_path('libsimple'), lib='simple'))
 
+def test_ignore(d):
+    d.cmds([
+        cget_cmd('size', '0'),
+        cget_cmd('ignore', '--verbose', get_exists_path('basicapp')),
+        cget_cmd('size', '1'),
+        cget_cmd('install', '--verbose', get_exists_path('basicapp')),
+        cget_cmd('size', '1'),
+        cget_cmd('remove', '--verbose -y', get_exists_path('basicapp')),
+        cget_cmd('size', '0')
+    ])
+
+@appveyor_skip
+@pytest.mark.xfail(strict=True)
+def test_ignore_dep(d):
+    d.cmds([
+        cget_cmd('ignore', '--verbose simple'),
+        cget_cmd('install', '--verbose', get_exists_path('basicapp'))
+    ])
+
 @appveyor_skip
 def test_symlink_dir(d):
     d.cmds([
         cget_cmd('install', get_path('symlinkdir'))
     ])
     assert os.path.exists(d.get_path('cget', 'data', 'sdir', 'file.txt'))
+
+def test_cmake_trouble(d):
+    d.cmds([
+        cget_cmd('install', get_exists_path('cmake-trouble')),
+        cget_cmd('install', get_exists_path('libsimple'))
+    ])

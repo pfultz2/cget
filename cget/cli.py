@@ -16,7 +16,9 @@ class AliasedGroup(click.Group):
         rv = click.Group.get_command(self, ctx, cmd_name)
         if rv is not None:
             return rv
-        return click.Group.get_command(self, ctx, aliases[cmd_name])
+        if cmd_name in aliases:
+            return click.Group.get_command(self, ctx, aliases[cmd_name])
+        return None
 
 
 @click.group(cls=AliasedGroup, context_settings={'help_option_names': ['-h', '--help']})
@@ -89,10 +91,23 @@ def install_command(prefix, pkgs, define, file, test, test_all, update, generato
         sys.exit(1)
     variant = 'Release'
     if debug: variant = 'Debug'
-    pbs = [PackageBuild(pkg, define=define, cmake=cmake, variant=variant) for pkg in pkgs]
-    for pb in util.flat([prefix.from_file(file), pbs]):
+    if not file and not pkgs:
+        file = 'requirements.txt'
+    pbs = [PackageBuild(pkg, cmake=cmake, variant=variant) for pkg in pkgs]
+    for pbu in util.flat([prefix.from_file(file), pbs]):
+        pb = pbu.merge_defines(define)
         with prefix.try_("Failed to build package {}".format(pb.to_name()), on_fail=lambda: prefix.remove(pb)):
             click.echo(prefix.install(pb, test=test, test_all=test_all, update=update, generator=generator, insecure=insecure))
+
+@cli.command(name='ignore')
+@use_prefix
+@click.argument('pkgs', nargs=-1, type=click.STRING)
+def ignore_command(prefix, pkgs):
+    """ Ignore packages """
+    pbs = [PackageBuild(pkg) for pkg in pkgs]
+    for pb in pbs:
+        with prefix.try_("Failed to ignore package {}".format(pb.to_name()), on_fail=lambda: prefix.remove(pb)):
+            click.echo(prefix.ignore(pb))
 
 @cli.command(name='build')
 @use_prefix
@@ -104,10 +119,17 @@ def install_command(prefix, pkgs, define, file, test, test_all, update, generato
 @click.option('-T', '--target', default=None, help="Cmake target to build")
 @click.option('-y', '--yes', is_flag=True, default=False)
 @click.option('-G', '--generator', envvar='CGET_GENERATOR', help='Set the generator for CMake to use')
+@click.option('--debug', is_flag=True, help="Build debug version")
+@click.option('--release', is_flag=True, help="Build release version")
 @click.argument('pkg', nargs=1, default='.', type=click.STRING)
-def build_command(prefix, pkg, define, test, configure, clean, path, yes, target, generator):
+def build_command(prefix, pkg, define, test, configure, clean, path, yes, target, generator, debug, release):
     """ Build package """
     pb = PackageBuild(pkg).merge_defines(define)
+    if debug and release:
+        click.echo("ERROR: debug and release are not supported together")
+        sys.exit(1)
+    pb.variant = 'Release'
+    if debug: pb.variant = 'Debug'
     with prefix.try_("Failed to build package {}".format(pb.to_name())):
         if configure: prefix.build_configure(pb)
         elif path: click.echo(prefix.build_path(pb))

@@ -37,7 +37,7 @@ def fname_to_pkg(fname):
     else: return PackageSource(name=fname.replace('__', '/'), fname=fname)
 
 class PackageBuild:
-    def __init__(self, pkg_src=None, define=None, parent=None, test=False, hash=None, build=None, cmake=None, variant=None, requirements=None):
+    def __init__(self, pkg_src=None, define=None, parent=None, test=False, hash=None, build=None, cmake=None, variant=None, requirements=None, file=None):
         self.pkg_src = pkg_src
         self.define = define or []
         self.parent = parent
@@ -47,6 +47,7 @@ class PackageBuild:
         self.cmake = cmake
         self.variant = variant or 'Release'
         self.requirements = requirements
+        self.file = file
 
     def merge_defines(self, defines):
         result = copy.copy(self)
@@ -81,10 +82,11 @@ class PackageBuild:
 
 def parse_pkg_build_tokens(args):
     parser = argparse.ArgumentParser()
-    parser.add_argument('pkg_src')
+    parser.add_argument('pkg_src', nargs='?')
     parser.add_argument('-D', '--define', action='append', default=[])
     parser.add_argument('-H', '--hash')
     parser.add_argument('-X', '--cmake')
+    parser.add_argument('-f', '--file')
     parser.add_argument('-t', '--test', action='store_true')
     parser.add_argument('-b', '--build', action='store_true')
     return parser.parse_args(args=args, namespace=PackageBuild())

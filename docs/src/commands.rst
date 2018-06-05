@@ -59,6 +59,14 @@ This specifies the package source (see :ref:`pkg-src`) that will be built.
 
     Set the generator for CMake to use.
 
+.. option::  --debug
+
+    Build the debug version of the package.
+
+.. option::  --release
+
+    Build the release version of the package.
+
 -----
 clean
 -----
@@ -78,6 +86,26 @@ This will clear the directory used by cget. This will remove all packages that h
 .. option:: -y, --yes
 
     Affirm all questions.
+
+------
+ignore
+------
+
+.. program:: build
+
+This will ignore a package, so if an install command or a dependency requests the package it will be treated as already installed. This is useful to ignore a dependency that may already be installed by the system.
+
+.. option:: <package-name>
+
+    This is the name of the package that will be ignored.
+
+.. option::  -p, --prefix PATH      
+
+    Set prefix where packages are installed. This defaults to a directory named ``cget`` in the current working directory. This can also be overidden by the ``CGET_PREFIX`` environment variable.
+
+.. option::  -v, --verbose          
+
+    Enable verbose mode.
 
 ----
 init
@@ -150,7 +178,7 @@ However, ``cget`` will always create the build directory out of source. The ``cg
 
 .. option:: <package-source>
 
-This specifies the package source (see :ref:`pkg-src`) that will be installed.
+    This specifies the package source (see :ref:`pkg-src`) that will be installed. If no package source is provided then ``cget`` will default to using the ``requirements.txt`` file. That is ``cget install`` is equivalent to ``cget install -f requirements.txt``.
 
 .. option::  -p, --prefix PATH      
 

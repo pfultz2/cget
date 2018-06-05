@@ -120,7 +120,10 @@ def symlink_dir(src, dst):
             path = os.path.relpath(root, src)
             d = os.path.join(dst, path)
             mkdir(d)
-            os.symlink(os.path.join(root, file), os.path.join(d, file))
+            try:
+                os.symlink(os.path.join(root, file), os.path.join(d, file))
+            except:
+                raise BuildError("Failed to link: {} -> {}".format(os.path.join(root, file), os.path.join(d, file)))
 
 def copy_dir(src, dst):
     for root, dirs, files in os.walk(src):
@@ -186,6 +189,12 @@ def symlink_to(src, dst_dir):
     os.symlink(src, target)
     return target
 
+class CGetURLOpener(request.FancyURLopener):
+    def http_error_default(self, url, fp, errcode, errmsg, headers):
+        if errcode >= 400:
+            raise BuildError("Download failed with error {0} for: {1}".format(errcode, url))
+        return request.FancyURLopener.http_error_default(self, url, fp, errcode, errmsg, headers)
+
 def download_to(url, download_dir, insecure=False):
     name = url.split('/')[-1]
     file = os.path.join(download_dir, name)
@@ -200,8 +209,10 @@ def download_to(url, download_dir, insecure=False):
                 bar.update(0)
         context = None
         if insecure: context = ssl._create_unverified_context()
-        request.FancyURLopener(context=context).retrieve(url, filename=file, reporthook=hook, data=None)
+        CGetURLOpener(context=context).retrieve(url, filename=file, reporthook=hook, data=None)
         bar.update(bar_len)
+    if not os.path.exists(file):
+        raise BuildError("Download failed for: {0}".format(url))
     return file
 
 def transfer_to(f, dst, copy=False):
@@ -231,11 +242,16 @@ def extract_ar(archive, dst, *kwargs):
     elif archive.endswith('.zip'):
         with zipfile.ZipFile(archive,'r') as f:
             f.extractall(dst)
-    else:
+    elif tarfile.is_tarfile(archive):
         if USE_CMAKE_TAR:
             cmd([which('cmake'), '-E', 'tar', 'xzf', os.path.abspath(archive)], cwd=dst)
         else:
             tarfile.open(archive, *kwargs).extractall(dst)
+    else:
+        # Treat as a single source file
+        d = os.path.join(dst, 'header')
+        mkdir(d)
+        copy_to(archive, d)
 
 def hash_file(f, t):
     h = hashlib.new(t)
@@ -251,7 +267,7 @@ def which(p, paths=None, throws=True):
     for dirname in list(paths or [])+os.environ['PATH'].split(os.pathsep):
         for exe in exes:
             candidate = os.path.join(os.path.expanduser(dirname), exe)
-            if os.path.exists(candidate):
+            if os.path.isfile(candidate):
                 return candidate
     if throws: raise BuildError("Can't find file %s" % p)
     else: return None
