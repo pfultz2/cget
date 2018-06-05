@@ -85,3 +85,22 @@ Libraries can be selected with cmake variables ``BOOST_WITH_`` and ``BOOST_WITHO
 Also, everthing can be built except Boost.Python like the following::
 
     cget install boost,http://downloads.sourceforge.net/project/boost/boost/1.62.0/boost_1_62_0.tar.bz2 --cmake boost -DBOOST_WITHOUT_PYTHON=1
+
+"""""
+Meson
+"""""
+
+A cmake ``meson`` is provided to build packages that use the meson build system. CMake variables of the form ``MESON_SOME_VAR`` are passed to meson as a variable ``some-var``.
+
+To use meson you will need python 3.5 or later, with meson and ninja installed. It can be installed with ``pip3 install meson ninja``. Cget does not provide an installation of meson.
+
+Currently, this does not support cross-compilation.
+
+"""""""""
+Autotools
+"""""""""
+
+A cmake ``autotools`` is provided to build autotools-based libraries. Autotools is not a portable build system and may not work on all platforms.
+
+Currently, this does not support cross-compilation.
+
