@@ -329,6 +329,10 @@ class CGetPrefix:
     def build(self, pb, test=False, target=None, generator=None):
         pb = self.parse_pkg_build(pb)
         src_dir = pb.pkg_src.get_src_dir()
+        if os.path.exists(os.path.join(src_dir, 'dev-requirements.txt')):
+            pb.requirements = os.path.join(src_dir, 'dev-requirements.txt')
+        elif os.path.exists(os.path.join(src_dir, 'requirements.txt')):
+            pb.requirements = os.path.join(src_dir, 'requirements.txt')
         with self.create_builder(pb.to_fname()) as builder:
             # Install any dependencies first
             self.install_deps(pb, src_dir, generator=generator, test=test)

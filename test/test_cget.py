@@ -435,6 +435,10 @@ def test_unlink_update(d):
 def test_build_dir(d):
     d.cmds(build_cmds(get_exists_path('libsimple')))
 
+@appveyor_skip
+def test_build_dir_dev(d):
+    d.cmds(build_cmds(get_exists_path('basicapp-dev'), size=1))
+
 def test_build_relative_dir(d):
     p = os.path.relpath(get_exists_path('libsimple'), d.get_path())
     d.cmds(build_cmds(p))
@@ -557,6 +561,12 @@ def test_without_reqs_f(d):
 @appveyor_skip
 def test_without_reqs_f_dev(d):
     d.write_to('dev-requirements.txt', [shlex_quote(get_exists_path('libsimple'))])
+    d.cmds(install_cmds(url='', lib='simple', alias=get_exists_path('libsimple')))
+
+@appveyor_skip
+def test_without_reqs_f_dev2(d):
+    d.write_to('dev-requirements.txt', [shlex_quote(get_exists_path('libsimple'))])
+    d.write_to('requirements.txt', ['fail'])
     d.cmds(install_cmds(url='', lib='simple', alias=get_exists_path('libsimple')))
 
 @appveyor_skip
