@@ -555,6 +555,11 @@ def test_without_reqs_f(d):
     d.cmds(install_cmds(url='', lib='simple', alias=get_exists_path('libsimple')))
 
 @appveyor_skip
+def test_without_reqs_f_dev(d):
+    d.write_to('dev-requirements.txt', [shlex_quote(get_exists_path('libsimple'))])
+    d.cmds(install_cmds(url='', lib='simple', alias=get_exists_path('libsimple')))
+
+@appveyor_skip
 def test_without_reqs_f2(d):
     d.write_to('requirements.txt', [shlex_quote(get_exists_path('basicapp'))])
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple'))

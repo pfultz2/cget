@@ -92,7 +92,8 @@ def install_command(prefix, pkgs, define, file, test, test_all, update, generato
     variant = 'Release'
     if debug: variant = 'Debug'
     if not file and not pkgs:
-        file = 'requirements.txt'
+        if os.path.exists('dev-requirements.txt'): file = 'dev-requirements.txt'
+        else: file = 'requirements.txt'
     pbs = [PackageBuild(pkg, cmake=cmake, variant=variant) for pkg in pkgs]
     for pbu in util.flat([prefix.from_file(file), pbs]):
         pb = pbu.merge_defines(define)
