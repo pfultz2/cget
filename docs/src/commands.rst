@@ -9,7 +9,7 @@ build
 
 .. program:: build
 
-This will build a package, but it doesn't install it. This is useful over using raw cmake as it will use the cmake toolchain that was initialized by cget which sets cmake up to easily find the dependencies that have been installed by cget.
+This will build a package, but it doesn't install it. This is useful over using raw cmake as it will use the cmake toolchain that was initialized by cget which sets cmake up to easily find the dependencies that have been installed by cget. This will also install the dependencies in a ``dev-requirements.txt`` file if available, otherwise it will install any dependencies in the ``requirements.txt``.
 
 .. option:: <package-source>
 
@@ -178,7 +178,7 @@ However, ``cget`` will always create the build directory out of source. The ``cg
 
 .. option:: <package-source>
 
-    This specifies the package source (see :ref:`pkg-src`) that will be installed. If no package source is provided then ``cget`` will default to using the ``requirements.txt`` file. That is ``cget install`` is equivalent to ``cget install -f requirements.txt``.
+    This specifies the package source (see :ref:`pkg-src`) that will be installed. If no package source is provided then ``cget`` will default to using the ``requirements.txt`` file or the ``dev-requirements.txt`` file if available. That is ``cget install`` is equivalent to ``cget install -f requirements.txt`` or ``cget install -f dev-requirements.txt``.
 
 .. option::  -p, --prefix PATH      
 
