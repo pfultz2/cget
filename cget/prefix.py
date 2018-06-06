@@ -102,6 +102,7 @@ class CGetPrefix:
 
     def get_env(self):
         return {
+            'LD_LIBRARY_PATH': self.get_path('lib'),
             'PKG_CONFIG_PATH': self.pkg_config_path()
         }
 
