@@ -20,8 +20,8 @@ class Builder:
         return os.path.exists(self.get_build_path('Makefile'))
 
     def cmake(self, options=None, use_toolchain=False, **kwargs):
-        if use_toolchain: self.prefix.cmd.cmake(options=util.merge({'-DCMAKE_TOOLCHAIN_FILE': self.prefix.toolchain}, options), **kwargs)
-        else: self.prefix.cmd.cmake(options=options, **kwargs)
+        if use_toolchain: return self.prefix.cmd.cmake(options=util.merge({'-DCMAKE_TOOLCHAIN_FILE': self.prefix.toolchain}, options), **kwargs)
+        else: return self.prefix.cmd.cmake(options=options, **kwargs)
 
     def show_log(self, log):
         if self.prefix.verbose and os.path.exists(log):
@@ -30,6 +30,12 @@ class Builder:
     def show_logs(self):
         self.show_log(self.get_build_path('CMakeFiles', 'CMakeOutput.log'))
         self.show_log(self.get_build_path('CMakeFiles', 'CMakeError.log'))
+
+    def targets(self):
+        out, err = self.cmake(args=['--build', self.build_dir, '--target', 'help'], capture='out')
+        for line in out.splitlines():
+            if line.startswith('... '):
+                yield line[4:]
 
     def fetch(self, url, hash=None, copy=False, insecure=False):
         self.prefix.log("fetch:", url)
@@ -74,7 +80,7 @@ class Builder:
 
     def test(self, variant=None):
         self.prefix.log("test")
-        util.try_until(
-            lambda: self.build(target='check', variant=variant or 'Release'),
-            lambda: self.prefix.cmd.ctest((self.prefix.verbose and ['-VV'] or []) + ['-C', variant], cwd=self.build_dir)
-        )
+        if 'check' in self.targets():
+            self.build(target='check', variant=variant or 'Release')
+        else:
+            self.prefix.cmd.ctest((self.prefix.verbose and ['-VV'] or []) + ['-C', variant], cwd=self.build_dir)

@@ -289,12 +289,18 @@ def yield_from(f):
         return flat(f(*args, **kwargs))
     return g
 
-def cmd(args, env=None, **kwargs):
+def cmd(args, env=None, capture=None, **kwargs):
     e = merge(os.environ, env)
-    child = subprocess.Popen(args, env=e, **kwargs)
-    child.communicate()
+    c = capture or ''
+    stdout = None
+    stderr = None
+    if c == 'out' or c == 'all': stdout = subprocess.PIPE
+    if c == 'err' or c == 'all': stderr = subprocess.PIPE
+    child = subprocess.Popen(args, stdout=stdout, stderr=stderr, env=e, **kwargs)
+    out = child.communicate()
     if child.returncode != 0: 
         raise BuildError(msg='Command failed: ' + str(args), data=e)
+    return out
 
 def as_list(x):
     if is_string(x): return [x]
@@ -335,17 +341,17 @@ class Commander:
         option_args = ["{0}={1}".format(key, value) for key, value in six.iteritems(options or {})]
         c = [exe] + option_args + as_list(args or [])
         if self.verbose: click.secho(' '.join(c), bold=True)
-        cmd(c, env=as_dict_str(merge(self.env, self._get_paths_env(), env)), **kwargs)
+        return cmd(c, env=as_dict_str(merge(self.env, self._get_paths_env(), env)), **kwargs)
 
     def __getattr__(self, name):
         c = name.replace('_', '-')
         def f(*args, **kwargs):
-            self._cmd(c, *args, **kwargs)
+            return self._cmd(c, *args, **kwargs)
         return f
 
     def __getitem__(self, name):
         def f(*args, **kwargs):
-            self._cmd(name, *args, **kwargs)
+            return self._cmd(name, *args, **kwargs)
         return f
 
     def __contains__(self, name):
