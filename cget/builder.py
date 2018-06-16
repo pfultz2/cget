@@ -32,7 +32,11 @@ class Builder:
         self.show_log(self.get_build_path('CMakeFiles', 'CMakeError.log'))
 
     def targets(self):
-        out, err = self.cmake(args=['--build', self.build_dir, '--target', 'help'], capture='out')
+        out = None
+        try:
+            out, err = self.cmake(args=['--build', self.build_dir, '--target', 'help'], capture='out')
+        except:
+            pass
         for line in (out or '').splitlines():
             if line.startswith(six.b('... ')):
                 yield line[4:]
