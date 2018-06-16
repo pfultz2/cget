@@ -33,7 +33,7 @@ class Builder:
 
     def targets(self):
         out, err = self.cmake(args=['--build', self.build_dir, '--target', 'help'], capture='out')
-        for line in out.splitlines():
+        for line in (out or '').splitlines():
             if line.startswith(six.b('... ')):
                 yield line[4:]
 
