@@ -169,17 +169,14 @@ set(BUILD_FLAGS
 string(REPLACE ";" " " BUILD_FLAGS_STR "${BUILD_FLAGS}")
 
 add_custom_target(boost ALL
-    COMMAND ${B2_EXE}
-    ${BUILD_FLAGS}
+    COMMAND ${B2_ENV_COMMAND} ${B2_EXE} ${BUILD_FLAGS}
     COMMENT "${B2_EXE} ${BUILD_FLAGS_STR}"
     VERBATIM
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 add_custom_target(boost_install
-    COMMAND ${B2_EXE}
-    ${BUILD_FLAGS}
-    install
+    COMMAND ${B2_ENV_COMMAND} ${B2_EXE} ${BUILD_FLAGS} install
     COMMENT "${B2_EXE} ${BUILD_FLAGS_STR} install"
     VERBATIM
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
