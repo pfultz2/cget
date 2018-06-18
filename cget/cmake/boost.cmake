@@ -20,12 +20,28 @@ macro(get_property_list VAR PROP)
     get_directory_property(${VAR} ${PROP})
     string(REPLACE ";" " " ${VAR} "${${VAR}}")
 endmacro()
+function(exec)
+    execute_process(${ARGN} RESULT_VARIABLE RESULT)
+    if(NOT RESULT EQUAL 0)
+        message(FATAL_ERROR "Process failed: ${ARGN}")
+    endif()
+endfunction()
 macro(preamble PREFIX)
+    # TODO: Adjust paths based on cross-compiling
+    set(${PREFIX}_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_SYSTEM_PREFIX_PATH})
     set(${PREFIX}_SYSTEM_PATH)
-    foreach(P ${CMAKE_PREFIX_PATH} ${CMAKE_SYSTEM_PREFIX_PATH})
+    foreach(P ${${PREFIX}_PATH})
         list(APPEND ${PREFIX}_SYSTEM_PATH ${P}/bin)
     endforeach()
-    # adjust_path(${PREFIX}_SYSTEM_PATH)
+    adjust_path(${PREFIX}_SYSTEM_PATH)
+
+    set(${PREFIX}_PKG_CONFIG_PATH)
+    foreach(P ${${PREFIX}_PATH})
+        foreach(SUFFIX lib lib64 share)
+            list(APPEND ${PREFIX}_PKG_CONFIG_PATH ${P}/${SUFFIX}/pkgconfig)
+        endforeach()
+    endforeach()
+    adjust_path(${PREFIX}_PKG_CONFIG_PATH)
 
     get_property_list(${PREFIX}_COMPILE_FLAGS COMPILE_OPTIONS)
     get_directory_property(${PREFIX}_INCLUDE_DIRECTORIES INCLUDE_DIRECTORIES)
@@ -72,12 +88,23 @@ macro(preamble PREFIX)
         string(STRIP "${${VAR}}" ${VAR})
     endforeach()
 
+    # TODO: Check against the DEBUG_CONFIGURATIONS property
     string(TOLOWER "${CMAKE_BUILD_TYPE}" BUILD_TYPE)
     if(BUILD_TYPE STREQUAL "debug")
         set(${PREFIX}_VARIANT "debug")
     else()
         set(${PREFIX}_VARIANT "release")
     endif()
+
+    # TODO: Adjust pkgconfig path based on cross-compiling
+    set(${PREFIX}_ENV_COMMAND ${CMAKE_COMMAND} -E env
+        "CC=${CMAKE_C_COMPILER}"
+        "CXX=${CMAKE_CXX_COMPILER}"
+        "CFLAGS=${${PREFIX}_C_FLAGS}"
+        "CXXFLAGS=${${PREFIX}_CXX_FLAGS}"
+        "LDFLAGS=${${PREFIX}_LINK_FLAGS}"
+        "PATH=${${PREFIX}_SYSTEM_PATH}${PATH_SEP}$ENV{PATH}"
+        "PKG_CONFIG_PATH=${${PREFIX}_PKG_CONFIG_PATH}") 
 endmacro()
 # preamble
 
@@ -241,17 +268,14 @@ set(BUILD_FLAGS
 string(REPLACE ";" " " BUILD_FLAGS_STR "${BUILD_FLAGS}")
 
 add_custom_target(boost ALL
-    COMMAND ${B2_EXE}
-    ${BUILD_FLAGS}
+    COMMAND ${B2_ENV_COMMAND} ${B2_EXE} ${BUILD_FLAGS}
     COMMENT "${B2_EXE} ${BUILD_FLAGS_STR}"
     VERBATIM
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 add_custom_target(boost_install
-    COMMAND ${B2_EXE}
-    ${BUILD_FLAGS}
-    install
+    COMMAND ${B2_ENV_COMMAND} ${B2_EXE} ${BUILD_FLAGS} install
     COMMENT "${B2_EXE} ${BUILD_FLAGS_STR} install"
     VERBATIM
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

@@ -8,8 +8,6 @@ include(CTest)
 include(ProcessorCount)
 ProcessorCount(AUTOTOOLS_JOBS)
 
-# set(AUTOTOOLS_FLAGS)
-
 find_program(MAKE_EXE make)
 if(NOT MAKE_EXE)
     message(FATAL_ERROR "Make build system not installed.")
@@ -28,12 +26,28 @@ macro(get_property_list VAR PROP)
     get_directory_property(${VAR} ${PROP})
     string(REPLACE ";" " " ${VAR} "${${VAR}}")
 endmacro()
+function(exec)
+    execute_process(${ARGN} RESULT_VARIABLE RESULT)
+    if(NOT RESULT EQUAL 0)
+        message(FATAL_ERROR "Process failed: ${ARGN}")
+    endif()
+endfunction()
 macro(preamble PREFIX)
+    # TODO: Adjust paths based on cross-compiling
+    set(${PREFIX}_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_SYSTEM_PREFIX_PATH})
     set(${PREFIX}_SYSTEM_PATH)
-    foreach(P ${CMAKE_PREFIX_PATH} ${CMAKE_SYSTEM_PREFIX_PATH})
+    foreach(P ${${PREFIX}_PATH})
         list(APPEND ${PREFIX}_SYSTEM_PATH ${P}/bin)
     endforeach()
-    # adjust_path(${PREFIX}_SYSTEM_PATH)
+    adjust_path(${PREFIX}_SYSTEM_PATH)
+
+    set(${PREFIX}_PKG_CONFIG_PATH)
+    foreach(P ${${PREFIX}_PATH})
+        foreach(SUFFIX lib lib64 share)
+            list(APPEND ${PREFIX}_PKG_CONFIG_PATH ${P}/${SUFFIX}/pkgconfig)
+        endforeach()
+    endforeach()
+    adjust_path(${PREFIX}_PKG_CONFIG_PATH)
 
     get_property_list(${PREFIX}_COMPILE_FLAGS COMPILE_OPTIONS)
     get_directory_property(${PREFIX}_INCLUDE_DIRECTORIES INCLUDE_DIRECTORIES)
@@ -80,41 +94,37 @@ macro(preamble PREFIX)
         string(STRIP "${${VAR}}" ${VAR})
     endforeach()
 
+    # TODO: Check against the DEBUG_CONFIGURATIONS property
     string(TOLOWER "${CMAKE_BUILD_TYPE}" BUILD_TYPE)
     if(BUILD_TYPE STREQUAL "debug")
         set(${PREFIX}_VARIANT "debug")
     else()
         set(${PREFIX}_VARIANT "release")
     endif()
+
+    # TODO: Adjust pkgconfig path based on cross-compiling
+    set(${PREFIX}_ENV_COMMAND ${CMAKE_COMMAND} -E env
+        "CC=${CMAKE_C_COMPILER}"
+        "CXX=${CMAKE_CXX_COMPILER}"
+        "CFLAGS=${${PREFIX}_C_FLAGS}"
+        "CXXFLAGS=${${PREFIX}_CXX_FLAGS}"
+        "LDFLAGS=${${PREFIX}_LINK_FLAGS}"
+        "PATH=${${PREFIX}_SYSTEM_PATH}${PATH_SEP}$ENV{PATH}"
+        "PKG_CONFIG_PATH=${${PREFIX}_PKG_CONFIG_PATH}") 
 endmacro()
 # preamble
 
 preamble(AUTOTOOLS)
-adjust_path(AUTOTOOLS_SYSTEM_PATH)
 
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/build)
 file(MAKE_DIRECTORY ${BUILD_DIR})
 
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/autotools.cmake "
-set(ENV{CC} ${CMAKE_C_COMPILER})
-set(ENV{CXX} ${CMAKE_CXX_COMPILER})
 
-set(ENV{CFLAGS} ${AUTOTOOLS_C_FLAGS})
-set(ENV{CXXFLAGS} ${AUTOTOOLS_CXX_FLAGS})
-set(ENV{LDFLAGS} ${AUTOTOOLS_LINK_FLAGS})
-
-set(ENV{PATH} \"${AUTOTOOLS_SYSTEM_PATH}${PATH_SEP}\$ENV{PATH}\")
-
-execute_process(COMMAND  
-    ${CMAKE_CURRENT_SOURCE_DIR}/configure
+# TODO: Check flags of configure script
+exec(COMMAND ${AUTOTOOLS_ENV_COMMAND} ${CMAKE_CURRENT_SOURCE_DIR}/configure
     --prefix=${CMAKE_INSTALL_PREFIX}
     ${CONFIGURE_OPTIONS}
-    WORKING_DIRECTORY ${BUILD_DIR} 
-)
-
-")
-
-execute_process(COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/autotools.cmake)
+    WORKING_DIRECTORY ${BUILD_DIR})
 
 add_custom_target(autotools ALL
     COMMAND ${MAKE_EXE} -j ${AUTOTOOLS_JOBS}

@@ -30,8 +30,6 @@ endforeach()
 
 @PREAMBLE@
 preamble(MESON)
-list(APPEND MESON_SYSTEM_PATH ${NINJA_PATH})
-adjust_path(MESON_SYSTEM_PATH)
 
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/build)
 file(MAKE_DIRECTORY ${BUILD_DIR})
@@ -46,22 +44,8 @@ set(MESON_CMD ${MESON_EXE}
 
 string(REPLACE ";" " " MESON_COMMENT "${MESON_CMD}")
 
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/meson.cmake "
-set(ENV{CC} ${CMAKE_C_COMPILER})
-set(ENV{CXX} ${CMAKE_CXX_COMPILER})
-
-set(ENV{CFLAGS} ${MESON_C_FLAGS})
-set(ENV{CXXFLAGS} ${MESON_CXX_FLAGS})
-set(ENV{LDFLAGS} ${MESON_LINK_FLAGS})
-
-set(ENV{PATH} \"${MESON_SYSTEM_PATH}${PATH_SEP}\$ENV{PATH}\")
-
-execute_process(COMMAND ${MESON_CMD})
-
-")
-
 message("${MESON_COMMENT}")
-execute_process(COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/meson.cmake)
+exec(COMMAND ${MESON_ENV_COMMAND} ${MESON_CMD})
 
 add_custom_target(meson ALL
     COMMAND ${NINJA_EXE}
