@@ -4,6 +4,8 @@ project(meson)
 enable_language(C CXX)
 
 include(CTest)
+include(TestBigEndian)
+include(CheckTypeSize)
 
 # find meson
 find_program(MESON_EXE meson)
@@ -28,6 +30,16 @@ foreach (VAR ${_variableNames})
     endif()
 endforeach()
 
+function(to_array OUT)
+    set(ARRAY)
+    separate_arguments(INPUT UNIX_COMMAND "${ARGN}") 
+    foreach(ITEM ${INPUT})
+        list(APPEND ARRAY "'${ITEM}'")
+    endforeach()
+    string(REPLACE ";" ", " ARRAY "${ARRAY}")
+    set(${OUT} "${ARRAY}" PARENT_SCOPE)
+endfunction()
+
 @PREAMBLE@
 preamble(MESON)
 
@@ -42,8 +54,79 @@ set(MESON_CMD ${MESON_EXE}
     --default-library=${MESON_LINK}
     ${MESON_OPTIONS})
 
-string(REPLACE ";" " " MESON_COMMENT "${MESON_CMD}")
+if(CMAKE_CROSSCOMPILING)
 
+to_array(C_ARGS ${MESON_C_FLAGS})
+to_array(C_LINK_ARGS ${MESON_LINK_FLAGS})
+
+string(TOLOWER "${CMAKE_SYSTEM_NAME}" MESON_SYSTEM)
+string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" MESON_CPU)
+if(NOT CMAKE_SYSTEM_PROCESSOR)
+    message(FATAL_ERROR "You must set the processor name when cross-compiling with meson")
+endif()
+set(MESON_CPU_FAMILY "${MESON_CPU}")
+
+set(EXE_WRAPPER)
+if(CMAKE_CROSSCOMPILING_EMULATOR)
+set(EXE_WRAPPER "exe_wrapper = '${CMAKE_CROSSCOMPILING_EMULATOR}'")
+endif()
+
+set(ROOT)
+if(CMAKE_FIND_ROOT_PATH)
+# Root in meson can't be a list
+list(GET CMAKE_FIND_ROOT_PATH 0 MESON_ROOT)
+set(ROOT "root = '${MESON_ROOT}'")
+endif()
+
+set(SYSROOT)
+if(CMAKE_SYSROOT)
+set(SYSROOT "sys_root = '${CMAKE_SYSROOT}'")
+endif()
+
+find_program(PKG_CONFIG pkg-config)
+check_type_size(int SIZEOF_INT)
+check_type_size(wchar_t SIZEOF_WCHAR_T)
+test_big_endian(BIG_ENDIAN)
+set(MESON_ENDIAN little)
+if(BIG_ENDIAN)
+    set(MESON_ENDIAN big)
+endif()
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/cross-file.txt "
+[binaries]
+c = '${CMAKE_C_COMPILER}'
+cpp = '${CMAKE_CXX_COMPILER}'
+ar = '${CMAKE_AR}'
+pkgconfig = '${PKG_CONFIG}'
+${EXE_WRAPPER}
+
+[properties]
+${ROOT}
+${SYSROOT}
+
+sizeof_int = ${SIZEOF_INT}
+sizeof_wchar_t = ${SIZEOF_WCHAR_T}
+sizeof_void* = ${CMAKE_SIZEOF_VOID_P}
+
+alignment_char = 1
+alignment_void* = ${CMAKE_SIZEOF_VOID_P}
+alignment_double = ${CMAKE_SIZEOF_VOID_P}
+
+has_function_printf = true
+
+c_args = [${C_ARGS}]
+c_link_args = [${C_LINK_ARGS}]
+
+[target_machine]
+system = '${MESON_SYSTEM}'
+cpu_family = '${MESON_CPU_FAMILY}'
+cpu = '${MESON_CPU}'
+endian = '${MESON_ENDIAN}'
+")
+
+list(APPEND MESON_CMD --cross-file ${CMAKE_CURRENT_BINARY_DIR}/cross-file.txt)
+endif()
+
+string(REPLACE ";" " " MESON_COMMENT "${MESON_CMD}")
 message("${MESON_COMMENT}")
 exec(COMMAND ${MESON_ENV_COMMAND} ${MESON_CMD})
 

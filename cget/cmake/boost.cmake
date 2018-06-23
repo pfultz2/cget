@@ -10,7 +10,7 @@ ProcessorCount(B2_JOBS)
 
 # preamble
 set(PATH_SEP ":")
-if(WIN32)
+if(CMAKE_HOST_WIN32)
     set(PATH_SEP ";")
 endif()
 macro(adjust_path PATH_LIST)
