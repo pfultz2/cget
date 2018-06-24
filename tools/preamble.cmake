@@ -17,8 +17,12 @@ function(exec)
     endif()
 endfunction()
 macro(preamble PREFIX)
-    # TODO: Adjust paths based on cross-compiling
     set(${PREFIX}_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_SYSTEM_PREFIX_PATH})
+    if(CMAKE_CROSSCOMPILING)
+        set(${PREFIX}_PACKAGE_PATH ${CMAKE_FIND_ROOT_PATH})
+    else()
+        set(${PREFIX}_PACKAGE_PATH ${${PREFIX}_PATH})
+    endif()
     set(${PREFIX}_SYSTEM_PATH)
     foreach(P ${${PREFIX}_PATH})
         list(APPEND ${PREFIX}_SYSTEM_PATH ${P}/bin)
@@ -26,7 +30,7 @@ macro(preamble PREFIX)
     adjust_path(${PREFIX}_SYSTEM_PATH)
 
     set(${PREFIX}_PKG_CONFIG_PATH)
-    foreach(P ${${PREFIX}_PATH})
+    foreach(P ${${PREFIX}_PACKAGE_PATH})
         foreach(SUFFIX lib lib64 share)
             list(APPEND ${PREFIX}_PKG_CONFIG_PATH ${P}/${SUFFIX}/pkgconfig)
         endforeach()
@@ -86,6 +90,12 @@ macro(preamble PREFIX)
         set(${PREFIX}_VARIANT "release")
     endif()
 
+    # TODO: Set PKG_CONFIG_SYSROOT_DIR
+    set(PKG_CONFIG_ENV "PKG_CONFIG_PATH=${${PREFIX}_PKG_CONFIG_PATH}")
+    if(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE STREQUAL "ONLY")
+        list(APPEND PKG_CONFIG_ENV "PKG_CONFIG_LIBDIR=${${PREFIX}_PKG_CONFIG_PATH}")
+    endif()
+
     # TODO: Adjust pkgconfig path based on cross-compiling
     set(${PREFIX}_ENV_COMMAND ${CMAKE_COMMAND} -E env
         "CC=${CMAKE_C_COMPILER}"
@@ -94,6 +104,6 @@ macro(preamble PREFIX)
         "CXXFLAGS=${${PREFIX}_CXX_FLAGS}"
         "LDFLAGS=${${PREFIX}_LINK_FLAGS}"
         "PATH=${${PREFIX}_SYSTEM_PATH}${PATH_SEP}$ENV{PATH}"
-        "PKG_CONFIG_PATH=${${PREFIX}_PKG_CONFIG_PATH}") 
+        ${PKG_CONFIG_ENV}) 
 endmacro()
 # preamble

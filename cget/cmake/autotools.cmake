@@ -13,6 +13,7 @@ if(NOT MAKE_EXE)
     message(FATAL_ERROR "Make build system not installed.")
 endif()
 
+set(CONFIGURE_OPTIONS)
 
 # preamble
 set(PATH_SEP ":")
@@ -33,8 +34,12 @@ function(exec)
     endif()
 endfunction()
 macro(preamble PREFIX)
-    # TODO: Adjust paths based on cross-compiling
     set(${PREFIX}_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_SYSTEM_PREFIX_PATH})
+    if(CMAKE_CROSSCOMPILING)
+        set(${PREFIX}_PACKAGE_PATH ${CMAKE_FIND_ROOT_PATH})
+    else()
+        set(${PREFIX}_PACKAGE_PATH ${${PREFIX}_PATH})
+    endif()
     set(${PREFIX}_SYSTEM_PATH)
     foreach(P ${${PREFIX}_PATH})
         list(APPEND ${PREFIX}_SYSTEM_PATH ${P}/bin)
@@ -42,7 +47,7 @@ macro(preamble PREFIX)
     adjust_path(${PREFIX}_SYSTEM_PATH)
 
     set(${PREFIX}_PKG_CONFIG_PATH)
-    foreach(P ${${PREFIX}_PATH})
+    foreach(P ${${PREFIX}_PACKAGE_PATH})
         foreach(SUFFIX lib lib64 share)
             list(APPEND ${PREFIX}_PKG_CONFIG_PATH ${P}/${SUFFIX}/pkgconfig)
         endforeach()
@@ -102,6 +107,12 @@ macro(preamble PREFIX)
         set(${PREFIX}_VARIANT "release")
     endif()
 
+    # TODO: Set PKG_CONFIG_SYSROOT_DIR
+    set(PKG_CONFIG_ENV "PKG_CONFIG_PATH=${${PREFIX}_PKG_CONFIG_PATH}")
+    if(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE STREQUAL "ONLY")
+        list(APPEND PKG_CONFIG_ENV "PKG_CONFIG_LIBDIR=${${PREFIX}_PKG_CONFIG_PATH}")
+    endif()
+
     # TODO: Adjust pkgconfig path based on cross-compiling
     set(${PREFIX}_ENV_COMMAND ${CMAKE_COMMAND} -E env
         "CC=${CMAKE_C_COMPILER}"
@@ -110,7 +121,7 @@ macro(preamble PREFIX)
         "CXXFLAGS=${${PREFIX}_CXX_FLAGS}"
         "LDFLAGS=${${PREFIX}_LINK_FLAGS}"
         "PATH=${${PREFIX}_SYSTEM_PATH}${PATH_SEP}$ENV{PATH}"
-        "PKG_CONFIG_PATH=${${PREFIX}_PKG_CONFIG_PATH}") 
+        ${PKG_CONFIG_ENV}) 
 endmacro()
 # preamble
 
@@ -119,6 +130,17 @@ preamble(AUTOTOOLS)
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/build)
 file(MAKE_DIRECTORY ${BUILD_DIR})
 
+if(CMAKE_CROSSCOMPILING)
+execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine OUTPUT_VARIABLE AUTOTOOLS_TARGET)
+string(STRIP "${AUTOTOOLS_TARGET}" AUTOTOOLS_TARGET)
+execute_process(COMMAND cc -dumpmachine OUTPUT_VARIABLE AUTOTOOLS_HOST)
+string(STRIP "${AUTOTOOLS_HOST}" AUTOTOOLS_HOST)
+list(APPEND CONFIGURE_OPTIONS
+    --build=${AUTOTOOLS_HOST}
+    --host=${AUTOTOOLS_TARGET}
+    --target=${AUTOTOOLS_TARGET}
+)
+endif()
 
 # TODO: Check flags of configure script
 exec(COMMAND ${AUTOTOOLS_ENV_COMMAND} ${CMAKE_CURRENT_SOURCE_DIR}/configure

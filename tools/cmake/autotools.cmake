@@ -13,6 +13,7 @@ if(NOT MAKE_EXE)
     message(FATAL_ERROR "Make build system not installed.")
 endif()
 
+set(CONFIGURE_OPTIONS)
 
 @PREAMBLE@
 preamble(AUTOTOOLS)
@@ -20,6 +21,17 @@ preamble(AUTOTOOLS)
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/build)
 file(MAKE_DIRECTORY ${BUILD_DIR})
 
+if(CMAKE_CROSSCOMPILING)
+execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine OUTPUT_VARIABLE AUTOTOOLS_TARGET)
+string(STRIP "${AUTOTOOLS_TARGET}" AUTOTOOLS_TARGET)
+execute_process(COMMAND cc -dumpmachine OUTPUT_VARIABLE AUTOTOOLS_HOST)
+string(STRIP "${AUTOTOOLS_HOST}" AUTOTOOLS_HOST)
+list(APPEND CONFIGURE_OPTIONS
+    --build=${AUTOTOOLS_HOST}
+    --host=${AUTOTOOLS_TARGET}
+    --target=${AUTOTOOLS_TARGET}
+)
+endif()
 
 # TODO: Check flags of configure script
 exec(COMMAND ${AUTOTOOLS_ENV_COMMAND} ${CMAKE_CURRENT_SOURCE_DIR}/configure
