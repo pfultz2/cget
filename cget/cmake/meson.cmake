@@ -7,6 +7,18 @@ include(CTest)
 include(TestBigEndian)
 include(CheckTypeSize)
 
+# Find meson options first before any meson variables are defined
+set(MESON_OPTIONS)
+get_cmake_property(_variableNames VARIABLES)
+foreach (VAR ${_variableNames})
+    if(VAR MATCHES "MESON_")
+        string(TOLOWER ${VAR} OPTION)
+        string(REPLACE "_" "-" OPTION ${OPTION})
+        string(REPLACE "meson-" "" OPTION ${OPTION})
+        list(APPEND MESON_OPTIONS -D ${OPTION}=${${VAR}})
+    endif()
+endforeach()
+
 # find meson
 find_program(MESON_EXE meson)
 if(NOT MESON_EXE)
@@ -19,16 +31,6 @@ if(NOT NINJA_EXE)
 endif()
 get_filename_component(NINJA_PATH ${NINJA_EXE} DIRECTORY)
 
-set(MESON_OPTIONS)
-get_cmake_property(_variableNames VARIABLES)
-foreach (VAR ${_variableNames})
-    if(VAR MATCHES "MESON_")
-        string(TOLOWER ${VAR} OPTION)
-        string(REPLACE "_" "-" OPTION ${OPTION})
-        string(REPLACE "meson-" "" OPTION ${OPTION})
-        list(APPEND MESON_OPTIONS -D ${OPTION}=${${VAR}})
-    endif()
-endforeach()
 
 function(to_array OUT)
     set(ARRAY)
@@ -132,21 +134,22 @@ macro(preamble PREFIX)
         set(${PREFIX}_VARIANT "release")
     endif()
 
-    # TODO: Set PKG_CONFIG_SYSROOT_DIR
-    set(PKG_CONFIG_ENV "PKG_CONFIG_PATH=${${PREFIX}_PKG_CONFIG_PATH}")
+    set(${PREFIX}_BASE_ENV_COMMAND ${CMAKE_COMMAND} -E env
+        "PATH=${${PREFIX}_SYSTEM_PATH}${PATH_SEP}$ENV{PATH}"
+        "PKG_CONFIG_PATH=${${PREFIX}_PKG_CONFIG_PATH}"
+    )
+
+    # TODO: Set also PKG_CONFIG_SYSROOT_DIR
     if(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE STREQUAL "ONLY")
-        list(APPEND PKG_CONFIG_ENV "PKG_CONFIG_LIBDIR=${${PREFIX}_PKG_CONFIG_PATH}")
+        list(APPEND ${PREFIX}_BASE_ENV_COMMAND "PKG_CONFIG_LIBDIR=${${PREFIX}_PKG_CONFIG_PATH}")
     endif()
 
-    # TODO: Adjust pkgconfig path based on cross-compiling
-    set(${PREFIX}_ENV_COMMAND ${CMAKE_COMMAND} -E env
+    set(${PREFIX}_ENV_COMMAND ${${PREFIX}_BASE_ENV_COMMAND}
         "CC=${CMAKE_C_COMPILER}"
         "CXX=${CMAKE_CXX_COMPILER}"
         "CFLAGS=${${PREFIX}_C_FLAGS}"
         "CXXFLAGS=${${PREFIX}_CXX_FLAGS}"
-        "LDFLAGS=${${PREFIX}_LINK_FLAGS}"
-        "PATH=${${PREFIX}_SYSTEM_PATH}${PATH_SEP}$ENV{PATH}"
-        ${PKG_CONFIG_ENV}) 
+        "LDFLAGS=${${PREFIX}_LINK_FLAGS}") 
 endmacro()
 # preamble
 
@@ -225,7 +228,8 @@ has_function_printf = true
 c_args = [${C_ARGS}]
 c_link_args = [${C_LINK_ARGS}]
 
-[target_machine]
+# The host machine is the target machine
+[host_machine]
 system = '${MESON_SYSTEM}'
 cpu_family = '${MESON_CPU_FAMILY}'
 cpu = '${MESON_CPU}'
@@ -233,11 +237,20 @@ endian = '${MESON_ENDIAN}'
 ")
 
 list(APPEND MESON_CMD --cross-file ${CMAKE_CURRENT_BINARY_DIR}/cross-file.txt)
-endif()
-
+string(REPLACE ";" " " MESON_COMMENT "${MESON_CMD}")
+message("${MESON_COMMENT}")
+# Unset these variables as these cause meson cross compile to break
+unset(ENV{CC})
+unset(ENV{CXX})
+unset(ENV{CFLAGS})
+unset(ENV{CXXFLAGS})
+unset(ENV{LDFLAGS})
+exec(COMMAND ${MESON_BASE_ENV_COMMAND} ${MESON_CMD})
+else()
 string(REPLACE ";" " " MESON_COMMENT "${MESON_CMD}")
 message("${MESON_COMMENT}")
 exec(COMMAND ${MESON_ENV_COMMAND} ${MESON_CMD})
+endif()
 
 add_custom_target(meson ALL
     COMMAND ${NINJA_EXE}

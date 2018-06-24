@@ -100,21 +100,22 @@ macro(preamble PREFIX)
         set(${PREFIX}_VARIANT "release")
     endif()
 
-    # TODO: Set PKG_CONFIG_SYSROOT_DIR
-    set(PKG_CONFIG_ENV "PKG_CONFIG_PATH=${${PREFIX}_PKG_CONFIG_PATH}")
+    set(${PREFIX}_BASE_ENV_COMMAND ${CMAKE_COMMAND} -E env
+        "PATH=${${PREFIX}_SYSTEM_PATH}${PATH_SEP}$ENV{PATH}"
+        "PKG_CONFIG_PATH=${${PREFIX}_PKG_CONFIG_PATH}"
+    )
+
+    # TODO: Set also PKG_CONFIG_SYSROOT_DIR
     if(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE STREQUAL "ONLY")
-        list(APPEND PKG_CONFIG_ENV "PKG_CONFIG_LIBDIR=${${PREFIX}_PKG_CONFIG_PATH}")
+        list(APPEND ${PREFIX}_BASE_ENV_COMMAND "PKG_CONFIG_LIBDIR=${${PREFIX}_PKG_CONFIG_PATH}")
     endif()
 
-    # TODO: Adjust pkgconfig path based on cross-compiling
-    set(${PREFIX}_ENV_COMMAND ${CMAKE_COMMAND} -E env
+    set(${PREFIX}_ENV_COMMAND ${${PREFIX}_BASE_ENV_COMMAND}
         "CC=${CMAKE_C_COMPILER}"
         "CXX=${CMAKE_CXX_COMPILER}"
         "CFLAGS=${${PREFIX}_C_FLAGS}"
         "CXXFLAGS=${${PREFIX}_CXX_FLAGS}"
-        "LDFLAGS=${${PREFIX}_LINK_FLAGS}"
-        "PATH=${${PREFIX}_SYSTEM_PATH}${PATH_SEP}$ENV{PATH}"
-        ${PKG_CONFIG_ENV}) 
+        "LDFLAGS=${${PREFIX}_LINK_FLAGS}") 
 endmacro()
 # preamble
 

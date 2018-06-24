@@ -7,6 +7,18 @@ include(CTest)
 include(TestBigEndian)
 include(CheckTypeSize)
 
+# Find meson options first before any meson variables are defined
+set(MESON_OPTIONS)
+get_cmake_property(_variableNames VARIABLES)
+foreach (VAR ${_variableNames})
+    if(VAR MATCHES "MESON_")
+        string(TOLOWER ${VAR} OPTION)
+        string(REPLACE "_" "-" OPTION ${OPTION})
+        string(REPLACE "meson-" "" OPTION ${OPTION})
+        list(APPEND MESON_OPTIONS -D ${OPTION}=${${VAR}})
+    endif()
+endforeach()
+
 # find meson
 find_program(MESON_EXE meson)
 if(NOT MESON_EXE)
@@ -19,16 +31,6 @@ if(NOT NINJA_EXE)
 endif()
 get_filename_component(NINJA_PATH ${NINJA_EXE} DIRECTORY)
 
-set(MESON_OPTIONS)
-get_cmake_property(_variableNames VARIABLES)
-foreach (VAR ${_variableNames})
-    if(VAR MATCHES "MESON_")
-        string(TOLOWER ${VAR} OPTION)
-        string(REPLACE "_" "-" OPTION ${OPTION})
-        string(REPLACE "meson-" "" OPTION ${OPTION})
-        list(APPEND MESON_OPTIONS -D ${OPTION}=${${VAR}})
-    endif()
-endforeach()
 
 function(to_array OUT)
     set(ARRAY)
@@ -116,7 +118,8 @@ has_function_printf = true
 c_args = [${C_ARGS}]
 c_link_args = [${C_LINK_ARGS}]
 
-[target_machine]
+# The host machine is the target machine
+[host_machine]
 system = '${MESON_SYSTEM}'
 cpu_family = '${MESON_CPU_FAMILY}'
 cpu = '${MESON_CPU}'
@@ -124,11 +127,20 @@ endian = '${MESON_ENDIAN}'
 ")
 
 list(APPEND MESON_CMD --cross-file ${CMAKE_CURRENT_BINARY_DIR}/cross-file.txt)
-endif()
-
+string(REPLACE ";" " " MESON_COMMENT "${MESON_CMD}")
+message("${MESON_COMMENT}")
+# Unset these variables as these cause meson cross compile to break
+unset(ENV{CC})
+unset(ENV{CXX})
+unset(ENV{CFLAGS})
+unset(ENV{CXXFLAGS})
+unset(ENV{LDFLAGS})
+exec(COMMAND ${MESON_BASE_ENV_COMMAND} ${MESON_CMD})
+else()
 string(REPLACE ";" " " MESON_COMMENT "${MESON_CMD}")
 message("${MESON_COMMENT}")
 exec(COMMAND ${MESON_ENV_COMMAND} ${MESON_CMD})
+endif()
 
 add_custom_target(meson ALL
     COMMAND ${NINJA_EXE}
