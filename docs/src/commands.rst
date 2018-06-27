@@ -91,7 +91,7 @@ This will clear the directory used by cget. This will remove all packages that h
 ignore
 ------
 
-.. program:: build
+.. program:: ignore
 
 This will ignore a package, so if an install command or a dependency requests the package it will be treated as already installed. This is useful to ignore a dependency that may already be installed by the system.
 
