@@ -898,6 +898,18 @@ def test_static_init(d):
 def test_shared_static_init(d):
     d.cmds(install_cmds(init='--shared --static', url=get_exists_path('libsimple'), lib='simple'))
 
+@appveyor_skip
+def test_auto_rpath_init(d):
+    d.cmds(install_cmds(init='--auto-rpath', url=get_exists_path('libsimple'), lib='simple'))
+
+@appveyor_skip
+def test_auto_rpath_shared_init(d):
+    d.cmds(install_cmds(init='--auto-rpath --shared', url=get_exists_path('libsimple'), lib='simple'))
+
+@appveyor_skip
+def test_auto_rpath_static_init(d):
+    d.cmds(install_cmds(init='--auto-rpath --static', url=get_exists_path('libsimple'), lib='simple'))
+
 def test_ignore(d):
     d.cmds([
         cget_cmd('size', '0'),

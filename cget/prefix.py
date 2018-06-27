@@ -111,13 +111,13 @@ class CGetPrefix:
 
     @returns(inspect.isgenerator)
     @util.yield_from
-    def generate_cmake_toolchain(self, toolchain=None, cxx=None, cxxflags=None, ldflags=None, std=None, defines=None):
+    def generate_cmake_toolchain(self, toolchain=None, cxx=None, cxxflags=None, ldflags=None, std=None, defines=None, auto_rpath=False):
         set_ = cmake_set
         if_ = cmake_if
         append_ = cmake_append
         yield set_('CGET_PREFIX', self.prefix)
         yield set_('CMAKE_PREFIX_PATH', self.prefix)
-        yield ['include_directories(SYSTEM ${CMAKE_PREFIX_PATH}/include)']
+        yield ['include_directories(SYSTEM ${CGET_PREFIX}/include)']
         if toolchain: yield ['include({})'.format(util.quote(os.path.abspath(toolchain)))]
         yield if_('CMAKE_CROSSCOMPILING',
             append_('CMAKE_FIND_ROOT_PATH', self.prefix)
@@ -145,6 +145,7 @@ class CGetPrefix:
             set_('CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS', 'ON', cache='BOOL')
         )
         set_('CMAKE_FIND_FRAMEWORK', 'LAST', cache='STRING')
+        if auto_rpath: set_('CMAKE_INSTALL_RPATH', '${CGET_PREFIX}/lib')
 
 
     def get_path(self, *paths):

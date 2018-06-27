@@ -54,7 +54,8 @@ def use_prefix(f):
 @click.option('-D', '--define', multiple=True, help="Extra configuration variables to pass to CMake")
 @click.option('--shared', is_flag=True, help="Set toolchain to build shared libraries by default")
 @click.option('--static', is_flag=True, help="Set toolchain to build static libraries by default")
-def init_command(prefix, toolchain, cxx, cxxflags, ldflags, std, define, shared, static):
+@click.option('--auto-rpath', is_flag=True, help="Automatically add rpath to the cget directory")
+def init_command(prefix, toolchain, cxx, cxxflags, ldflags, std, define, shared, static, auto_rpath):
     """ Initialize install directory """
     if shared and static:
         click.echo("ERROR: shared and static are not supported together")
@@ -69,7 +70,8 @@ def init_command(prefix, toolchain, cxx, cxxflags, ldflags, std, define, shared,
         cxxflags=cxxflags, 
         ldflags=ldflags, 
         std=std, 
-        defines=defines)
+        defines=defines,
+        auto_rpath=auto_rpath)
 
 @cli.command(name='install')
 @use_prefix
