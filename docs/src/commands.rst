@@ -159,6 +159,10 @@ This will initialize the cmake toolchain. By default, the ``install`` command wi
 
     Set toolchain to build static libraries by default.
 
+.. option::  --auto-rpath               
+
+    Automatically add rpath to the cget directory. This can be useful for using shared libraries outside of cget environment.
+
 
 -------
 install
