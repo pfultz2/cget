@@ -145,6 +145,7 @@ class CGetPrefix:
             set_('CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS', 'ON', cache='BOOL')
         )
         set_('CMAKE_FIND_FRAMEWORK', 'LAST', cache='STRING')
+        set_('CMAKE_INSTALL_RPATH', '${CGET_PREFIX}/lib')
 
 
     def get_path(self, *paths):
