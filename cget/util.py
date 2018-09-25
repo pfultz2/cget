@@ -122,8 +122,7 @@ def symlink_dir(src, dst):
             mkdir(d)
             relpath = os.path.relpath(os.path.join(root, file), d)
             try:
-                if not os.path.isfile(os.path.join(d, file)):
-                    os.symlink(relpath, os.path.join(d, file))
+                os.symlink(relpath, os.path.join(d, file))
             except:
                 raise BuildError("Failed to link: {} -> {}".format(os.path.join(root, file), os.path.join(d, file)))
 
