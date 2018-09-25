@@ -143,6 +143,8 @@ def rm_symlink(file):
 def rm_symlink_in(file, prefix):
     if os.path.islink(file):
         f = os.readlink(file)
+        if not os.path.isabs(f):
+            f = os.path.normpath(os.path.join(os.path.dirname(file), f))
         if f.startswith(prefix):
             os.remove(file)
 
