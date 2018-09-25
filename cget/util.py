@@ -55,7 +55,7 @@ def can(f):
 
 def try_until(*args):
     for arg in args[:-1]:
-        try: 
+        try:
             arg()
             return
         except:
@@ -74,7 +74,7 @@ def write_to(file, lines):
 def mkdir(p):
     if not os.path.exists(p): os.makedirs(p)
     return p
-    
+
 def mkfile(d, file, content, always_write=True):
     mkdir(d)
     p = os.path.join(d, file)
@@ -111,17 +111,18 @@ def delete_dir(path):
 def symlink_dir(src, dst):
     for root, dirs, files in os.walk(src):
         all_files = (
-            file 
-            for x in [dirs, files] 
-            for file in x 
+            file
+            for x in [dirs, files]
+            for file in x
             if os.path.islink(os.path.join(root, file)) or os.path.isfile(os.path.join(root, file))
         )
         for file in all_files:
             path = os.path.relpath(root, src)
             d = os.path.join(dst, path)
             mkdir(d)
+            relpath = os.path.relpath(os.path.join(root, file), d)
             try:
-                os.symlink(os.path.join(root, file), os.path.join(d, file))
+                os.symlink(relpath, os.path.join(d, file))
             except:
                 raise BuildError("Failed to link: {} -> {}".format(os.path.join(root, file), os.path.join(d, file)))
 
@@ -141,7 +142,9 @@ def rm_symlink(file):
 def rm_symlink_in(file, prefix):
     if os.path.islink(file):
         f = os.readlink(file)
-        if f.startswith(prefix): 
+        if not os.path.isabs(f):
+            f = os.path.normpath(os.path.join(os.path.dirname(file), f))
+        if f.startswith(prefix):
             os.remove(file)
 
 def rm_symlink_dir(d):
@@ -159,7 +162,7 @@ def rm_dup_dir(d, prefix, remove_both=True):
         for file in files:
             fullpath = os.path.join(root, file)
             relpath = os.path.relpath(fullpath, d)
-            if '..' in relpath: 
+            if '..' in relpath:
                 raise BuildError('Trying to remove link outside of prefix directory: ' + relpath)
             os.remove(os.path.join(prefix, relpath))
             if remove_both: os.remove(fullpath)
@@ -168,9 +171,9 @@ def rm_empty_dirs(d):
     has_files = False
     for x in os.listdir(d):
         p = os.path.join(d, x)
-        if os.path.isdir(p) and not os.path.islink(p): 
+        if os.path.isdir(p) and not os.path.islink(p):
             has_files = has_files or rm_empty_dirs(p)
-        else: 
+        else:
             has_files = True
     if not has_files: os.rmdir(d)
     return has_files
@@ -203,7 +206,7 @@ def download_to(url, download_dir, insecure=False):
     with click.progressbar(length=bar_len, width=70) as bar:
         def hook(count, block_size, total_size):
             percent = int(count*block_size*bar_len/total_size)
-            if percent > 0 and percent < bar_len: 
+            if percent > 0 and percent < bar_len:
                 # Hack because we can't set the position
                 bar.pos = percent
                 bar.update(0)
@@ -228,7 +231,7 @@ def retrieve_url(url, dst, copy=False, insecure=False, hash=None):
     f = download_to(url, dst, insecure=insecure) if remote else transfer_to(url[7:], dst, copy=copy)
     if os.path.isfile(f) and hash:
         click.echo("Computing hash: {}".format(hash))
-        if check_hash(f, hash): 
+        if check_hash(f, hash):
             if remote: add_cache_file(hash.replace(':', '-'), f)
         else:
             raise BuildError("Hash doesn't match for {0}: {1}".format(url, hash))
@@ -298,7 +301,7 @@ def cmd(args, env=None, capture=None, **kwargs):
     if c == 'err' or c == 'all': stderr = subprocess.PIPE
     child = subprocess.Popen(args, stdout=stdout, stderr=stderr, env=e, **kwargs)
     out = child.communicate()
-    if child.returncode != 0: 
+    if child.returncode != 0:
         raise BuildError(msg='Command failed: ' + str(args), data=e)
     return out
 
