@@ -338,7 +338,7 @@ class CGetPrefix:
             # Install any dependencies first
             self.install_deps(pb, src_dir, generator=generator, test=test)
             # Configure and build
-            if not builder.exists: builder.configure(src_dir, defines=pb.define, generator=generator, variant=pb.variant)
+            if not builder.exists: builder.configure(src_dir, defines=pb.define, generator=generator, test=test, variant=pb.variant)
             builder.build(variant=pb.variant, target=target)
             # Run tests if enabled
             if test: builder.test(variant=pb.variant)

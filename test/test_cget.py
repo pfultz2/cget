@@ -436,6 +436,19 @@ def test_build_dir(d):
     d.cmds(build_cmds(get_exists_path('libsimple')))
 
 @appveyor_skip
+def test_build_dir_notest(d):
+    d.cmds([
+        cget_cmd('build', '--verbose', get_exists_path('buildtesting')),
+    ])
+
+@appveyor_skip
+@pytest.mark.xfail(strict=True)
+def test_build_dir_with_test(d):
+    d.cmds([
+        cget_cmd('build', '--verbose --test', get_exists_path('buildtesting')),
+    ])
+
+@appveyor_skip
 def test_build_dir_dev(d):
     d.cmds(build_cmds(get_exists_path('basicapp-dev'), size=1))
 
