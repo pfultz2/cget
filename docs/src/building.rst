@@ -38,6 +38,9 @@ For projects that don't use cmake, then its matter of searching for the dependen
 Installing non-cmake packages
 -----------------------------
 
+
+Cget can install non-cmake packages as well. Due note that non-cmake build systems do not have a way to tell the build where the dependencies are installed. Cget will set environmnet variables such as ``PKG_CONFIG_PATH`` and ``PATH``, but if the dependencies are not found using pkg-config or these standard environmnet variables then you will need to consult the build scripts as to what protocol is needed to resolve the dependencies.
+
 .. _custom-cmake:
 
 """"""""""""""""""
@@ -94,13 +97,9 @@ A cmake ``meson`` is provided to build packages that use the meson build system.
 
 To use meson you will need python 3.5 or later, with meson and ninja installed. It can be installed with ``pip3 install meson ninja``. Cget does not provide an installation of meson.
 
-Currently, this does not support cross-compilation.
-
 """""""""
 Autotools
 """""""""
 
 A cmake ``autotools`` is provided to build autotools-based libraries. Autotools is not a portable build system and may not work on all platforms.
-
-Currently, this does not support cross-compilation.
 
