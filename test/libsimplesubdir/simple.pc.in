@@ -1,0 +1,6 @@
+Name: simple
+Description: A simple library
+URL: https://github.com/pfultz2/Fit
+Version: 1.0
+
+Cflags: -I@CMAKE_INSTALL_PREFIX@/include
