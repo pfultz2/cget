@@ -71,6 +71,19 @@ For binaries, ``cget`` provides a cmake file ``binary`` which will install all t
 
     cget install clang,http://llvm.org/releases/3.9.0/clang+llvm-3.9.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz  --cmake binary
 
+
+""""""""""""""""""
+CMake Subdirectory
+""""""""""""""""""
+
+If cmake is not in the top-level directory this will use the cmake in a subdirectory::
+
+    cget install google/protobuf --cmake subdir
+
+By default, it uses a directory named ``cmake``, but this can be changed by setting the ``CMAKE_DIR`` variable::
+
+    cget install sandstorm-io/capnproto --cmake subdir -DCMAKE_DIR=c++
+
 .. _boost-cmake:
 
 """""
