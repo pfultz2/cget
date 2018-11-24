@@ -1,10 +1,6 @@
 import pytest
 
-<<<<<<< HEAD
-import sys, os, tarfile, cget.util
-=======
-import os, tarfile, cget.util, shutil
->>>>>>> master
+import sys, os, tarfile, cget.util, shutil
 
 from six.moves import shlex_quote
 
