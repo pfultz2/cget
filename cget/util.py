@@ -154,8 +154,9 @@ def rm_symlink_dir(d):
 
 def rm_symlink_from(d, prefix):
     for root, dirs, files in os.walk(prefix):
-        for file in files:
-            rm_symlink_in(os.path.join(root, file), d)
+        if not root.startswith(d):
+            for file in files:
+                rm_symlink_in(os.path.join(root, file), d)
 
 def rm_dup_dir(d, prefix, remove_both=True):
     for root, dirs, files in os.walk(d):
