@@ -1,6 +1,6 @@
 import pytest
 
-import os, tarfile, cget.util
+import sys, os, tarfile, cget.util
 
 from six.moves import shlex_quote
 
@@ -56,9 +56,7 @@ class DirForTests:
             print(x)
             if x.startswith('assert_path'):
                 p = x[11:].strip()
-                if not os.path.isabs(p):
-                    p = os.path.join(self.tmp_dir, p)
-                assert os.path.exists(p)
+                self.assert_path(p)
             else:
                 self.cmd(x, **kwargs)
 
@@ -66,6 +64,13 @@ class DirForTests:
         p = self.get_path(f)
         cget.util.write_to(p, content)
         return p
+
+    def assert_path(self, *ps):
+        p = os.path.join(*ps)
+        if not os.path.isabs(p):
+            p = os.path.join(self.tmp_dir, p)
+        print(p)
+        assert os.path.exists(p)
 
     def get_path(self, *ps):
         return os.path.join(self.tmp_dir, *ps)
@@ -430,6 +435,28 @@ def test_unlink_update(d):
         cget_cmd('rm', '--verbose -y', 'app'),
         cget_cmd('size', '1')
     ])
+
+@appveyor_skip
+def test_unlink_shared(d):
+    d.cmds([
+        cget_cmd('init', '--shared'),
+        cget_cmd('install', '--verbose --test', get_exists_path('libsimple2')),
+        cget_cmd('size', '1')
+    ])
+    libname = None
+    if sys.platform == 'darwin':
+        libname = 'libsimple.dylib'
+    elif sys.platform.startswith('linux'):
+        libname = 'libsimple.so'
+    if libname:
+        d.assert_path('cget', 'lib', libname)
+    d.cmds([
+        cget_cmd('rm', '--verbose -y --unlink', get_exists_path('libsimple2')),
+        cget_cmd('install', '--verbose', get_exists_path('libsimple2')),
+        cget_cmd('size', '1')
+    ])
+    if libname:
+        d.assert_path('cget', 'lib', libname)
 
 @appveyor_skip
 def test_build_dir(d):
