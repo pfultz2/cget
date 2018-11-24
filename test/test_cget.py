@@ -1,6 +1,6 @@
 import pytest
 
-import os, tarfile, cget.util
+import os, tarfile, cget.util, shutil
 
 from six.moves import shlex_quote
 
@@ -428,6 +428,19 @@ def test_unlink_update(d):
         cget_cmd('install', '--verbose --test --update', 'app,'+get_exists_path('basicapp')),
         cget_cmd('size', '2'),
         cget_cmd('rm', '--verbose -y', 'app'),
+        cget_cmd('size', '1')
+    ])
+
+@appveyor_skip
+def test_unlink_pkg(d):
+    d.cmds([
+        cget_cmd('install', '--verbose --test', get_exists_path('libsimple')),
+        cget_cmd('size', '1'),
+        cget_cmd('rm', '--verbose -y --unlink', get_exists_path('libsimple')),
+    ])
+    shutil.rmtree(d.get_path('cget', 'cget', 'pkg'))
+    d.cmds([
+        cget_cmd('install', '--verbose --test', get_exists_path('libsimple')),
         cget_cmd('size', '1')
     ])
 

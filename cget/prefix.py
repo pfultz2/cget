@@ -390,6 +390,7 @@ class CGetPrefix:
         pkg_dir = self.get_package_directory(pkg.to_fname())
         unlink_dir = self.get_unlink_directory(pkg.to_fname())
         if os.path.exists(unlink_dir):
+            util.mkdir(self.get_package_directory())
             os.rename(unlink_dir, pkg_dir)
             if util.USE_SYMLINKS: util.symlink_dir(os.path.join(pkg_dir, 'install'), self.prefix)
             else: util.copy_dir(os.path.join(pkg_dir, 'install'), self.prefix)
