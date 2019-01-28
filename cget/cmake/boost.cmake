@@ -250,6 +250,8 @@ endif()
 
 set(B2_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/build)
 
+set(BOOST_BUILD_FLAGS "" CACHE STRING "Additional flags to pass to boost build")
+
 set(BUILD_FLAGS
     -q
     ${B2_VERBOSE_FLAG}
@@ -264,6 +266,7 @@ set(BUILD_FLAGS
     threading=multi
     toolset=${B2_TOOLCHAIN_TYPE}-${B2_TOOLCHAIN_VERSION}
     variant=${B2_VARIANT}
+    pch=off
     "${B2_C_FLAGS_ARG}"
     "${B2_CXX_FLAGS_ARG}"
     "${B2_LINK_FLAGS_ARG}"
@@ -274,6 +277,7 @@ set(BUILD_FLAGS
     --exec-prefix=${CMAKE_INSTALL_PREFIX}/bin
     --libdir=${CMAKE_INSTALL_PREFIX}/lib
     --includedir=${CMAKE_INSTALL_PREFIX}/include
+    ${BOOST_BUILD_FLAGS}
 )
 
 string(REPLACE ";" " " BUILD_FLAGS_STR "${BUILD_FLAGS}")
