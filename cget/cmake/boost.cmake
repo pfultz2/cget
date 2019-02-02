@@ -27,6 +27,11 @@ function(exec)
     endif()
 endfunction()
 macro(preamble PREFIX)
+    set(${PREFIX}_ADDRESS_MODEL "64")
+    if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+        set(${PREFIX}_ADDRESS_MODEL "32")
+    endif()
+
     set(${PREFIX}_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_SYSTEM_PREFIX_PATH})
     if(CMAKE_CROSSCOMPILING)
         set(${PREFIX}_PACKAGE_PATH ${CMAKE_FIND_ROOT_PATH})
@@ -41,7 +46,7 @@ macro(preamble PREFIX)
 
     set(${PREFIX}_PKG_CONFIG_PATH)
     foreach(P ${${PREFIX}_PACKAGE_PATH})
-        foreach(SUFFIX lib lib64 share)
+        foreach(SUFFIX lib lib${${PREFIX}_ADDRESS_MODEL} share)
             list(APPEND ${PREFIX}_PKG_CONFIG_PATH ${P}/${SUFFIX}/pkgconfig)
         endforeach()
     endforeach()
@@ -121,29 +126,28 @@ endmacro()
 
 preamble(B2)
 
-set(B2_ADDRESS_MODEL "64")
-if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-    set(B2_ADDRESS_MODEL "32")
-endif()
-
 set(B2_COMPILER ${CMAKE_CXX_COMPILER})
 if (MSVC)
-    set(B2_TOOLCHAIN_TYPE "msvc")
+    set(B2_DEFAULT_TOOLCHAIN_TYPE "msvc")
 else()
-    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    if (CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
+        set(B2_DEFAULT_TOOLCHAIN_TYPE "clang-darwin")
+    elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         if(WIN32)
-            set(B2_TOOLCHAIN_TYPE "clang-win")
+            set(B2_DEFAULT_TOOLCHAIN_TYPE "clang-win")
+        elseif(APPLE)
+            set(B2_DEFAULT_TOOLCHAIN_TYPE "clang-darwin")
         else()
-            set(B2_TOOLCHAIN_TYPE "clang-linux")
+            set(B2_DEFAULT_TOOLCHAIN_TYPE "clang-linux")
         endif()
-    elseif (CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
-        set(B2_TOOLCHAIN_TYPE "clang-darwin")
     elseif (CMAKE_CXX_COMPILER_ID MATCHES "Intel")
-        set(B2_TOOLCHAIN_TYPE "intel")
+        set(B2_DEFAULT_TOOLCHAIN_TYPE "intel")
     else()
-        set(B2_TOOLCHAIN_TYPE "gcc")
+        set(B2_DEFAULT_TOOLCHAIN_TYPE "gcc")
     endif()
 endif()
+
+set(BOOST_TOOLCHAIN "${B2_DEFAULT_TOOLCHAIN_TYPE}" CACHE STRING "Toolchain for b2")
 
 set(B2_TARGET)
 
@@ -190,7 +194,7 @@ if(WIN32)
     set(B2_THREAD_API "win32")
 endif()
 set(B2_CONFIG_CONTENT "
-using ${B2_TOOLCHAIN_TYPE} : ${B2_TOOLCHAIN_VERSION} : \"${B2_COMPILER}\" : 
+using ${BOOST_TOOLCHAIN} : ${B2_TOOLCHAIN_VERSION} : \"${B2_COMPILER}\" : 
 <rc>${CMAKE_RC_COMPILER}
 <archiver>${CMAKE_AR}
 <ranlib>${CMAKE_RANLIB}
@@ -264,7 +268,7 @@ set(BUILD_FLAGS
     target-os=${B2_TARGET}
     threadapi=${B2_THREAD_API}
     threading=multi
-    toolset=${B2_TOOLCHAIN_TYPE}-${B2_TOOLCHAIN_VERSION}
+    toolset=${BOOST_TOOLCHAIN}-${B2_TOOLCHAIN_VERSION}
     variant=${B2_VARIANT}
     pch=off
     "${B2_C_FLAGS_ARG}"
