@@ -116,3 +116,9 @@ Autotools
 
 A cmake ``autotools`` is provided to build autotools-based libraries. Autotools is not a portable build system and may not work on all platforms.
 
+""""
+Make
+""""
+
+A cmake ``make`` is provided to build makefile-based libraries. This will invoke ``make`` and then ``make install``. It will set the ``PREFIX`` variable to the installation location. Makefile is not a portable build system and may not work on all platforms.
+
