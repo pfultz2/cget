@@ -11,11 +11,6 @@ ProcessorCount(B2_JOBS)
 @PREAMBLE@
 preamble(B2)
 
-set(B2_ADDRESS_MODEL "64")
-if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-    set(B2_ADDRESS_MODEL "32")
-endif()
-
 set(B2_COMPILER ${CMAKE_CXX_COMPILER})
 if (MSVC)
     set(B2_DEFAULT_TOOLCHAIN_TYPE "msvc")

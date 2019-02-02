@@ -27,6 +27,11 @@ function(exec)
     endif()
 endfunction()
 macro(preamble PREFIX)
+    set(${PREFIX}_ADDRESS_MODEL "64")
+    if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+        set(${PREFIX}_ADDRESS_MODEL "32")
+    endif()
+
     set(${PREFIX}_PATH ${CMAKE_PREFIX_PATH} ${CMAKE_SYSTEM_PREFIX_PATH})
     if(CMAKE_CROSSCOMPILING)
         set(${PREFIX}_PACKAGE_PATH ${CMAKE_FIND_ROOT_PATH})
@@ -41,7 +46,7 @@ macro(preamble PREFIX)
 
     set(${PREFIX}_PKG_CONFIG_PATH)
     foreach(P ${${PREFIX}_PACKAGE_PATH})
-        foreach(SUFFIX lib lib64 share)
+        foreach(SUFFIX lib lib${${PREFIX}_ADDRESS_MODEL} share)
             list(APPEND ${PREFIX}_PKG_CONFIG_PATH ${P}/${SUFFIX}/pkgconfig)
         endforeach()
     endforeach()
@@ -120,11 +125,6 @@ endmacro()
 # preamble
 
 preamble(B2)
-
-set(B2_ADDRESS_MODEL "64")
-if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-    set(B2_ADDRESS_MODEL "32")
-endif()
 
 set(B2_COMPILER ${CMAKE_CXX_COMPILER})
 if (MSVC)
