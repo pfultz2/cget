@@ -9,6 +9,7 @@ include(ProcessorCount)
 ProcessorCount(B2_JOBS)
 
 @PREAMBLE@
+auto_search()
 preamble(B2)
 
 set(B2_COMPILER ${CMAKE_CXX_COMPILER})

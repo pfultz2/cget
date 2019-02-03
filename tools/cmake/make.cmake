@@ -14,6 +14,7 @@ if(NOT MAKE_EXE)
 endif()
 
 @PREAMBLE@
+auto_search()
 preamble(MAKE)
 
 set(MAKE_VARIABLES

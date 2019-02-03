@@ -16,6 +16,7 @@ endif()
 set(CONFIGURE_OPTIONS)
 
 @PREAMBLE@
+auto_search()
 preamble(AUTOTOOLS)
 
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/build)

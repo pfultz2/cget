@@ -43,6 +43,7 @@ function(to_array OUT)
 endfunction()
 
 @PREAMBLE@
+auto_search()
 preamble(MESON)
 
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/build)
