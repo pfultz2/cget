@@ -327,6 +327,8 @@ def as_dict_str(d):
     return result
 
 def actual_path(path, start=None):
+    if os.path.isabs(path):
+        return path
     return os.path.normpath(os.path.join(start or os.getcwd(), os.path.expanduser(path)))
 
 class Commander:

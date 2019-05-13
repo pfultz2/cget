@@ -659,6 +659,10 @@ if __has_pkg_config__:
         d.cmds(install_cmds(url=get_exists_path('basicapp'), lib='simple', alias='simple', size=2))
 
     @appveyor_skip
+    def test_app_indirect_dir(d):
+        d.cmds(install_cmds(url=get_exists_path('basicapp-indirect'), lib='simple', alias='simple', size=2))
+
+    @appveyor_skip
     def test_xapp_dir(d):
         d.cmds(install_cmds(url=get_exists_path('basicappx'), lib='simple', alias='simple', size=2))
 
