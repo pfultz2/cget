@@ -131,9 +131,17 @@ This will initialize the cmake toolchain. By default, the ``install`` command wi
 
     Set cmake toolchain file to use.
 
+.. option::  --cc COMPILER             
+
+    Set c compiler.
+
 .. option::  --cxx COMPILER             
 
     Set c++ compiler.
+
+.. option::  --cflags FLAGS        
+
+    Set additional c flags.
 
 .. option::  --cxxflags FLAGS        
 

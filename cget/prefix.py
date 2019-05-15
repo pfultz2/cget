@@ -117,7 +117,7 @@ class CGetPrefix:
 
     @returns(inspect.isgenerator)
     @util.yield_from
-    def generate_cmake_toolchain(self, toolchain=None, cxx=None, cxxflags=None, ldflags=None, std=None, defines=None):
+    def generate_cmake_toolchain(self, toolchain=None, cc=None, cxx=None, cflags=None, cxxflags=None, ldflags=None, std=None, defines=None):
         set_ = cmake_set
         if_ = cmake_if
         else_ = cmake_else
@@ -139,6 +139,7 @@ class CGetPrefix:
             set_('CMAKE_INSTALL_PREFIX', self.prefix)
         )
         if cxx: yield set_('CMAKE_CXX_COMPILER', cxx)
+        if cc: yield set_('CMAKE_C_COMPILER', cc)
         if std:
             yield if_('NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC"',
                 set_('CMAKE_CXX_STD_FLAG', "-std={}".format(std))
@@ -146,8 +147,10 @@ class CGetPrefix:
         yield if_('"${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC"',
             set_('CMAKE_CXX_ENABLE_PARALLEL_BUILD_FLAG', "/MP".format(std))
         )
+        if cflags:
+            yield set_('CMAKE_C_FLAGS', "$ENV{{CFLAGS}} ${{CMAKE_C_FLAGS_INIT}} {}".format(cflags or ''), cache='STRING')
         if cxxflags or std:
-            yield set_('CMAKE_CXX_FLAGS', "$ENV{{CXXFLAGS}} ${{CMAKE_CXX_FLAGS_INIT}} ${{CMAKE_CXX_STD_FLAG}} ${{CMAKE_CXX_STD_FLAG}} {}".format(cxxflags or ''), cache='STRING')
+            yield set_('CMAKE_CXX_FLAGS', "$ENV{{CXXFLAGS}} ${{CMAKE_CXX_FLAGS_INIT}} ${{CMAKE_CXX_STD_FLAG}} {}".format(cxxflags or ''), cache='STRING')
         if ldflags:
             for link_type in ['STATIC', 'SHARED', 'MODULE', 'EXE']:
                 yield set_('CMAKE_{}_LINKER_FLAGS'.format(link_type), "$ENV{{LDFLAGS}} {0}".format(ldflags), cache='STRING')

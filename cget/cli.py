@@ -47,14 +47,16 @@ def use_prefix(f):
 @cli.command(name='init')
 @use_prefix
 @click.option('-t', '--toolchain', required=False, help="Set cmake toolchain file to use")
+@click.option('--cc', required=False, help="Set c compiler")
 @click.option('--cxx', required=False, help="Set c++ compiler")
+@click.option('--cflags', required=False, help="Set additional c flags")
 @click.option('--cxxflags', required=False, help="Set additional c++ flags")
 @click.option('--ldflags', required=False, help="Set additional linker flags")
 @click.option('--std', required=False, help="Set C++ standard if available")
 @click.option('-D', '--define', multiple=True, help="Extra configuration variables to pass to CMake")
 @click.option('--shared', is_flag=True, help="Set toolchain to build shared libraries by default")
 @click.option('--static', is_flag=True, help="Set toolchain to build static libraries by default")
-def init_command(prefix, toolchain, cxx, cxxflags, ldflags, std, define, shared, static):
+def init_command(prefix, toolchain, cc, cxx, cflags, cxxflags, ldflags, std, define, shared, static):
     """ Initialize install directory """
     if shared and static:
         click.echo("ERROR: shared and static are not supported together")
@@ -65,7 +67,9 @@ def init_command(prefix, toolchain, cxx, cxxflags, ldflags, std, define, shared,
     prefix.write_cmake(
         always_write=True, 
         toolchain=toolchain, 
+        cc=cc,
         cxx=cxx,
+        cflags=cflags, 
         cxxflags=cxxflags, 
         ldflags=ldflags, 
         std=std, 
