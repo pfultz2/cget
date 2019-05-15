@@ -61,6 +61,12 @@ def cmake_if(cond, *args):
             yield '    ' + line
     yield 'endif()'
 
+def cmake_else(*args):
+    yield 'else ()'
+    for arg in args:
+        for line in arg:
+            yield '    ' + line
+
 def parse_cmake_var_type(key, value):
     if ':' in key:
         p = key.split(':')
@@ -114,10 +120,17 @@ class CGetPrefix:
     def generate_cmake_toolchain(self, toolchain=None, cxx=None, cxxflags=None, ldflags=None, std=None, defines=None):
         set_ = cmake_set
         if_ = cmake_if
+        else_ = cmake_else
         append_ = cmake_append
         yield set_('CGET_PREFIX', self.prefix)
         yield set_('CMAKE_PREFIX_PATH', self.prefix)
-        yield ['include_directories(SYSTEM ${CMAKE_PREFIX_PATH}/include)']
+        yield if_('${CMAKE_VERSION} VERSION_LESS "3.6.0"',
+            ['include_directories(SYSTEM ${CGET_PREFIX}/include)'],
+            else_(
+                set_('CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES', '${CGET_PREFIX}/include'),
+                set_('CMAKE_C_STANDARD_INCLUDE_DIRECTORIES', '${CGET_PREFIX}/include')
+            )
+        )
         if toolchain: yield ['include({})'.format(util.quote(os.path.abspath(toolchain)))]
         yield if_('CMAKE_CROSSCOMPILING',
             append_('CMAKE_FIND_ROOT_PATH', self.prefix)
