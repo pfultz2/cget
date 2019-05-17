@@ -7,6 +7,8 @@ environment:
 init:
   - "ECHO %TOXENV%"
   - ps: "ls C:\\Python*"
+  - ps: "ls C:\\Python27\\Scripts\\"
+  - ps: "ls C:\\Python36\\Scripts\\"
 install:
   # Install pkg-config from chocolatey
   # - cinst pkgconfiglite
