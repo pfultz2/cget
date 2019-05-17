@@ -15,6 +15,9 @@ install:
   - "c:\\Python27\\python -m pip install --upgrade pip"
   - "c:\\Python35\\python -m pip install --upgrade pip"
   - "c:\\Python36\\python -m pip install --upgrade pip"
+  - "c:\\Python27\\Scripts\\pip install virtualenv"
+  - "c:\\Python35\\Scripts\\pip install virtualenv"
+  - "c:\\Python36\\Scripts\\pip install virtualenv"
   - "c:\\Python36\\Scripts\\pip install tox cget"
   # Install pkgconfig using cget
   - "c:\\Python36\\Scripts\\cget install --verbose -p c:\\cget pfultz2/pkgconfig"
