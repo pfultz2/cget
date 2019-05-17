@@ -278,7 +278,7 @@ def which(p, paths=None, throws=True):
     print(ps)
     for p in ps:
         print(p)
-        print(ls(p))
+        print(list(ls(p)))
     if throws: raise BuildError("Can't find file %s" % p)
     else: return None
 
