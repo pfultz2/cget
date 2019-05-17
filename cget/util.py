@@ -273,12 +273,6 @@ def which(p, paths=None, throws=True):
             candidate = os.path.join(os.path.expanduser(dirname), exe)
             if os.path.isfile(candidate):
                 return candidate
-    ps = list(paths or [])+os.environ['PATH'].split(os.pathsep)
-    print("Searched: ")
-    print(ps)
-    for p in ps:
-        print(p)
-        print(list(ls(p)))
     if throws: raise BuildError("Can't find file %s" % p)
     else: return None
 
