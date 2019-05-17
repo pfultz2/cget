@@ -13,19 +13,19 @@ init:
   - ps: "ls C:\\Python27\\"
   - ps: "ls C:\\Python36\\"
 install:
-  - "SET PATH=c:\\%PYTHON%;c:\\%PYTHON%\\Scripts;%PATH%"
-  - "python -m pip install -U pip setuptools wheel"
-  - "python -m pip install tox cget"
+  - SET PATH=c:\%PYTHON%;c:\%PYTHON%\Scripts;%PATH%
+  - python -m pip install -U pip setuptools wheel
+  - python -m pip install tox cget
   # Install pkgconfig using cget
-  - "cget install --verbose -p c:\\cget pfultz2/pkgconfig"
+  - cget install --verbose -p c:\cget pfultz2/pkgconfig
 
 build: false
 
 test_script:
   - cmd: set PATH=c:\cget\bin;%PATH%
-  - cmd: "set TOX_PYTEST_NTHREADS=4"
+  - cmd: set TOX_PYTEST_NTHREADS=4
   - cmd: call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\vsvars32.bat"
-  - "python --version"
-  - "python -m tox --verion"
-  - "python -m pip --verion"
-  - "python -m tox -v -- -x"
+  - python --version
+  - python -m tox --verion
+  - python -m pip --verion
+  - python -m tox -v -- -x
