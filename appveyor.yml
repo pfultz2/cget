@@ -10,6 +10,9 @@ init:
 install:
   # Install pkg-config from chocolatey
   # - cinst pkgconfiglite
+  - "c:\\Python27\\Scripts\\pip install -U pip"
+  - "c:\\Python34\\Scripts\\pip install -U pip"
+  - "c:\\Python35\\Scripts\\pip install -U pip"
   - "c:\\Python34\\Scripts\\pip install tox cget"
   # Install pkgconfig using cget
   - "c:\\Python34\\Scripts\\cget install --verbose -p c:\\cget pfultz2/pkgconfig"
@@ -22,4 +25,4 @@ test_script:
   - cmd: call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\vsvars32.bat"
   - "c:\\Python34\\Scripts\\tox --version"
   - "c:\\Python34\\Scripts\\pip --version"
-  - "c:\\Python34\\Scripts\\tox -vvv --force-dep 'pip >= 19.1.1' -- -x"
+  - "c:\\Python34\\Scripts\\tox -v -- -x"
