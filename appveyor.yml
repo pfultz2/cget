@@ -26,6 +26,6 @@ test_script:
   - cmd: set TOX_PYTEST_NTHREADS=4
   - cmd: call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\vsvars32.bat"
   - python --version
-  - python -m tox --verion
-  - python -m pip --verion
-  - python -m tox -v -- -x
+  - python -m tox -- --verion
+  - python -m pip -- --verion
+  - python -m tox -- -v -- -x
