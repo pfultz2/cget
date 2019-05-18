@@ -1,25 +1,31 @@
 environment:
   matrix:
     - TOXENV: py27
-    - TOXENV: py34
+      PYTHON: Python27
     - TOXENV: py35
+      PYTHON: Python35
+    - TOXENV: py36
+      PYTHON: Python36
 
 init:
   - "ECHO %TOXENV%"
   - ps: "ls C:\\Python*"
+  - ps: "ls C:\\Python27\\"
+  - ps: "ls C:\\Python36\\"
 install:
-  # Install pkg-config from chocolatey
-  # - cinst pkgconfiglite
-  - "c:\\Python34\\Scripts\\pip install tox cget"
+  - SET PATH=c:\%PYTHON%;c:\%PYTHON%\Scripts;%PATH%
+  - python -m pip install -U pip setuptools wheel
+  - python -m pip install tox cget
   # Install pkgconfig using cget
-  - "c:\\Python34\\Scripts\\cget install --verbose -p c:\\cget pfultz2/pkgconfig"
+  - cget install --verbose -p c:\cget pfultz2/pkgconfig
 
 build: false
 
 test_script:
   - cmd: set PATH=c:\cget\bin;%PATH%
-  - cmd: "set TOX_PYTEST_NTHREADS=4"
+  - cmd: set TOX_PYTEST_NTHREADS=4
   - cmd: call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\vsvars32.bat"
-  - "c:\\Python34\\Scripts\\tox --version"
-  - "c:\\Python34\\Scripts\\pip --version"
-  - "c:\\Python34\\Scripts\\tox -- -x"
+  - python --version
+  - tox --version
+  - pip --version
+  - tox -v -- -x
