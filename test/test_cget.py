@@ -651,6 +651,11 @@ def test_app_include_dir(d):
 def test_app_header_dep(d):
     d.cmds(install_cmds(url=get_exists_path('basicapp-simpleinclude'), alias='simple', size=2))
 
+@appveyor_skip
+# @pytest.mark.xfail(strict=True)
+def test_app_header_werror(d):
+    d.cmds(install_cmds(url=get_exists_path('basicapp-simpleinclude-werror'), alias='simple', size=2))
+
 # Basic app needs pkg-config
 if __has_pkg_config__:
 
