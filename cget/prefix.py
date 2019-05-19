@@ -265,18 +265,22 @@ class CGetPrefix:
         else: return p
 
     def from_file(self, file, url=None, no_recipe=False):
-        if file is not None and os.path.exists(file):
-            start = os.path.dirname(file)
-            if url is not None and url.startswith('file://'):
-                start = url[7:]
-            with open(file) as f:
-                for line in f.readlines():
-                    tokens = shlex.split(line, comments=True)
-                    if len(tokens) > 0: 
-                        pb = parse_pkg_build_tokens(tokens)
-                        # p = self.parse_pkg_build(parse_pkg_build_tokens(tokens), start=start, no_recipe=no_recipe)
-                        ps = self.from_file(pb.file, no_recipe=no_recipe) if pb.file else [self.parse_pkg_build(pb, start=start, no_recipe=no_recipe)]
-                        for p in ps: yield p
+        if file is None:
+            return
+        if not os.path.exists(file):
+            self.log("file not found: " + file)
+            return
+        start = os.path.dirname(file)
+        if url is not None and url.startswith('file://'):
+            start = url[7:]
+        with open(file) as f:
+            self.log("parse file: " + file)
+            for line in f.readlines():
+                tokens = shlex.split(line, comments=True)
+                if len(tokens) > 0: 
+                    pb = parse_pkg_build_tokens(tokens)
+                    ps = self.from_file(util.actual_path(pb.file, start), no_recipe=no_recipe) if pb.file else [self.parse_pkg_build(pb, start=start, no_recipe=no_recipe)]
+                    for p in ps: yield p
 
     def write_parent(self, pb, track=True):
         if track and pb.parent is not None: util.mkfile(self.get_deps_directory(pb.to_fname()), pb.parent, pb.parent)
