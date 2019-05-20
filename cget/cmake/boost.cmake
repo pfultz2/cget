@@ -107,6 +107,16 @@ macro(preamble PREFIX)
     set(${PREFIX}_C_FLAGS "${CMAKE_C_FLAGS} ${${PREFIX}_COMPILE_FLAGS} ${${PREFIX}_PIC_FLAG}")
     set(${PREFIX}_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${${PREFIX}_COMPILE_FLAGS} ${${PREFIX}_PIC_FLAG}")
 
+    foreach(LANG C CXX)
+        foreach(DIR ${CMAKE_${LANG}_STANDARD_INCLUDE_DIRECTORIES})
+            if(MSVC)
+                string(APPEND ${PREFIX}_${LANG}_FLAGS " /I ${DIR}")
+            else()
+                string(APPEND ${PREFIX}_${LANG}_FLAGS " -isystem ${DIR}")
+            endif()
+        endforeach()
+    endforeach()
+
     # Compensate for extra spaces in the flags, which can cause build failures
     foreach(VAR ${PREFIX}_C_FLAGS ${PREFIX}_CXX_FLAGS ${PREFIX}_LINK_FLAGS)
         string(REGEX REPLACE "  +" " " ${VAR} "${${VAR}}")
