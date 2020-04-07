@@ -20,6 +20,7 @@ from six.moves.urllib import request
 
 USE_SYMLINKS=(os.name == 'posix')
 USE_CMAKE_TAR=(os.name != 'posix')
+# USE_CMAKE_TAR=(sys.version_info[0] < 3) or (os.name != 'posix')
 
 __CGET_DIR__ = os.path.dirname(os.path.realpath(__file__))
 
@@ -346,6 +347,8 @@ class Commander:
         exe = which(name, self.paths)
         option_args = ["{0}={1}".format(key, value) for key, value in six.iteritems(options or {})]
         c = [exe] + option_args + as_list(args or [])
+        if sys.version_info[0] < 3:
+            c = [x.decode('utf-8') for x in c]
         if self.verbose: click.secho(' '.join(c), bold=True)
         return cmd(c, env=as_dict_str(merge(self.env, self._get_paths_env(), env)), **kwargs)
 

@@ -1,4 +1,4 @@
-import pytest
+import pytest, six
 
 import sys, os, tarfile, cget.util, shutil
 
@@ -158,6 +158,16 @@ def build_cmds(url=None, init=None, size=0, defines=None, prefix=None, build_pat
 def test_tar(d):
     ar = d.get_path('libsimple.tar.gz')
     create_ar(archive=ar, src=get_exists_path('libsimple'))
+    d.cmds(install_cmds(url=ar, lib='simple'))
+
+def test_tar_unicode(d):
+    ar = d.get_path('libsimple.tar.gz')
+    src = d.mkdir('src')
+    shutil.copytree(get_exists_path('libsimple'), src.get_path('libsimple'))
+    # write unicode file
+    cget.util.write_to(src.get_path('libsimple', 'extra'+six.u('\xc3'), 'file'+six.u('\xc3')), six.u('\xc3'))
+
+    create_ar(archive=ar, src=src.get_path('libsimple'))
     d.cmds(install_cmds(url=ar, lib='simple'))
 
 @appveyor_skip
