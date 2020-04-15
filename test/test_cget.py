@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import pytest, six
 
 import sys, os, tarfile, cget.util, shutil
@@ -32,7 +31,12 @@ def basename(p):
     else: return basename(d)
 
 def create_ar(archive, src):
-    with tarfile.open(archive, mode='w:gz') as f:
+    mode = 'w'
+    if (archive.endswith('gz')):
+        mode = 'w:gz'
+    if (archive.endswith('bz2')):
+        mode = 'w:bz2'
+    with tarfile.open(archive, mode=mode) as f:
         name = basename(src)
         f.add(src, arcname=name)
 
@@ -163,7 +167,7 @@ def test_tar(d):
     d.cmds(install_cmds(url=ar, lib='simple'))
 
 def test_tar_unicode(d):
-    ar = d.get_path('libsimple.tar.gz')
+    ar = d.get_path('libsimple.tar.bz2')
     src = d.mkdir('src')
     shutil.copytree(get_exists_path('libsimple'), src.get_path('libsimple'))
     # write unicode file
