@@ -20,7 +20,6 @@ from six.moves.urllib import request
 
 USE_SYMLINKS=(os.name == 'posix')
 USE_CMAKE_TAR=(os.name != 'posix')
-# USE_CMAKE_TAR=(sys.version_info[0] < 3) or (os.name != 'posix')
 
 __CGET_DIR__ = os.path.dirname(os.path.realpath(__file__))
 
