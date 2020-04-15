@@ -173,6 +173,7 @@ def test_relative_dir(d):
     p = os.path.relpath(get_exists_path('libsimple'), d.get_path())
     d.cmds(install_cmds(url=p, lib='simple'))
 
+@appveyor_skip
 @pytest.mark.xfail(strict=True)
 def test_debug_dir_fail(d):
     d.cmds(install_cmds(url=get_exists_path('libsimpledebug'), lib='simple', variants=['--debug']))
