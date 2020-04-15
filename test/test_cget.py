@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import pytest, six
 
 import sys, os, tarfile, cget.util, shutil
@@ -165,9 +167,14 @@ def test_tar_unicode(d):
     src = d.mkdir('src')
     shutil.copytree(get_exists_path('libsimple'), src.get_path('libsimple'))
     # write unicode file
-    cget.util.write_to(src.get_path('libsimple', 'extra'+six.u('\xc3'), 'file'+six.u('\xc3')), six.u('\xc3'))
+    p = src.get_path('libsimple', u'éxtra')
+    cget.util.mkdir(p)
+    cget.util.mkfile(p, u'filé', [""])
 
     create_ar(archive=ar, src=src.get_path('libsimple'))
+    # check the file is in the archive
+    tar = tarfile.open(ar)
+    assert len([name for name in tar.getnames() if 'filé' in name]) > 0
     d.cmds(install_cmds(url=ar, lib='simple'))
 
 @appveyor_skip
