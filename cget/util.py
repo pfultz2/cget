@@ -129,6 +129,8 @@ def symlink_dir(src, dst):
 def copy_dir(src, dst):
     for root, dirs, files in os.walk(src):
         for file in files:
+            if os.path.isdir(file):
+                continue
             path = os.path.relpath(root, src)
             d = os.path.join(dst, path)
             mkdir(d)
