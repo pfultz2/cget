@@ -129,11 +129,11 @@ def symlink_dir(src, dst):
 def copy_dir(src, dst):
     for root, dirs, files in os.walk(src):
         for file in files:
-            if os.path.isdir(file):
-                continue
             path = os.path.relpath(root, src)
             d = os.path.join(dst, path)
             mkdir(d)
+            if not os.path.exists(os.path.join(root, file)):
+                raise BuildError("Source path is incorrect: root={}, file={}".format(root, file))
             shutil.copy2(os.path.join(root, file), os.path.join(d, file))
 
 def rm_symlink(file):
