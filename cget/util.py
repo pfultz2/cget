@@ -133,6 +133,7 @@ def copy_dir(src, dst):
             d = os.path.join(dst, path)
             mkdir(d)
             if not os.path.exists(os.path.join(root, file)):
+                print(ls(root))
                 raise BuildError("Source path is incorrect: root={}, file={}".format(root, file))
             shutil.copy2(os.path.join(root, file), os.path.join(d, file))
 
