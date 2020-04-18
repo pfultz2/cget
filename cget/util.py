@@ -132,10 +132,10 @@ def copy_dir(src, dst):
             path = os.path.relpath(root, src)
             d = os.path.join(dst, path)
             mkdir(d)
-            if not os.path.exists(os.path.join(root, file)):
-                print("ERROR:")
-                for x in ls(root): print(x)
-                raise BuildError("Source path is incorrect: root={}, file={}".format(root, file))
+            src_file = os.path.join(root, file)
+            # Prefixing path to avoid problems with long paths on windows
+            if os.name == 'nt':
+                src_file = "\\\\?\\" + src_file
             shutil.copy2(os.path.join(root, file), os.path.join(d, file))
 
 def rm_symlink(file):
