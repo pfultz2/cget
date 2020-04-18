@@ -134,6 +134,7 @@ def copy_dir(src, dst):
             mkdir(d)
             src_file = os.path.join(root, file)
             # Prefixing path to avoid problems with long paths on windows
+            print("************* OS:", os.name)
             if os.name == 'nt':
                 src_file = "\\\\?\\" + src_file
             shutil.copy2(os.path.join(root, file), os.path.join(d, file))
