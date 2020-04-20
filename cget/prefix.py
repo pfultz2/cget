@@ -399,7 +399,7 @@ class CGetPrefix:
             else:
                 util.rm_dup_dir(os.path.join(pkg_dir, 'install'), self.prefix, remove_both=False)
             util.rm_empty_dirs(self.prefix)
-            if delete: shutil.rmtree(pkg_dir)
+            if delete: util.delete_dir(pkg_dir)
             else:
                 util.mkdir(self.get_unlink_directory())
                 os.rename(pkg_dir, unlink_dir)
