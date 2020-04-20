@@ -87,4 +87,5 @@ class Builder:
         if 'check' in self.targets():
             self.build(target='check', variant=variant or 'Release')
         else:
-            self.prefix.cmd.ctest((self.prefix.verbose and ['-VV'] or []) + ['-C', variant], cwd=self.build_dir)
+            self.prefix.cmd.ctest((self.prefix.verbose and ['-VV'] or []) + ['-C', variant] +
+                                  ['-j', str(multiprocessing.cpu_count())] + ['--output-on-failure'], cwd=self.build_dir)

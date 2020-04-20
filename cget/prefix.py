@@ -145,7 +145,7 @@ class CGetPrefix:
                 set_('CMAKE_CXX_STD_FLAG', "-std={}".format(std))
             )
         yield if_('"${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC"',
-            set_('CMAKE_CXX_ENABLE_PARALLEL_BUILD_FLAG', "/MP".format(std))
+            set_('CMAKE_CXX_ENABLE_PARALLEL_BUILD_FLAG', "/MP")
         )
         if cflags:
             yield set_('CMAKE_C_FLAGS', "$ENV{{CFLAGS}} ${{CMAKE_C_FLAGS_INIT}} {}".format(cflags or ''), cache='STRING')
@@ -399,7 +399,7 @@ class CGetPrefix:
             else:
                 util.rm_dup_dir(os.path.join(pkg_dir, 'install'), self.prefix, remove_both=False)
             util.rm_empty_dirs(self.prefix)
-            if delete: shutil.rmtree(pkg_dir)
+            if delete: util.delete_dir(pkg_dir)
             else:
                 util.mkdir(self.get_unlink_directory())
                 os.rename(pkg_dir, unlink_dir)

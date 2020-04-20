@@ -94,6 +94,12 @@ def get_app_dir(*args):
 def get_cache_path(*args):
     return get_app_dir('cache', *args)
 
+def adjust_path(p):
+    # Prefixing path to avoid problems with long paths on windows
+    if 'nt' in os.name and os.path.isabs(p) and not p.startswith("\\\\?\\"):
+        return "\\\\?\\" + p
+    return p
+
 def add_cache_file(key, f):
     mkdir(get_cache_path(key))
     shutil.copy2(f, get_cache_path(key, os.path.basename(f)))
@@ -106,7 +112,7 @@ def get_cache_file(key):
         return None
 
 def delete_dir(path):
-    if path is not None and os.path.exists(path): shutil.rmtree(path)
+    if path is not None and os.path.exists(path): shutil.rmtree(adjust_path(path))
 
 def symlink_dir(src, dst):
     for root, dirs, files in os.walk(src):
@@ -132,7 +138,8 @@ def copy_dir(src, dst):
             path = os.path.relpath(root, src)
             d = os.path.join(dst, path)
             mkdir(d)
-            shutil.copy2(os.path.join(root, file), os.path.join(d, file))
+            src_file = os.path.join(root, file)
+            shutil.copy2(adjust_path(src_file), os.path.join(d, file))
 
 def rm_symlink(file):
     if os.path.islink(file):
