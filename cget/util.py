@@ -23,7 +23,7 @@ def to_bool(value):
     if x in ("no",  "n", "false", "f", "0", "0.0", "", "none", "[]", "{}"): return False
     return True
 
-USE_SYMLINKS=(os.name == 'posix')
+USE_SYMLINKS=to_bool(os.environ.get('CGET_USE_SYMLINKS', (os.name == 'posix')))
 USE_CMAKE_TAR=to_bool(os.environ.get('CGET_USE_CMAKE_TAR', True))
 
 __CGET_DIR__ = os.path.dirname(os.path.realpath(__file__))
