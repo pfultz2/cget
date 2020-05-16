@@ -24,7 +24,7 @@ def to_bool(value):
     return True
 
 USE_SYMLINKS=to_bool(os.environ.get('CGET_USE_SYMLINKS', (os.name == 'posix')))
-USE_CMAKE_TAR=to_bool(os.environ.get('CGET_USE_CMAKE_TAR', True))
+USE_CMAKE_TAR=to_bool(os.environ.get('CGET_USE_CMAKE_TAR', False))
 
 __CGET_DIR__ = os.path.dirname(os.path.realpath(__file__))
 
@@ -262,7 +262,13 @@ def extract_ar(archive, dst, *kwargs):
         if USE_CMAKE_TAR:
             cmd([which('cmake'), '-E', 'tar', 'xzf', os.path.abspath(archive)], cwd=dst)
         else:
-            tarfile.open(archive, *kwargs).extractall(dst)
+            t = tarfile.open(archive, mode="r", *kwargs)
+            updated = []
+            for m in t.getmembers():
+                m.name = six.ensure_text(m.name, 'utf-8')
+                updated.append(m)
+            t.extractall(members=updated, path=dst)
+            t.close()
     else:
         # Treat as a single source file
         d = os.path.join(dst, 'header')
