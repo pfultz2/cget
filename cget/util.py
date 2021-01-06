@@ -16,7 +16,7 @@ if os.name == 'posix' and sys.version_info[0] < 3:
 else:
     import subprocess
 
-from six.moves.urllib import request
+import requests
 
 def to_bool(value):
     x = str(value).lower()
@@ -205,31 +205,27 @@ def symlink_to(src, dst_dir):
     os.symlink(src, target)
     return target
 
-class CGetURLOpener(request.FancyURLopener):
-    def http_error_default(self, url, fp, errcode, errmsg, headers):
-        if errcode >= 400:
-            raise BuildError("Download failed with error {0} for: {1}".format(errcode, url))
-        return request.FancyURLopener.http_error_default(self, url, fp, errcode, errmsg, headers)
-
 def download_to(url, download_dir, insecure=False):
     name = url.split('/')[-1]
-    file = os.path.join(download_dir, name)
+    file_name = os.path.join(download_dir, name)
     click.echo("Downloading {0}".format(url))
-    bar_len = 1000
-    with click.progressbar(length=bar_len, width=70) as bar:
-        def hook(count, block_size, total_size):
-            percent = int(count*block_size*bar_len/total_size)
-            if percent > 0 and percent < bar_len:
-                # Hack because we can't set the position
-                bar.pos = percent
-                bar.update(0)
-        context = None
-        if insecure: context = ssl._create_unverified_context()
-        CGetURLOpener(context=context).retrieve(url, filename=file, reporthook=hook, data=None)
-        bar.update(bar_len)
-    if not os.path.exists(file):
+    with open(file_name, "wb") as f:
+        response = requests.get(url, stream=True)
+        total_length = response.headers.get('content-length')
+        if total_length is None: # no content length header
+            f.write(response.content)
+        else:
+            dl = 0
+            total_length = int(total_length)
+            for data in response.iter_content(chunk_size=4096):
+                dl += len(data)
+                f.write(data)
+                done = int(50 * dl / total_length)
+                sys.stdout.write("\r[%s%s]" % ('=' * done, ' ' * (50-done)) )    
+                sys.stdout.flush()
+    if not os.path.exists(file_name):
         raise BuildError("Download failed for: {0}".format(url))
-    return file
+    return file_name
 
 def transfer_to(f, dst, copy=False):
     if USE_SYMLINKS and not copy: return symlink_to(f, dst)
