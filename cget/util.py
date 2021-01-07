@@ -215,14 +215,13 @@ def download_to(url, download_dir, insecure=False):
         if total_length is None: # no content length header
             f.write(response.content)
         else:
-            dl = 0
             total_length = int(total_length)
-            for data in response.iter_content(chunk_size=4096):
-                dl += len(data)
-                f.write(data)
-                done = int(50 * dl / total_length)
-                sys.stdout.write("\r[%s%s]" % ('=' * done, ' ' * (50-done)) )    
-                sys.stdout.flush()
+            with click.progressbar(length=total_length, width=70) as bar:
+                for data in response.iter_content(chunk_size=4096):
+                    f.write(data)
+                    bar.pos += len(data)
+                    bar.update(0)
+                bar.update(total_length)
     if not os.path.exists(file_name):
         raise BuildError("Download failed for: {0}".format(url))
     return file_name
