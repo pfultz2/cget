@@ -211,6 +211,7 @@ def download_to(url, download_dir, insecure=False):
     click.echo("Downloading {0}".format(url))
     with open(file_name, "wb") as f:
         response = requests.get(url, stream=True)
+        response.raise_for_status()
         total_length = response.headers.get('content-length')
         if total_length is None: # no content length header
             f.write(response.content)
