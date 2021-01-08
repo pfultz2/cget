@@ -87,6 +87,25 @@ def mkfile(d, file, content, always_write=True):
         write_to(p, content)
     return p
 
+def zipdir(src_dir, tgt_file):
+    print("zipping '%s' to '%s" % (src_dir, tgt_file))
+    zipf = zipfile.ZipFile(tgt_file, 'w', zipfile.ZIP_DEFLATED)
+    for root, dirs, files in os.walk(src_dir):
+        for file in files:
+            zipf.write(
+                os.path.join(root, file),
+                os.path.relpath(
+                    os.path.join(root, file),
+                    os.path.join(src_dir, '..')
+                )
+            )
+    zipf.close()
+
+def zip_dir_to_cache(prefix, key, src_dir):
+    out_dir = get_cache_path(prefix)
+    mkdir(out_dir)
+    zipdir(src_dir, os.path.join(out_dir, key + ".zip"))
+
 def ls(p, predicate=lambda x:True):
     if os.path.exists(p):
         return (d for d in os.listdir(p) if predicate(os.path.join(p, d)))

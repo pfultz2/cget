@@ -338,6 +338,7 @@ class CGetPrefix:
             if test or test_all: builder.test(variant=pb.variant)
             # Install
             builder.build(target='install', variant=pb.variant)
+            util.zip_dir_to_cache("builds/%s" % pb.to_name(), self.hash_pkg(pb), install_dir)
             if util.USE_SYMLINKS: util.symlink_dir(install_dir, self.prefix)
             else: util.copy_dir(install_dir, self.prefix)
         self.write_parent(pb, track=track)
