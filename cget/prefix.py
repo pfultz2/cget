@@ -124,13 +124,6 @@ class CGetPrefix:
         append_ = cmake_append
         yield set_('CGET_PREFIX', self.prefix)
         yield set_('CMAKE_PREFIX_PATH', self.prefix)
-        yield if_('${CMAKE_VERSION} VERSION_LESS "3.6.0"',
-            ['include_directories(SYSTEM ${CGET_PREFIX}/include)'],
-            else_(
-                set_('CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES', '${CGET_PREFIX}/include'),
-                set_('CMAKE_C_STANDARD_INCLUDE_DIRECTORIES', '${CGET_PREFIX}/include')
-            )
-        )
         if toolchain: yield ['include({})'.format(util.quote(os.path.abspath(toolchain)))]
         yield if_('CMAKE_CROSSCOMPILING',
             append_('CMAKE_FIND_ROOT_PATH', self.prefix)
