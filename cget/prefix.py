@@ -1,4 +1,4 @@
-import os, shutil, shlex, six, inspect, click, contextlib, uuid, sys, functools
+import os, shutil, shlex, six, inspect, click, contextlib, uuid, sys, functools, hashlib
 
 from cget.builder import Builder
 from cget.package import fname_to_pkg
@@ -222,6 +222,15 @@ class CGetPrefix:
         else: url = 'https://github.com/{0}/{0}/archive/{1}.tar.gz'.format(p, v)
         if name is None: name = p
         return PackageSource(name=name, url=url)
+
+    def hash_pkg(self, pkg):
+        pkg_src = self.parse_pkg_src(pkg)
+        result = pkg_src.calc_hash()
+        pkg_build = self.parse_pkg_build(pkg)
+        if pkg_build.requirements:
+            for dependency in self.from_file(pkg_build.requirements):
+                result = hashlib.sha1((result + self.hash_pkg(dependency)).encode("utf-8")).hexdigest()
+        return result
 
     @returns(PackageSource)
     @params(pkg=PACKAGE_SOURCE_TYPES)
