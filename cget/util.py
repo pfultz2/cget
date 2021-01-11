@@ -96,15 +96,26 @@ def zipdir(src_dir, tgt_file):
                 os.path.join(root, file),
                 os.path.relpath(
                     os.path.join(root, file),
-                    os.path.join(src_dir, '..')
+                    os.path.join(src_dir)
                 )
             )
     zipf.close()
 
 def zip_dir_to_cache(prefix, key, src_dir):
-    out_dir = get_cache_path(prefix)
-    mkdir(out_dir)
-    zipdir(src_dir, os.path.join(out_dir, key + ".zip"))
+    cache_dir = get_cache_path(prefix)
+    zipfile_path = os.path.join(cache_dir, key + ".zip")
+    mkdir(cache_dir)
+    zipdir(src_dir, zipfile_path)
+
+def unzip_dir_from_cache(prefix, key, tgt_dir):
+    cache_dir = get_cache_path(prefix)
+    zipfile_path = os.path.join(cache_dir, key + ".zip")
+    if os.path.exists(zipfile_path):
+        f = zipfile.ZipFile(zipfile_path, "r")
+        f.extractall(tgt_dir)
+        return True
+    else:
+        return False
 
 def ls(p, predicate=lambda x:True):
     if os.path.exists(p):

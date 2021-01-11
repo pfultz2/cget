@@ -100,8 +100,6 @@ def install_command(prefix, pkgs, define, file, test, test_all, update, generato
         else: file = 'requirements.txt'
     pbs = [PackageBuild(pkg, cmake=cmake, variant=variant) for pkg in pkgs]
     for pbu in util.flat([prefix.from_file(file), pbs]):
-        hash = prefix.hash_pkg(pbu)
-        print("package '%s' hash %s" % (prefix.parse_pkg_src(pbu).name, hash))
         pb = pbu.merge_defines(define)
         with prefix.try_("Failed to build package {}".format(pb.to_name()), on_fail=lambda: prefix.remove(pb)):
             click.echo(prefix.install(pb, test=test, test_all=test_all, update=update, generator=generator, insecure=insecure))
