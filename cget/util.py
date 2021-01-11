@@ -1,4 +1,4 @@
-import click, os, sys, shutil, json, six, hashlib, ssl
+import click, os, sys, shutil, json, six, hashlib, ssl, filelock
 
 if sys.version_info[0] < 3:
     try:
@@ -87,6 +87,11 @@ def mkfile(d, file, content, always_write=True):
         write_to(p, content)
     return p
 
+def cache_lock():
+    cache_base_dir = get_cache_path()
+    mkdir(cache_base_dir)
+    return filelock.FileLock(os.path.join(cache_base_dir, "lock"))
+
 def zipdir(src_dir, tgt_file):
     print("zipping '%s' to '%s" % (src_dir, tgt_file))
     zipf = zipfile.ZipFile(tgt_file, 'w', zipfile.ZIP_DEFLATED)
@@ -102,20 +107,22 @@ def zipdir(src_dir, tgt_file):
     zipf.close()
 
 def zip_dir_to_cache(prefix, key, src_dir):
-    cache_dir = get_cache_path(prefix)
-    zipfile_path = os.path.join(cache_dir, key + ".zip")
-    mkdir(cache_dir)
-    zipdir(src_dir, zipfile_path)
+    with cache_lock():
+        cache_dir = get_cache_path(prefix)
+        zipfile_path = os.path.join(cache_dir, key + ".zip")
+        mkdir(cache_dir)
+        zipdir(src_dir, zipfile_path)
 
 def unzip_dir_from_cache(prefix, key, tgt_dir):
-    cache_dir = get_cache_path(prefix)
-    zipfile_path = os.path.join(cache_dir, key + ".zip")
-    if os.path.exists(zipfile_path):
-        f = zipfile.ZipFile(zipfile_path, "r")
-        f.extractall(tgt_dir)
-        return True
-    else:
-        return False
+    with cache_lock():
+        cache_dir = get_cache_path(prefix)
+        zipfile_path = os.path.join(cache_dir, key + ".zip")
+        if os.path.exists(zipfile_path):
+            f = zipfile.ZipFile(zipfile_path, "r")
+            f.extractall(tgt_dir)
+            return True
+        else:
+            return False
 
 def ls(p, predicate=lambda x:True):
     if os.path.exists(p):
@@ -136,15 +143,17 @@ def adjust_path(p):
     return p
 
 def add_cache_file(key, f):
-    mkdir(get_cache_path(key))
-    shutil.copy2(f, get_cache_path(key, os.path.basename(f)))
+    with cache_lock():
+        mkdir(get_cache_path(key))
+        shutil.copy2(f, get_cache_path(key, os.path.basename(f)))
 
 def get_cache_file(key):
-    p = get_cache_path(key)
-    if os.path.exists(p):
-        return os.path.join(p, next(ls(p)))
-    else:
-        return None
+    with cache_lock():
+        p = get_cache_path(key)
+        if os.path.exists(p):
+            return os.path.join(p, next(ls(p)))
+        else:
+            return None
 
 def delete_dir(path):
     if path is not None and os.path.exists(path): shutil.rmtree(adjust_path(path))

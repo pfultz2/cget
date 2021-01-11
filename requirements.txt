@@ -2,3 +2,5 @@ click>=6.6
 # PyYAML
 six>=1.10
 dirhash>=0.2.1
+filelock>=2.0.13
+
