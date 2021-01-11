@@ -3,3 +3,4 @@ click>=6.6
 six>=1.10
 requests
 dirhash>=0.2.1
+filelock>=2.0.13

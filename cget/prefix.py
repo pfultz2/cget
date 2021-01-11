@@ -320,25 +320,32 @@ class CGetPrefix:
             self.write_parent(pb, track=track)
             if update: self.remove(pb)
             else: return "Package {} already installed".format(pb.to_name())
+        package_hash = self.hash_pkg(pb)
+        print("package %s hash %s" % (pb.to_name(), package_hash))
+        #return "dry run"
+        build_cache_prefix = "builds/%s" % pb.to_name()
         with self.create_builder(uuid.uuid4().hex, tmp=True) as builder:
             # Fetch package
             src_dir = builder.fetch(pb.pkg_src.url, pb.hash, (pb.cmake != None), insecure=insecure)
             # Install any dependencies first
             self.install_deps(pb, src_dir, test=test, test_all=test_all, generator=generator, insecure=insecure)
-            # Setup cmake file
-            if pb.cmake: 
-                target = os.path.join(src_dir, 'CMakeLists.txt')
-                if os.path.exists(target):
-                    os.rename(target, os.path.join(src_dir, builder.cmake_original_file))
-                shutil.copyfile(pb.cmake, target)
-            # Configure and build
-            builder.configure(src_dir, defines=pb.define, generator=generator, install_prefix=install_dir, test=test, variant=pb.variant)
-            builder.build(variant=pb.variant)
-            # Run tests if enabled
-            if test or test_all: builder.test(variant=pb.variant)
-            # Install
-            builder.build(target='install', variant=pb.variant)
-            util.zip_dir_to_cache("builds/%s" % pb.to_name(), self.hash_pkg(pb), install_dir)
+            if util.unzip_dir_from_cache(build_cache_prefix, package_hash, install_dir):
+                print("retreived Package {} from cache".format(pb.to_name()))
+            else:
+                # Setup cmake file
+                if pb.cmake:
+                    target = os.path.join(src_dir, 'CMakeLists.txt')
+                    if os.path.exists(target):
+                        os.rename(target, os.path.join(src_dir, builder.cmake_original_file))
+                    shutil.copyfile(pb.cmake, target)
+                # Configure and build
+                builder.configure(src_dir, defines=pb.define, generator=generator, install_prefix=install_dir, test=test, variant=pb.variant)
+                builder.build(variant=pb.variant)
+                # Run tests if enabled
+                if test or test_all: builder.test(variant=pb.variant)
+                # Install
+                builder.build(target='install', variant=pb.variant)
+                util.zip_dir_to_cache(build_cache_prefix, package_hash, install_dir)
             if util.USE_SYMLINKS: util.symlink_dir(install_dir, self.prefix)
             else: util.copy_dir(install_dir, self.prefix)
         self.write_parent(pb, track=track)
