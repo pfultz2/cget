@@ -117,20 +117,32 @@ class CGetPrefix:
 
     @returns(inspect.isgenerator)
     @util.yield_from
-    def generate_cmake_toolchain(self, toolchain=None, cc=None, cxx=None, cflags=None, cxxflags=None, ldflags=None, std=None, defines=None):
+    def generate_cmake_toolchain(
+        self,
+        toolchain=None,
+        cc=None,
+        cxx=None,
+        cflags=None,
+        cxxflags=None,
+        ldflags=None,
+        std=None,
+        defines=None,
+        no_global_include=False
+    ):
         set_ = cmake_set
         if_ = cmake_if
         else_ = cmake_else
         append_ = cmake_append
         yield set_('CGET_PREFIX', self.prefix)
         yield set_('CMAKE_PREFIX_PATH', self.prefix)
-        yield if_('${CMAKE_VERSION} VERSION_LESS "3.6.0"',
-            ['include_directories(SYSTEM ${CGET_PREFIX}/include)'],
-            else_(
-                set_('CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES', '${CGET_PREFIX}/include'),
-                set_('CMAKE_C_STANDARD_INCLUDE_DIRECTORIES', '${CGET_PREFIX}/include')
+        if not no_global_include:
+            yield if_('${CMAKE_VERSION} VERSION_LESS "3.6.0"',
+                ['include_directories(SYSTEM ${CGET_PREFIX}/include)'],
+                else_(
+                    set_('CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES', '${CGET_PREFIX}/include'),
+                    set_('CMAKE_C_STANDARD_INCLUDE_DIRECTORIES', '${CGET_PREFIX}/include')
+                )
             )
-        )
         if toolchain: yield ['include({})'.format(util.quote(os.path.abspath(toolchain)))]
         yield if_('CMAKE_CROSSCOMPILING',
             append_('CMAKE_FIND_ROOT_PATH', self.prefix)

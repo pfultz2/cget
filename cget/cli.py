@@ -56,7 +56,8 @@ def use_prefix(f):
 @click.option('-D', '--define', multiple=True, help="Extra configuration variables to pass to CMake")
 @click.option('--shared', is_flag=True, help="Set toolchain to build shared libraries by default")
 @click.option('--static', is_flag=True, help="Set toolchain to build static libraries by default")
-def init_command(prefix, toolchain, cc, cxx, cflags, cxxflags, ldflags, std, define, shared, static):
+@click.option('--no-global-include', is_flag=True, help="Don't use global include dir (required for -X header)")
+def init_command(prefix, toolchain, cc, cxx, cflags, cxxflags, ldflags, std, define, shared, static, no_global_include):
     """ Initialize install directory """
     if shared and static:
         click.echo("ERROR: shared and static are not supported together")
@@ -73,7 +74,9 @@ def init_command(prefix, toolchain, cc, cxx, cflags, cxxflags, ldflags, std, def
         cxxflags=cxxflags, 
         ldflags=ldflags, 
         std=std, 
-        defines=defines)
+        defines=defines,
+        no_global_include=no_global_include
+    )
 
 @cli.command(name='install')
 @use_prefix
