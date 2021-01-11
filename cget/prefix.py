@@ -304,7 +304,7 @@ class CGetPrefix:
 
     @returns(six.string_types)
     @params(pb=PACKAGE_SOURCE_TYPES, test=bool, test_all=bool, update=bool, track=bool)
-    def install(self, pb, test=False, test_all=False, generator=None, update=False, track=True, insecure=False):
+    def install(self, pb, test=False, test_all=False, generator=None, update=False, track=True, insecure=False, use_build_cache=False):
         pb = self.parse_pkg_build(pb)
         pkg_dir = self.get_package_directory(pb.to_fname())
         unlink_dir = self.get_unlink_directory(pb.to_fname())
@@ -329,7 +329,7 @@ class CGetPrefix:
             src_dir = builder.fetch(pb.pkg_src.url, pb.hash, (pb.cmake != None), insecure=insecure)
             # Install any dependencies first
             self.install_deps(pb, src_dir, test=test, test_all=test_all, generator=generator, insecure=insecure)
-            if util.unzip_dir_from_cache(build_cache_prefix, package_hash, install_dir):
+            if not update and use_build_cache and util.unzip_dir_from_cache(build_cache_prefix, package_hash, install_dir):
                 print("retreived Package {} from cache".format(pb.to_name()))
             else:
                 # Setup cmake file
@@ -345,7 +345,8 @@ class CGetPrefix:
                 if test or test_all: builder.test(variant=pb.variant)
                 # Install
                 builder.build(target='install', variant=pb.variant)
-                util.zip_dir_to_cache(build_cache_prefix, package_hash, install_dir)
+                if use_build_cache:
+                    util.zip_dir_to_cache(build_cache_prefix, package_hash, install_dir)
             if util.USE_SYMLINKS: util.symlink_dir(install_dir, self.prefix)
             else: util.copy_dir(install_dir, self.prefix)
         self.write_parent(pb, track=track)
