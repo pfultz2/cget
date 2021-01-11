@@ -306,13 +306,20 @@ class CGetPrefix:
     def write_parent(self, pb, track=True):
         if track and pb.parent is not None: util.mkfile(self.get_deps_directory(pb.to_fname()), pb.parent, pb.parent)
 
-    def install_deps(self, pb, d, test=False, test_all=False, generator=None, insecure=False):
+    def install_deps(self, pb, d, test=False, test_all=False, generator=None, insecure=False, use_build_cache=False):
         for dependent in self.from_file(pb.requirements or os.path.join(d, 'requirements.txt'), pb.pkg_src.url):
             transient = dependent.test or dependent.build
             testing = test or test_all
             installable = not dependent.test or dependent.test == testing
             if installable: 
-                self.install(dependent.of(pb), test_all=test_all, generator=generator, track=not transient, insecure=insecure)
+                self.install(
+                    dependent.of(pb),
+                    test_all=test_all,
+                    generator=generator,
+                    track=not transient,
+                    insecure=insecure,
+                    use_build_cache=use_build_cache
+                )
 
     @returns(six.string_types)
     @params(pb=PACKAGE_SOURCE_TYPES, test=bool, test_all=bool, update=bool, track=bool)
@@ -340,7 +347,15 @@ class CGetPrefix:
             # Fetch package
             src_dir = builder.fetch(pb.pkg_src.url, pb.hash, (pb.cmake != None), insecure=insecure)
             # Install any dependencies first
-            self.install_deps(pb, src_dir, test=test, test_all=test_all, generator=generator, insecure=insecure)
+            self.install_deps(
+                pb,
+                src_dir,
+                test=test,
+                test_all=test_all,
+                generator=generator,
+                insecure=insecure,
+                use_build_cache=use_build_cache
+            )
             if not update and use_build_cache and util.unzip_dir_from_cache(build_cache_prefix, package_hash, install_dir):
                 print("retreived Package {} from cache".format(pb.to_name()))
             else:
