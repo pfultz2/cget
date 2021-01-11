@@ -88,8 +88,9 @@ def init_command(prefix, toolchain, cc, cxx, cflags, cxxflags, ldflags, std, def
 @click.option('--release', is_flag=True, help="Install release version")
 @click.option('--insecure', is_flag=True, help="Don't use https urls")
 @click.option('--use-build-cache', is_flag=True, help="Cache builds")
+@click.option('--recipe-deps-only', is_flag=True, help="only use dependencies from recipes (speeds up cached builds a lot)")
 @click.argument('pkgs', nargs=-1, type=click.STRING)
-def install_command(prefix, pkgs, define, file, test, test_all, update, generator, cmake, debug, release, insecure, use_build_cache):
+def install_command(prefix, pkgs, define, file, test, test_all, update, generator, cmake, debug, release, insecure, use_build_cache, recipe_deps_only):
     """ Install packages """
     if debug and release:
         click.echo("ERROR: debug and release are not supported together")
@@ -110,7 +111,8 @@ def install_command(prefix, pkgs, define, file, test, test_all, update, generato
                 update=update,
                 generator=generator,
                 insecure=insecure,
-                use_build_cache=use_build_cache
+                use_build_cache=use_build_cache,
+                recipe_deps_only=recipe_deps_only
             ))
 
 @cli.command(name='ignore')
