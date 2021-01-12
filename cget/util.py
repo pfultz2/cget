@@ -151,9 +151,10 @@ def get_cache_file(key):
     with cache_lock():
         p = get_cache_path(key)
         if os.path.exists(p):
-            return os.path.join(p, next(ls(p)))
-        else:
-            return None
+            content = list(ls(p))
+            if content:
+                return os.path.join(p, content[0])
+        return None
 
 def delete_dir(path):
     if path is not None and os.path.exists(path): shutil.rmtree(adjust_path(path))
