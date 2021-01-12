@@ -217,7 +217,7 @@ class CGetPrefix:
     def parse_src_file(self, name, url, start=None):
         f = util.actual_path(url, start)
         self.log('parse_src_file actual_path:', start, f)
-        if os.path.exists(f): return PackageSource(name=name, url='file://' + f)
+        if os.path.isfile(f): return PackageSource(name=name, url='file://' + f)
         return None
 
     def parse_src_recipe(self, name, url):
@@ -260,14 +260,14 @@ class CGetPrefix:
     @returns(PackageBuild)
     @params(pkg=PACKAGE_SOURCE_TYPES)
     def parse_pkg_build(self, pkg, start=None, no_recipe=False):
-        if isinstance(pkg, PackageBuild): 
+        if isinstance(pkg, PackageBuild):
             pkg.pkg_src = self.parse_pkg_src(pkg.pkg_src, start, no_recipe)
             if pkg.pkg_src.recipe: pkg = self.from_recipe(pkg.pkg_src.recipe, pkg)
             if pkg.cmake: pkg.cmake = find_cmake(pkg.cmake, start)
             return pkg
         else:
             pkg_src = self.parse_pkg_src(pkg, start, no_recipe)
-            if pkg_src.recipe: return self.from_recipe(pkg_src.recipe, pkg_src.name)
+            if pkg_src.recipe: return self.from_recipe(pkg_src.recipe, name=pkg_src.name)
             else: return PackageBuild(pkg_src)
 
     def from_recipe(self, recipe, pkg=None, name=None):
@@ -277,7 +277,7 @@ class CGetPrefix:
         self.check(lambda:p.pkg_src is not None)
         requirements = os.path.join(recipe, "requirements.txt")
         if os.path.exists(requirements): p.requirements = requirements
-        p.pkg_src.recipe = None
+        p.pkg_src.recipe = recipe
         # Use original name
         if pkg: p.pkg_src.name = pkg.pkg_src.name
         elif name: p.pkg_src.name = name
