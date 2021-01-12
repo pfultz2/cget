@@ -280,10 +280,12 @@ def retrieve_url(url, dst, copy=False, insecure=False, hash=None):
     f = download_to(url, dst, insecure=insecure) if remote else transfer_to(url[7:], dst, copy=copy)
     if os.path.isfile(f) and hash:
         click.echo("Computing hash: {}".format(hash))
-        if check_hash(f, hash):
+        hash_type, hash_value = hash.lower().split(':')
+        computed = hash_file(f, hash_type)
+        if computed == hash_value:
             if remote: add_cache_file(hash.replace(':', '-'), f)
         else:
-            raise BuildError("Hash doesn't match for {0}: {1}".format(url, hash))
+            raise BuildError("Hash doesn't match for {0}: {1} != {2}".format(url, hash_type + ":" + computed, hash))
     return f
 
 def extract_ar(archive, dst, *kwargs):
@@ -309,10 +311,6 @@ def hash_file(f, t):
     h = hashlib.new(t)
     h.update(open(f, 'rb').read())
     return h.hexdigest()
-
-def check_hash(f, hash):
-    t, h = hash.lower().split(':')
-    return hash_file(f, t) == h
 
 def which(p, paths=None, throws=True):
     exes = [p+x for x in ['', '.exe', '.bat']]
