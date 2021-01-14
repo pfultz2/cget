@@ -110,7 +110,7 @@ def unzip(zipname, extract_dir):
     def extract_file(zf, info, extract_dir):
         zf.extract( info.filename, path=extract_dir )
         out_path = os.path.join( extract_dir, info.filename )
-        perm = info.external_attr >> 16L
+        perm = info.external_attr >> 16
         os.chmod( out_path, perm )
     with zipfile.ZipFile(zipname, 'r') as zf:
         for info in zf.infolist():
