@@ -106,6 +106,16 @@ def zipdir(src_dir, tgt_file):
             )
     zipf.close()
 
+def unzip(zipname, extract_dir):
+    def extract_file(zf, info, extract_dir):
+        zf.extract( info.filename, path=extract_dir )
+        out_path = os.path.join( extract_dir, info.filename )
+        perm = info.external_attr >> 16L
+        os.chmod( out_path, perm )
+    with zipfile.ZipFile(zipname, 'r') as zf:
+        for info in zf.infolist():
+            extract_file(zf, info, extract_dir)
+
 def zip_dir_to_cache(prefix, key, src_dir):
     with cache_lock():
         cache_dir = get_cache_path(prefix)
@@ -118,8 +128,7 @@ def unzip_dir_from_cache(prefix, key, tgt_dir):
         cache_dir = get_cache_path(prefix)
         zipfile_path = os.path.join(cache_dir, key + ".zip")
         if os.path.exists(zipfile_path):
-            f = zipfile.ZipFile(zipfile_path, "r")
-            f.extractall(tgt_dir)
+            unzip(zipfile_path, tgt_dir)
             return True
         else:
             return False
