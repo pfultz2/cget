@@ -251,16 +251,16 @@ if(NOT ${B2_EXE})
     endif()
     if(CMAKE_HOST_WIN32)
         add_custom_target(bootstrap
-            COMMAND cmd /c ${CMAKE_CURRENT_SOURCE_DIR}/tools/build/bootstrap.bat ${BOOST_BOOTSTRAP_ARGS} ${BOOST_BOOTSTRAP_PYTHON_ARG}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tools/build/
+            COMMAND cmd /c ${CMAKE_CURRENT_SOURCE_DIR}/bootstrap.bat ${BOOST_BOOTSTRAP_ARGS} ${BOOST_BOOTSTRAP_PYTHON_ARG}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
         set(B2_EXE "${CMAKE_CURRENT_SOURCE_DIR}/tools/build/b2.exe")
     else()
         add_custom_target(bootstrap
-            COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/build/bootstrap.sh ${BOOST_BOOTSTRAP_ARGS} ${BOOST_BOOTSTRAP_PYTHON_ARG}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tools/build/
+            COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bootstrap.sh ${BOOST_BOOTSTRAP_ARGS} ${BOOST_BOOTSTRAP_PYTHON_ARG}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
-        set(B2_EXE "${CMAKE_CURRENT_SOURCE_DIR}/tools/build/b2")
+        set(B2_EXE "${CMAKE_CURRENT_SOURCE_DIR}/b2")
     endif()
     install(PROGRAMS ${B2_EXE} DESTINATION bin)
 endif()
