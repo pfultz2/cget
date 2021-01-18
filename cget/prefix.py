@@ -368,7 +368,7 @@ class CGetPrefix:
             if update: self.remove(pb)
             else: return "Package {} already installed".format(pb.to_name())
         package_hash = self.hash_pkg(pb)
-        print("package %s hash %s" % (pb.to_name(), package_hash))
+        self.log("package %s hash %s" % (pb.to_name(), package_hash))
         build_cache_prefix = "builds/%s" % pb.to_name()
         need_build = True
         if recipe_deps_only:
