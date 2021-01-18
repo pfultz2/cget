@@ -84,7 +84,7 @@ macro(preamble PREFIX)
         if(MSVC)
             string(APPEND ${PREFIX}_LINK_FLAGS " /LIBPATH:${LIB_DIR}")
         else()
-            string(APPEND ${PREFIX}_LINK_FLAGS " -L ${LIB_DIR}")
+            string(APPEND ${PREFIX}_LINK_FLAGS " -L${LIB_DIR}")
         endif()
     endforeach()
 
