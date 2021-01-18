@@ -33,10 +33,8 @@ class PackageSource:
 
     def calc_hash(self):
         if self.recipe:
-            print("calculating dirshash of recipe '%s' package '%s'" % (self.recipe, self.to_name()))
             return dirhash.dirhash(self.recipe, "sha1")
         elif self.url:
-            print("calculating hash of url '%s' package '%s'" % (self.url, self.to_name()))
             return hashlib.sha1(self.url.encode("utf-8")).hexdigest()
         raise Exception("no url or recipe: %s" % self.__dict__)
 
