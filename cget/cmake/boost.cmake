@@ -233,9 +233,6 @@ using ${BOOST_TOOLCHAIN} : ${B2_TOOLCHAIN_VERSION} : \"${B2_COMPILER}\" :
 ${SEARCH_PATHS}
 ;
 ")
-message("${B2_CONFIG_CONTENT}")
-
-file(WRITE ${B2_CONFIG} "${B2_CONFIG_CONTENT}")
 
 set(BOOST_PYTHON "" CACHE STRING "python executable to use for boost build")
 set(BOOST_BOOTSTRAP_ARGS "" CACHE STRING "additional arguments to boost bootstrap")
@@ -245,6 +242,10 @@ if (BOOST_PYTHON)
     using python : : ${BOOST_PYTHON} ;
     ")
 endif (BOOST_PYTHON)
+
+message("${B2_CONFIG_CONTENT}")
+
+file(WRITE ${B2_CONFIG} "${B2_CONFIG_CONTENT}")
 
 find_program(B2_EXE b2)
 if(NOT ${B2_EXE})
