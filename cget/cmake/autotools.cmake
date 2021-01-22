@@ -60,14 +60,6 @@ macro(preamble PREFIX)
     endforeach()
     adjust_path(${PREFIX}_SYSTEM_PATH)
 
-    set(${PREFIX}_PKG_CONFIG_PATH)
-    foreach(P ${PREFIX_PATH} ${PREFIX_SYSTEM_PATH})
-        foreach(SUFFIX lib lib${${PREFIX}_ADDRESS_MODEL} share)
-            list(APPEND ${PREFIX}_PKG_CONFIG_PATH ${P}/${SUFFIX}/pkgconfig)
-        endforeach()
-    endforeach()
-    adjust_path(${PREFIX}_PKG_CONFIG_PATH)
-
     get_property_list(${PREFIX}_COMPILE_FLAGS COMPILE_OPTIONS)
     get_directory_property(${PREFIX}_INCLUDE_DIRECTORIES INCLUDE_DIRECTORIES)
     foreach(DIR ${${PREFIX}_INCLUDE_DIRECTORIES})
@@ -145,13 +137,7 @@ macro(preamble PREFIX)
 
     set(${PREFIX}_BASE_ENV_COMMAND ${CMAKE_COMMAND} -E env
         "PATH=${${PREFIX}_SYSTEM_PATH}${PATH_SEP}$ENV{PATH}"
-        "PKG_CONFIG_PATH=${${PREFIX}_PKG_CONFIG_PATH}"
     )
-
-    # TODO: Set also PKG_CONFIG_SYSROOT_DIR
-    if(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE STREQUAL "ONLY")
-        list(APPEND ${PREFIX}_BASE_ENV_COMMAND "PKG_CONFIG_LIBDIR=${${PREFIX}_PKG_CONFIG_PATH}")
-    endif()
 
     set(${PREFIX}_ENV_COMMAND ${${PREFIX}_BASE_ENV_COMMAND}
         "CC=${CMAKE_C_COMPILER}"
