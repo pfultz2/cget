@@ -377,6 +377,7 @@ class CGetPrefix:
         else:
             install_dir = pkg_install_dir
             self.log("using local install dir '%s'" % install_dir)
+        build_needed = True
         if recipe_deps_only:
             self.install_deps(
                 pb,
