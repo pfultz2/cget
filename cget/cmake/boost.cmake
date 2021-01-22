@@ -238,8 +238,11 @@ set(BOOST_PYTHON "" CACHE STRING "python executable to use for boost build")
 set(BOOST_BOOTSTRAP_ARGS "" CACHE STRING "additional arguments to boost bootstrap")
 
 if (BOOST_PYTHON)
+    find_program(BOOST_PYTHON_FOUND ${BOOST_PYTHON} REQUIRED)
+    get_filename_component(BOOST_PYTHON_FOUND_REAL "${BOOST_PYTHON_FOUND}" REALPATH)
+    message(STATUS "found python: '${BOOST_PYTHON_FOUND}' -> '${BOOST_PYTHON_FOUND_REAL}'")
     set(B2_CONFIG_CONTENT "${B2_CONFIG_CONTENT}
-    using python : : ${BOOST_PYTHON} ;
+    using python : : ${BOOST_PYTHON_FOUND_REAL} ;
     ")
 endif (BOOST_PYTHON)
 
@@ -250,11 +253,8 @@ file(WRITE ${B2_CONFIG} "${B2_CONFIG_CONTENT}")
 find_program(B2_EXE b2)
 if(NOT ${B2_EXE})
     if (BOOST_PYTHON)
-        find_program(BOOST_PYTHON_FOUND ${BOOST_PYTHON} REQUIRED)
-	get_filename_component(BOOST_PYTHON_FOUND_REAL "${BOOST_PYTHON_FOUND}" REALPATH)
-        message(STATUS "found python: '${BOOST_PYTHON_FOUND}' -> '${BOOST_PYTHON_FOUND_REAL}'")
         set(BOOST_BOOTSTRAP_PYTHON_ARG "--with-python=${BOOST_PYTHON_FOUND_REAL}")
-    endif()
+    endif (BOOST_PYTHON)
     if(CMAKE_HOST_WIN32)
         add_custom_target(bootstrap
             COMMAND cmd /c ${CMAKE_CURRENT_SOURCE_DIR}/bootstrap.bat ${BOOST_BOOTSTRAP_ARGS} ${BOOST_BOOTSTRAP_PYTHON_ARG}
