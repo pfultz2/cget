@@ -343,7 +343,6 @@ class CGetPrefix:
         pb = self.parse_pkg_build(pb)
         pkg_dir = self.get_package_directory(pb.to_fname())
         unlink_dir = self.get_unlink_directory(pb.to_fname())
-        install_dir = self.get_package_directory(pb.to_fname(), 'install')
         # If its been unlinked, then link it in
         if os.path.exists(unlink_dir):
             if update: shutil.rmtree(unlink_dir)
@@ -356,9 +355,16 @@ class CGetPrefix:
             if update: self.remove(pb)
             else: return "Package {} already installed".format(pb.to_name())
         package_hash = self.hash_pkg(pb)
-        print("package %s hash %s" % (pb.to_name(), package_hash))
-        build_cache_prefix = "builds/%s" % pb.to_name()
-        need_build = True
+        self.log("package %s hash %s" % (pb.to_name(), package_hash))
+        pkg_install_dir = self.get_package_directory(pb.to_fname(), 'install')
+        if use_build_cache:
+            install_dir = util.get_cache_path("builds", pb.to_name(), package_hash)
+            util.mkdir(pkg_dir)
+            os.symlink(install_dir, pkg_install_dir)
+            self.log("using cached install dir '%s'" % install_dir)
+        else:
+            install_dir = pkg_install_dir
+            self.log("using local install dir '%s'" % install_dir)
         if recipe_deps_only:
             self.install_deps(
                 pb,
@@ -369,26 +375,23 @@ class CGetPrefix:
                 use_build_cache=use_build_cache,
                 recipe_deps_only=True
             )
-            if not update and use_build_cache and util.unzip_dir_from_cache(build_cache_prefix, package_hash, install_dir):
-                print("retreived Package {} from cache".format(pb.to_name()))
-                need_build = False
-        if need_build:
-            with self.create_builder(uuid.uuid4().hex, tmp=True) as builder:
-                # Fetch package
-                src_dir = builder.fetch(pb.pkg_src.url, pb.hash, (pb.cmake != None), insecure=insecure)
-                # Install any dependencies first
-                if not recipe_deps_only:
-                    self.install_deps(
-                        pb,
-                        src_dir=src_dir,
-                        test=test,
-                        test_all=test_all,
-                        generator=generator,
-                        insecure=insecure,
-                        use_build_cache=use_build_cache,
-                        recipe_deps_only=False
-                    )
-                if not update and use_build_cache and util.unzip_dir_from_cache(build_cache_prefix, package_hash, install_dir):
+        with self.create_builder(uuid.uuid4().hex, tmp=True) as builder:
+            # Fetch package
+            src_dir = builder.fetch(pb.pkg_src.url, pb.hash, (pb.cmake != None), insecure=insecure)
+            # Install any dependencies first
+            if not recipe_deps_only:
+                self.install_deps(
+                    pb,
+                    src_dir=src_dir,
+                    test=test,
+                    test_all=test_all,
+                    generator=generator,
+                    insecure=insecure,
+                    use_build_cache=use_build_cache,
+                    recipe_deps_only=False
+                )
+            with util.cache_lock() as cache_lock:
+                if not update and use_build_cache and os.path.exists(install_dir):
                     print("retreived Package {} from cache".format(pb.to_name()))
                 else:
                     # Setup cmake file
@@ -398,14 +401,19 @@ class CGetPrefix:
                             os.rename(target, os.path.join(src_dir, builder.cmake_original_file))
                         shutil.copyfile(pb.cmake, target)
                     # Configure and build
-                    builder.configure(src_dir, defines=pb.define, generator=generator, install_prefix=install_dir, test=test, variant=pb.variant)
+                    builder.configure(
+                        src_dir,
+                        defines=pb.define,
+                        generator=generator,
+                        install_prefix=install_dir,
+                        test=test,
+                        variant=pb.variant
+                    )
                     builder.build(variant=pb.variant)
                     # Run tests if enabled
                     if test or test_all: builder.test(variant=pb.variant)
                     # Install
                     builder.build(target='install', variant=pb.variant)
-                    if use_build_cache:
-                        util.zip_dir_to_cache(build_cache_prefix, package_hash, install_dir)
         if util.USE_SYMLINKS: util.symlink_dir(install_dir, self.prefix)
         else: util.copy_dir(install_dir, self.prefix)
         self.write_parent(pb, track=track)

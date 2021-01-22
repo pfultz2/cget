@@ -134,7 +134,7 @@ def get_app_dir(*args):
     return os.path.join(click.get_app_dir('cget'), *args)
 
 def get_cache_path(*args):
-    return get_app_dir('cache', *args)
+    return os.path.join(os.path.expanduser("~"), ".cget", "cache", *args)
 
 def adjust_path(p):
     # Prefixing path to avoid problems with long paths on windows
