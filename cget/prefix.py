@@ -134,22 +134,7 @@ class CGetPrefix:
         else_ = cmake_else
         append_ = cmake_append
         yield set_('CGET_PREFIX', self.prefix)
-        yield set_('CMAKE_PREFIX_PATH', self.prefix)
-        if not no_global_include:
-            yield if_('${CMAKE_VERSION} VERSION_LESS "3.6.0"',
-                ['include_directories(SYSTEM ${CGET_PREFIX}/include)'],
-                else_(
-                    set_('CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES', '${CGET_PREFIX}/include'),
-                    set_('CMAKE_C_STANDARD_INCLUDE_DIRECTORIES', '${CGET_PREFIX}/include')
-                )
-            )
         if toolchain: yield ['include({})'.format(util.quote(os.path.abspath(toolchain)))]
-        yield if_('CMAKE_CROSSCOMPILING',
-            append_('CMAKE_FIND_ROOT_PATH', self.prefix)
-        )
-        yield if_('CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT',
-            set_('CMAKE_INSTALL_PREFIX', self.prefix)
-        )
         if cxx: yield set_('CMAKE_CXX_COMPILER', cxx)
         if cc: yield set_('CMAKE_C_COMPILER', cc)
         if std:
@@ -317,13 +302,7 @@ class CGetPrefix:
         use_build_cache=False,
         recipe_deps_only=False
     ):
-        if pb.requirements:
-            dependents = self.from_file(pb.requirements, pb.pkg_src.url)
-        elif src_dir:
-            dependents = self.from_file(os.path.join(src_dir, 'requirements.txt'), pb.pkg_src.url)
-        else:
-            return
-        for dependent in dependents:
+        for dependent in self.get_dependents(pb, src_dir):
             transient = dependent.test or dependent.build
             testing = test or test_all
             installable = not dependent.test or dependent.test == testing
@@ -337,6 +316,17 @@ class CGetPrefix:
                     use_build_cache=use_build_cache,
                     recipe_deps_only=recipe_deps_only
                 )
+
+    def get_dependents(self, pb, src_dir):
+        if pb.requirements:
+            dependents = self.from_file(pb.requirements, pb.pkg_src.url)
+        elif src_dir:
+            dependents = self.from_file(os.path.join(src_dir, 'requirements.txt'), pb.pkg_src.url)
+        else:
+            return []
+
+    def get_real_install_path(self, pb):
+        return os.path.realpath(self.get_package_directory(pb.to_fname(), 'install'))
 
     @returns(six.string_types)
     @params(pb=PACKAGE_SOURCE_TYPES, test=bool, test_all=bool, update=bool, track=bool)
@@ -419,6 +409,11 @@ class CGetPrefix:
                                 os.rename(target, os.path.join(src_dir, builder.cmake_original_file))
                             shutil.copyfile(pb.cmake, target)
                         # Configure and build
+                        defines = list(pb.define or []).append(
+                            "-DCMAKE_PREFIX_PATH=%s" % ";".join(
+                                ['"%s"' % self.get_real_install_path(dep) for dep in self.get_dependents(pb)]
+                            )
+                        )
                         builder.configure(
                             src_dir,
                             defines=pb.define,
