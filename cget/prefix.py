@@ -409,14 +409,16 @@ class CGetPrefix:
                                 os.rename(target, os.path.join(src_dir, builder.cmake_original_file))
                             shutil.copyfile(pb.cmake, target)
                         # Configure and build
-                        defines = list(pb.define or []).append(
-                            "-DCMAKE_PREFIX_PATH=%s" % ";".join(
+                        defines = list(pb.define or []) + [
+                            "CMAKE_PREFIX_PATH=%s" % ";".join(
                                 ['"%s"' % self.get_real_install_path(dep) for dep in self.get_dependents(pb, src_dir)]
                             )
-                        )
+                        ]
+                        print("defines")
+                        print(defines)
                         builder.configure(
                             src_dir,
-                            defines=pb.define,
+                            defines=defines,
                             generator=generator,
                             install_prefix=install_dir,
                             test=test,
