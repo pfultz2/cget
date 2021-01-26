@@ -319,9 +319,9 @@ class CGetPrefix:
 
     def get_dependents(self, pb, src_dir):
         if pb.requirements:
-            dependents = self.from_file(pb.requirements, pb.pkg_src.url)
+            return self.from_file(pb.requirements, pb.pkg_src.url)
         elif src_dir:
-            dependents = self.from_file(os.path.join(src_dir, 'requirements.txt'), pb.pkg_src.url)
+            return self.from_file(os.path.join(src_dir, 'requirements.txt'), pb.pkg_src.url)
         else:
             return []
 
