@@ -411,7 +411,7 @@ class CGetPrefix:
                         # Configure and build
                         defines = list(pb.define or []).append(
                             "-DCMAKE_PREFIX_PATH=%s" % ";".join(
-                                ['"%s"' % self.get_real_install_path(dep) for dep in self.get_dependents(pb)]
+                                ['"%s"' % self.get_real_install_path(dep) for dep in self.get_dependents(pb, src_dir)]
                             )
                         )
                         builder.configure(
