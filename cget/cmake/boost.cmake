@@ -227,8 +227,23 @@ if (BOOST_PYTHON)
     find_program(BOOST_PYTHON_FOUND ${BOOST_PYTHON} REQUIRED)
     get_filename_component(BOOST_PYTHON_FOUND_REAL "${BOOST_PYTHON_FOUND}" REALPATH)
     message(STATUS "found python: '${BOOST_PYTHON_FOUND}' -> '${BOOST_PYTHON_FOUND_REAL}'")
+    execute_process(
+        COMMAND ${BOOST_PYTHON} -c "from __future__ import print_function; import sys; print('%s.%s' % (sys.version_info[0], sys.version_info[1]))"
+        OUTPUT_VARIABLE _PYTHON_VERSION
+    )
+    execute_process(
+        COMMAND ${BOOST_PYTHON} -c "from __future__ import print_function; import sys, os, sysconfig; candidates = set([sysconfig.get_path('include'), sysconfig.get_path('platinclude'), sysconfig.get_config_var('INCLUDEPY'), sysconfig.get_config_var('INCLUDEDIR')]); print(list(filter(lambda x: os.path.isfile(os.path.join(x, 'Python.h')), set(candidates)))[0])"
+        OUTPUT_VARIABLE _PYTHON_INCLUDE_DIR
+    )
+    message(STATUS "python include dir: ${_PYTHON_INCLUDE_DIR}")
+    set(
+        _B2_CONFIG_PYTHON
+        "using python : ${_PYTHON_VERSION} : ${BOOST_PYTHON_FOUND_REAL} : ${_PYTHON_INCLUDE_DIR} ;"
+    )
+    string(REGEX REPLACE "\n" " " _B2_CONFIG_PYTHON "${_B2_CONFIG_PYTHON}")
+    message(STATUS "_B2_CONFIG_PYTHON: ${_B2_CONFIG_PYTHON}")
     set(B2_CONFIG_CONTENT "${B2_CONFIG_CONTENT}
-    using python : : ${BOOST_PYTHON_FOUND_REAL} ;
+${_B2_CONFIG_PYTHON}
     ")
 endif (BOOST_PYTHON)
 
