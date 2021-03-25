@@ -1,4 +1,4 @@
-import click, os, sys, shutil, json, six, hashlib, ssl
+import click, os, sys, shutil, json, six, hashlib, ssl, filelock
 
 if sys.version_info[0] < 3:
     try:
@@ -16,7 +16,7 @@ if os.name == 'posix' and sys.version_info[0] < 3:
 else:
     import subprocess
 
-from six.moves.urllib import request
+import requests
 
 def to_bool(value):
     x = str(value).lower()
@@ -87,6 +87,52 @@ def mkfile(d, file, content, always_write=True):
         write_to(p, content)
     return p
 
+def cache_lock():
+    cache_base_dir = get_cache_path()
+    mkdir(cache_base_dir)
+    return filelock.FileLock(os.path.join(cache_base_dir, "lock"))
+
+def zipdir(src_dir, tgt_file):
+    print("zipping '%s' to '%s" % (src_dir, tgt_file))
+    zipf = zipfile.ZipFile(tgt_file, 'w', zipfile.ZIP_DEFLATED)
+    for root, dirs, files in os.walk(src_dir):
+        for file in files:
+            zipf.write(
+                os.path.join(root, file),
+                os.path.relpath(
+                    os.path.join(root, file),
+                    os.path.join(src_dir)
+                )
+            )
+    zipf.close()
+
+def unzip(zipname, extract_dir):
+    def extract_file(zf, info, extract_dir):
+        zf.extract( info.filename, path=extract_dir )
+        out_path = os.path.join( extract_dir, info.filename )
+        perm = info.external_attr >> 16
+        os.chmod( out_path, perm )
+    with zipfile.ZipFile(zipname, 'r') as zf:
+        for info in zf.infolist():
+            extract_file(zf, info, extract_dir)
+
+def zip_dir_to_cache(prefix, key, src_dir):
+    with cache_lock():
+        cache_dir = get_cache_path(prefix)
+        zipfile_path = os.path.join(cache_dir, key + ".zip")
+        mkdir(cache_dir)
+        zipdir(src_dir, zipfile_path)
+
+def unzip_dir_from_cache(prefix, key, tgt_dir):
+    with cache_lock():
+        cache_dir = get_cache_path(prefix)
+        zipfile_path = os.path.join(cache_dir, key + ".zip")
+        if os.path.exists(zipfile_path):
+            unzip(zipfile_path, tgt_dir)
+            return True
+        else:
+            return False
+
 def ls(p, predicate=lambda x:True):
     if os.path.exists(p):
         return (d for d in os.listdir(p) if predicate(os.path.join(p, d)))
@@ -97,7 +143,7 @@ def get_app_dir(*args):
     return os.path.join(click.get_app_dir('cget'), *args)
 
 def get_cache_path(*args):
-    return get_app_dir('cache', *args)
+    return os.path.join(os.path.expanduser("~"), ".cget", "cache", *args)
 
 def adjust_path(p):
     # Prefixing path to avoid problems with long paths on windows
@@ -106,14 +152,17 @@ def adjust_path(p):
     return p
 
 def add_cache_file(key, f):
-    mkdir(get_cache_path(key))
-    shutil.copy2(f, get_cache_path(key, os.path.basename(f)))
+    with cache_lock():
+        mkdir(get_cache_path(key))
+        shutil.copy2(f, get_cache_path(key, os.path.basename(f)))
 
 def get_cache_file(key):
-    p = get_cache_path(key)
-    if os.path.exists(p):
-        return os.path.join(p, next(ls(p)))
-    else:
+    with cache_lock():
+        p = get_cache_path(key)
+        if os.path.exists(p):
+            content = list(ls(p))
+            if content:
+                return os.path.join(p, content[0])
         return None
 
 def delete_dir(path):
@@ -205,31 +254,27 @@ def symlink_to(src, dst_dir):
     os.symlink(src, target)
     return target
 
-class CGetURLOpener(request.FancyURLopener):
-    def http_error_default(self, url, fp, errcode, errmsg, headers):
-        if errcode >= 400:
-            raise BuildError("Download failed with error {0} for: {1}".format(errcode, url))
-        return request.FancyURLopener.http_error_default(self, url, fp, errcode, errmsg, headers)
-
 def download_to(url, download_dir, insecure=False):
     name = url.split('/')[-1]
-    file = os.path.join(download_dir, name)
+    file_name = os.path.join(download_dir, name)
     click.echo("Downloading {0}".format(url))
-    bar_len = 1000
-    with click.progressbar(length=bar_len, width=70) as bar:
-        def hook(count, block_size, total_size):
-            percent = int(count*block_size*bar_len/total_size)
-            if percent > 0 and percent < bar_len:
-                # Hack because we can't set the position
-                bar.pos = percent
-                bar.update(0)
-        context = None
-        if insecure: context = ssl._create_unverified_context()
-        CGetURLOpener(context=context).retrieve(url, filename=file, reporthook=hook, data=None)
-        bar.update(bar_len)
-    if not os.path.exists(file):
+    with open(file_name, "wb") as f:
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+        total_length = response.headers.get('content-length')
+        if total_length is None: # no content length header
+            f.write(response.content)
+        else:
+            total_length = int(total_length)
+            with click.progressbar(length=total_length, width=70) as bar:
+                for data in response.iter_content(chunk_size=4096):
+                    f.write(data)
+                    bar.pos += len(data)
+                    bar.update(0)
+                bar.update(total_length)
+    if not os.path.exists(file_name):
         raise BuildError("Download failed for: {0}".format(url))
-    return file
+    return file_name
 
 def transfer_to(f, dst, copy=False):
     if USE_SYMLINKS and not copy: return symlink_to(f, dst)
@@ -244,10 +289,12 @@ def retrieve_url(url, dst, copy=False, insecure=False, hash=None):
     f = download_to(url, dst, insecure=insecure) if remote else transfer_to(url[7:], dst, copy=copy)
     if os.path.isfile(f) and hash:
         click.echo("Computing hash: {}".format(hash))
-        if check_hash(f, hash):
+        hash_type, hash_value = hash.lower().split(':')
+        computed = hash_file(f, hash_type)
+        if computed == hash_value:
             if remote: add_cache_file(hash.replace(':', '-'), f)
         else:
-            raise BuildError("Hash doesn't match for {0}: {1}".format(url, hash))
+            raise BuildError("Hash doesn't match for {0}: {1} != {2}".format(url, hash_type + ":" + computed, hash))
     return f
 
 def extract_ar(archive, dst, *kwargs):
@@ -273,10 +320,6 @@ def hash_file(f, t):
     h = hashlib.new(t)
     h.update(open(f, 'rb').read())
     return h.hexdigest()
-
-def check_hash(f, hash):
-    t, h = hash.lower().split(':')
-    return hash_file(f, t) == h
 
 def which(p, paths=None, throws=True):
     exes = [p+x for x in ['', '.exe', '.bat']]

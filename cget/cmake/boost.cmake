@@ -53,14 +53,6 @@ macro(preamble PREFIX)
     endforeach()
     adjust_path(${PREFIX}_SYSTEM_PATH)
 
-    set(${PREFIX}_PKG_CONFIG_PATH)
-    foreach(P ${PREFIX_PATH} ${PREFIX_SYSTEM_PATH})
-        foreach(SUFFIX lib lib${${PREFIX}_ADDRESS_MODEL} share)
-            list(APPEND ${PREFIX}_PKG_CONFIG_PATH ${P}/${SUFFIX}/pkgconfig)
-        endforeach()
-    endforeach()
-    adjust_path(${PREFIX}_PKG_CONFIG_PATH)
-
     get_property_list(${PREFIX}_COMPILE_FLAGS COMPILE_OPTIONS)
     get_directory_property(${PREFIX}_INCLUDE_DIRECTORIES INCLUDE_DIRECTORIES)
     foreach(DIR ${${PREFIX}_INCLUDE_DIRECTORIES})
@@ -79,11 +71,12 @@ macro(preamble PREFIX)
         endif()
     endforeach()
     get_directory_property(${PREFIX}_LINK_DIRECTORIES LINK_DIRECTORIES)
+    get_property_list(${PREFIX}_LINK_FLAGS LINK_FLAGS)
     foreach(LIB_DIR ${${PREFIX}_LINK_DIRECTORIES})
         if(MSVC)
             string(APPEND ${PREFIX}_LINK_FLAGS " /LIBPATH:${LIB_DIR}")
         else()
-            string(APPEND ${PREFIX}_LINK_FLAGS " -L ${LIB_DIR}")
+            string(APPEND ${PREFIX}_LINK_FLAGS " -L${LIB_DIR}")
         endif()
     endforeach()
 
@@ -105,13 +98,11 @@ macro(preamble PREFIX)
         set(${PREFIX}_LINK_FLAGS "${${PREFIX}_LINK_FLAGS} -isysroot ${CMAKE_OSX_SYSROOT}")
     endif (APPLE)
 
-    get_property_list(${PREFIX}_LINK_FLAGS LINK_FLAGS)
     if(BUILD_SHARED_LIBS)
         string(APPEND ${PREFIX}_LINK_FLAGS " ${CMAKE_SHARED_LINKER_FLAGS}")
     else()
         string(APPEND ${PREFIX}_LINK_FLAGS " ${CMAKE_STATIC_LINKER_FLAGS}")
     endif()
-    get_property_list(${PREFIX}_LINK_FLAGS LINK_FLAGS)
 
     foreach(LANG C CXX)
         foreach(DIR ${CMAKE_${LANG}_STANDARD_INCLUDE_DIRECTORIES})
@@ -139,13 +130,7 @@ macro(preamble PREFIX)
 
     set(${PREFIX}_BASE_ENV_COMMAND ${CMAKE_COMMAND} -E env
         "PATH=${${PREFIX}_SYSTEM_PATH}${PATH_SEP}$ENV{PATH}"
-        "PKG_CONFIG_PATH=${${PREFIX}_PKG_CONFIG_PATH}"
     )
-
-    # TODO: Set also PKG_CONFIG_SYSROOT_DIR
-    if(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE STREQUAL "ONLY")
-        list(APPEND ${PREFIX}_BASE_ENV_COMMAND "PKG_CONFIG_LIBDIR=${${PREFIX}_PKG_CONFIG_PATH}")
-    endif()
 
     set(${PREFIX}_ENV_COMMAND ${${PREFIX}_BASE_ENV_COMMAND}
         "CC=${CMAKE_C_COMPILER}"
@@ -234,24 +219,40 @@ using ${BOOST_TOOLCHAIN} : ${B2_TOOLCHAIN_VERSION} : \"${B2_COMPILER}\" :
 ${SEARCH_PATHS}
 ;
 ")
+
+set(BOOST_PYTHON "" CACHE STRING "python executable to use for boost build")
+set(BOOST_BOOTSTRAP_ARGS "" CACHE STRING "additional arguments to boost bootstrap")
+
+if (BOOST_PYTHON)
+    find_program(BOOST_PYTHON_FOUND ${BOOST_PYTHON} REQUIRED)
+    get_filename_component(BOOST_PYTHON_FOUND_REAL "${BOOST_PYTHON_FOUND}" REALPATH)
+    message(STATUS "found python: '${BOOST_PYTHON_FOUND}' -> '${BOOST_PYTHON_FOUND_REAL}'")
+    set(B2_CONFIG_CONTENT "${B2_CONFIG_CONTENT}
+    using python : : ${BOOST_PYTHON_FOUND_REAL} ;
+    ")
+endif (BOOST_PYTHON)
+
 message("${B2_CONFIG_CONTENT}")
 
 file(WRITE ${B2_CONFIG} "${B2_CONFIG_CONTENT}")
 
 find_program(B2_EXE b2)
 if(NOT ${B2_EXE})
+    if (BOOST_PYTHON)
+        set(BOOST_BOOTSTRAP_PYTHON_ARG "--with-python=${BOOST_PYTHON_FOUND_REAL}")
+    endif (BOOST_PYTHON)
     if(CMAKE_HOST_WIN32)
         add_custom_target(bootstrap
-            COMMAND cmd /c ${CMAKE_CURRENT_SOURCE_DIR}/tools/build/bootstrap.bat
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tools/build/
+            COMMAND cmd /c ${CMAKE_CURRENT_SOURCE_DIR}/bootstrap.bat ${BOOST_BOOTSTRAP_ARGS} ${BOOST_BOOTSTRAP_PYTHON_ARG}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
         set(B2_EXE "${CMAKE_CURRENT_SOURCE_DIR}/tools/build/b2.exe")
     else()
         add_custom_target(bootstrap
-            COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/build/bootstrap.sh
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tools/build/
+            COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bootstrap.sh ${BOOST_BOOTSTRAP_ARGS} ${BOOST_BOOTSTRAP_PYTHON_ARG}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
-        set(B2_EXE "${CMAKE_CURRENT_SOURCE_DIR}/tools/build/b2")
+        set(B2_EXE "${CMAKE_CURRENT_SOURCE_DIR}/b2")
     endif()
     install(PROGRAMS ${B2_EXE} DESTINATION bin)
 endif()
