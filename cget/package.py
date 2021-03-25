@@ -1,4 +1,4 @@
-import base64, copy, argparse, six
+import base64, copy, argparse, six, dirhash, hashlib
 
 def encode_url(url):
     x = six.b(url[url.find('://')+3:])
@@ -31,6 +31,14 @@ class PackageSource:
             return self.url[7:] # Remove "file://"
         raise TypeError()
 
+    def calc_hash(self):
+        if self.recipe:
+            print("calculating dirshash of recipe '%s' package '%s'" % (self.recipe, self.to_name()))
+            return dirhash.dirhash(self.recipe, "sha1")
+        elif self.url:
+            print("calculating hash of url '%s' package '%s'" % (self.url, self.to_name()))
+            return hashlib.sha1(self.url.encode("utf-8")).hexdigest()
+        raise Exception("no url or recipe: %s" % self.__dict__)
 
 def fname_to_pkg(fname):
     if fname.startswith('_url_'): return PackageSource(name=decode_url(fname), fname=fname)
