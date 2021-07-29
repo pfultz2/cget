@@ -39,7 +39,7 @@ Installing non-cmake packages
 -----------------------------
 
 
-Cget can install non-cmake packages as well. Due note that non-cmake build systems do not have a way to tell the build where the dependencies are installed. Cget will set environmnet variables such as ``PKG_CONFIG_PATH`` and ``PATH``, but if the dependencies are not found using pkg-config or these standard environmnet variables then you will need to consult the build scripts as to what protocol is needed to resolve the dependencies.
+Cget can install non-cmake packages as well. Due note that non-cmake build systems do not have a way to tell the build where the dependencies are installed. Cget will set environment variables such as ``PKG_CONFIG_PATH`` and ``PATH``, but if the dependencies are not found using pkg-config or these standard environment variables then you will need to consult the build scripts as to what protocol is needed to resolve the dependencies.
 
 .. _custom-cmake:
 
@@ -98,7 +98,7 @@ Libraries can be selected with cmake variables ``BOOST_WITH_`` and ``BOOST_WITHO
 
     cget install boost,http://downloads.sourceforge.net/project/boost/boost/1.62.0/boost_1_62_0.tar.bz2 --cmake boost -DBOOST_WITH_FILESYSTEM=1
 
-Also, everthing can be built except Boost.Python like the following::
+Also, everything can be built except Boost.Python like the following::
 
     cget install boost,http://downloads.sourceforge.net/project/boost/boost/1.62.0/boost_1_62_0.tar.bz2 --cmake boost -DBOOST_WITHOUT_PYTHON=1
 

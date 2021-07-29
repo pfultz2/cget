@@ -17,7 +17,7 @@ This specifies the package source (see :ref:`pkg-src`) that will be built.
 
 .. option::  -p, --prefix PATH      
 
-    Set prefix where packages are installed. This defaults to a directory named ``cget`` in the current working directory. This can also be overidden by the ``CGET_PREFIX`` environment variable.
+    Set prefix where packages are installed. This defaults to a directory named ``cget`` in the current working directory. This can also be overridden by the ``CGET_PREFIX`` environment variable.
 
 .. option::  -v, --verbose          
 
@@ -77,7 +77,7 @@ This will clear the directory used by cget. This will remove all packages that h
 
 .. option::  -p, --prefix PATH      
 
-    Set prefix where packages are installed. This defaults to a directory named ``cget`` in the current working directory. This can also be overidden by the ``CGET_PREFIX`` environment variable.
+    Set prefix where packages are installed. This defaults to a directory named ``cget`` in the current working directory. This can also be overridden by the ``CGET_PREFIX`` environment variable.
 
 .. option::  -v, --verbose          
 
@@ -101,7 +101,7 @@ This will ignore a package, so if an install command or a dependency requests th
 
 .. option::  -p, --prefix PATH      
 
-    Set prefix where packages are installed. This defaults to a directory named ``cget`` in the current working directory. This can also be overidden by the ``CGET_PREFIX`` environment variable.
+    Set prefix where packages are installed. This defaults to a directory named ``cget`` in the current working directory. This can also be overridden by the ``CGET_PREFIX`` environment variable.
 
 .. option::  -v, --verbose          
 
@@ -117,7 +117,7 @@ This will initialize the cmake toolchain. By default, the ``install`` command wi
 
 .. option::  -p, --prefix PATH      
 
-    Set prefix where packages are installed. This defaults to a directory named ``cget`` in the current working directory. This can also be overidden by the ``CGET_PREFIX`` environment variable.
+    Set prefix where packages are installed. This defaults to a directory named ``cget`` in the current working directory. This can also be overridden by the ``CGET_PREFIX`` environment variable.
 
 .. option::  -v, --verbose          
 
@@ -190,7 +190,7 @@ However, ``cget`` will always create the build directory out of source. The ``cg
 
 .. option::  -p, --prefix PATH      
 
-    Set prefix where packages are installed. This defaults to a directory named ``cget`` in the current working directory. This can also be overidden by the ``CGET_PREFIX`` environment variable.
+    Set prefix where packages are installed. This defaults to a directory named ``cget`` in the current working directory. This can also be overridden by the ``CGET_PREFIX`` environment variable.
 
 .. option::  -v, --verbose          
 
@@ -246,7 +246,7 @@ This will list all packages that have been installed.
 
 .. option::  -p, --prefix PATH      
 
-    Set prefix where packages are installed. This defaults to a directory named ``cget`` in the current working directory. This can also be overidden by the ``CGET_PREFIX`` environment variable.
+    Set prefix where packages are installed. This defaults to a directory named ``cget`` in the current working directory. This can also be overridden by the ``CGET_PREFIX`` environment variable.
 
 .. option::  -v, --verbose          
 
@@ -262,7 +262,7 @@ This will run pkg-config, but will search in the cget directory for pkg-config f
 
 .. option::  -p, --prefix PATH      
 
-    Set prefix where packages are installed. This defaults to a directory named ``cget`` in the current working directory. This can also be overidden by the ``CGET_PREFIX`` environment variable.
+    Set prefix where packages are installed. This defaults to a directory named ``cget`` in the current working directory. This can also be overridden by the ``CGET_PREFIX`` environment variable.
 
 .. option::  -v, --verbose          
 
@@ -282,7 +282,7 @@ This will remove a package. If other packages depends on the package to be remov
 
 .. option::  -p, --prefix PATH      
 
-    Set prefix where packages are installed. This defaults to a directory named ``cget`` in the current working directory. This can also be overidden by the ``CGET_PREFIX`` environment variable.
+    Set prefix where packages are installed. This defaults to a directory named ``cget`` in the current working directory. This can also be overridden by the ``CGET_PREFIX`` environment variable.
 
 .. option::  -v, --verbose          
 
