@@ -11,6 +11,25 @@ aliases = {
     'ls': 'list'
 }
 
+
+def buildType(debug, release, build_type):
+    build_types = []
+    if debug:
+        build_types.append('Debug')
+    if release:
+        build_types.append('Release')
+    if not build_type is None:
+        build_types.append(build_type)
+
+    if len(build_types) == 0:
+        build_types.append('Release')
+
+    if len(build_types) > 1:
+        raise RuntimeError("build types are not supported together: %s" % build_types)
+
+    return build_types[0]
+
+
 class AliasedGroup(click.Group):
     def get_command(self, ctx, cmd_name):
         rv = click.Group.get_command(self, ctx, cmd_name)
@@ -86,23 +105,19 @@ def init_command(prefix, toolchain, cc, cxx, cflags, cxxflags, ldflags, std, def
 @click.option('-X', '--cmake', help='Set cmake file to use to build project')
 @click.option('--debug', is_flag=True, help="Install debug version")
 @click.option('--release', is_flag=True, help="Install release version")
+@click.option('--build-type', help="Install custom version [Release, Debug, RelWithDebInfo or other cmake build type]")
 @click.option('--insecure', is_flag=True, help="Don't use https urls")
 @click.argument('pkgs', nargs=-1, type=click.STRING)
-def install_command(prefix, pkgs, define, file, test, test_all, update, generator, cmake, debug, release, insecure):
+def install_command(prefix, pkgs, define, file, test, test_all, update, generator, cmake, debug, release, build_type, insecure):
     """ Install packages """
-    if debug and release:
-        click.echo("ERROR: debug and release are not supported together")
-        sys.exit(1)
-    variant = 'Release'
-    if debug: variant = 'Debug'
+    variant = buildType(debug, release, build_type)
     if not file and not pkgs:
         if os.path.exists('dev-requirements.txt'): file = 'dev-requirements.txt'
         else: file = 'requirements.txt'
     pbs = [PackageBuild(pkg, cmake=cmake, variant=variant) for pkg in pkgs]
     for pbu in util.flat([prefix.from_file(file), pbs]):
         pb = pbu.merge_defines(define)
-        pb.variant = 'Release'
-        if debug: pb.variant = 'Debug'
+        pb.variant = variant
         with prefix.try_("Failed to build package {}".format(pb.to_name()), on_fail=lambda: prefix.remove(pb)):
             click.echo(prefix.install(pb, test=test, test_all=test_all, update=update, generator=generator, insecure=insecure))
 
@@ -128,15 +143,12 @@ def ignore_command(prefix, pkgs):
 @click.option('-G', '--generator', envvar='CGET_GENERATOR', help='Set the generator for CMake to use')
 @click.option('--debug', is_flag=True, help="Build debug version")
 @click.option('--release', is_flag=True, help="Build release version")
+@click.option('--build-type', help="Install custom version [Release, Debug, RelWithDebInfo or other cmake build type]")
 @click.argument('pkg', nargs=1, default='.', type=click.STRING)
-def build_command(prefix, pkg, define, test, configure, clean, path, yes, target, generator, debug, release):
+def build_command(prefix, pkg, define, test, configure, clean, path, yes, target, generator, debug, release, build_type):
     """ Build package """
     pb = PackageBuild(pkg).merge_defines(define)
-    if debug and release:
-        click.echo("ERROR: debug and release are not supported together")
-        sys.exit(1)
-    pb.variant = 'Release'
-    if debug: pb.variant = 'Debug'
+    pb.variant = buildType(debug, release, build_type)
     with prefix.try_("Failed to build package {}".format(pb.to_name())):
         if configure: prefix.build_configure(pb)
         elif path: click.echo(prefix.build_path(pb))
