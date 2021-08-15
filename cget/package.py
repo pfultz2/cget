@@ -37,7 +37,7 @@ def fname_to_pkg(fname):
     else: return PackageSource(name=fname.replace('__', '/'), fname=fname)
 
 class PackageBuild:
-    def __init__(self, pkg_src=None, define=None, parent=None, test=False, hash=None, build=None, cmake=None, variant=None, requirements=None, file=None):
+    def __init__(self, pkg_src=None, define=None, parent=None, test=False, hash=None, build=None, cmake=None, variant=None, requirements=None, file=None, ignore_requirements=None):
         self.pkg_src = pkg_src
         self.define = define or []
         self.parent = parent
@@ -47,6 +47,7 @@ class PackageBuild:
         self.cmake = cmake
         self.variant = variant or 'Release'
         self.requirements = requirements
+        self.ignore_requirements = ignore_requirements
         self.file = file
 
     def merge_defines(self, defines):
@@ -89,5 +90,6 @@ def parse_pkg_build_tokens(args):
     parser.add_argument('-f', '--file')
     parser.add_argument('-t', '--test', action='store_true')
     parser.add_argument('-b', '--build', action='store_true')
+    parser.add_argument('--ignore-requirements', action='store_true')
     return parser.parse_args(args=args, namespace=PackageBuild())
 
