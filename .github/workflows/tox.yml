@@ -1,0 +1,37 @@
+name: cget
+
+on: [push]
+
+jobs:
+  cancel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.6.0
+        with:
+          access_token: ${{ github.token }}
+  test:
+    runs-on: ${{ matrix.platform }}
+    strategy:
+      matrix:
+        platform:
+          - ubuntu-18.04
+          - macos-10.14
+          # - windows-2016
+        python-version: [2.7, 3.5, 3.6, 3.7, 3.8, 3.9]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
+      continue-on-error: true
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade setuptools pip wheel
+        python -m pip install tox
+    - name: Test with tox
+      run: tox -e py,lint
