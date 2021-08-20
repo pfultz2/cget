@@ -4,7 +4,7 @@ import sys, os, tarfile, cget.util, shutil
 
 from six.moves import shlex_quote
 
-__appveyor__ = 'APPVEYOR' in os.environ
+__appveyor__ = 'APPVEYOR' in os.environ or ('GITHUB_WORKFLOW' in os.environ and os.name == 'nt')
 appveyor_skip = pytest.mark.skipif(__appveyor__, reason="Trimmed windows tests for appveyor")
 
 __test_dir__ = os.path.dirname(os.path.realpath(__file__))
