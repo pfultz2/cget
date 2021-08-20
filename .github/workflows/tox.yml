@@ -38,3 +38,5 @@ jobs:
         pkg-config --version
         which pkg-config
         tox -e py,lint
+      env:
+        CGET_VERBOSE: 1
