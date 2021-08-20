@@ -35,3 +35,5 @@ jobs:
         python -m pip install tox
     - name: Test with tox
       run: tox -e py,lint
+      env:
+        CGET_VERBOSE: 1
