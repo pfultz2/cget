@@ -359,6 +359,7 @@ class Commander:
         option_args = ["{0}={1}".format(key, value) for key, value in six.iteritems(options or {})]
         c = [exe] + option_args + as_list(args or [])
         if self.verbose: click.secho(' '.join(c), bold=True)
+        click.secho(' '.join(c), bold=True)
         return cmd(c, env=as_dict_str(merge(self.env, self._get_paths_env(), env)), **kwargs)
 
     def __getattr__(self, name):
