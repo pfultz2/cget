@@ -1,4 +1,4 @@
-import os, shutil, shlex, six, inspect, click, contextlib, uuid, sys, functools
+import os, shutil, shlex, six, inspect, click, contextlib, uuid, sys, functools, hashlib
 
 from cget.builder import Builder
 from cget.package import fname_to_pkg
@@ -117,27 +117,24 @@ class CGetPrefix:
 
     @returns(inspect.isgenerator)
     @util.yield_from
-    def generate_cmake_toolchain(self, toolchain=None, cc=None, cxx=None, cflags=None, cxxflags=None, ldflags=None, std=None, defines=None):
+    def generate_cmake_toolchain(
+        self,
+        toolchain=None,
+        cc=None,
+        cxx=None,
+        cflags=None,
+        cxxflags=None,
+        ldflags=None,
+        std=None,
+        defines=None,
+        no_global_include=False
+    ):
         set_ = cmake_set
         if_ = cmake_if
         else_ = cmake_else
         append_ = cmake_append
         yield set_('CGET_PREFIX', self.prefix)
-        yield set_('CMAKE_PREFIX_PATH', self.prefix)
-        yield if_('${CMAKE_VERSION} VERSION_LESS "3.6.0"',
-            ['include_directories(SYSTEM ${CGET_PREFIX}/include)'],
-            else_(
-                set_('CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES', '${CGET_PREFIX}/include'),
-                set_('CMAKE_C_STANDARD_INCLUDE_DIRECTORIES', '${CGET_PREFIX}/include')
-            )
-        )
         if toolchain: yield ['include({})'.format(util.quote(os.path.abspath(toolchain)))]
-        yield if_('CMAKE_CROSSCOMPILING',
-            append_('CMAKE_FIND_ROOT_PATH', self.prefix)
-        )
-        yield if_('CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT',
-            set_('CMAKE_INSTALL_PREFIX', self.prefix)
-        )
         if cxx: yield set_('CMAKE_CXX_COMPILER', cxx)
         if cc: yield set_('CMAKE_C_COMPILER', cc)
         if std:
@@ -205,7 +202,7 @@ class CGetPrefix:
     def parse_src_file(self, name, url, start=None):
         f = util.actual_path(url, start)
         self.log('parse_src_file actual_path:', start, f)
-        if os.path.exists(f): return PackageSource(name=name, url='file://' + f)
+        if os.path.isfile(f): return PackageSource(name=name, url='file://' + f)
         return None
 
     def parse_src_recipe(self, name, url):
@@ -223,6 +220,15 @@ class CGetPrefix:
         if name is None: name = p
         return PackageSource(name=name, url=url)
 
+    def hash_pkg(self, pkg):
+        pkg_src = self.parse_pkg_src(pkg)
+        result = pkg_src.calc_hash()
+        pkg_build = self.parse_pkg_build(pkg)
+        if pkg_build.requirements:
+            for dependency in self.from_file(pkg_build.requirements):
+                result = hashlib.sha1((result + self.hash_pkg(dependency)).encode("utf-8")).hexdigest()
+        return result
+
     @returns(PackageSource)
     @params(pkg=PACKAGE_SOURCE_TYPES)
     def parse_pkg_src(self, pkg, start=None, no_recipe=False):
@@ -239,14 +245,14 @@ class CGetPrefix:
     @returns(PackageBuild)
     @params(pkg=PACKAGE_SOURCE_TYPES)
     def parse_pkg_build(self, pkg, start=None, no_recipe=False):
-        if isinstance(pkg, PackageBuild): 
+        if isinstance(pkg, PackageBuild):
             pkg.pkg_src = self.parse_pkg_src(pkg.pkg_src, start, no_recipe)
             if pkg.pkg_src.recipe: pkg = self.from_recipe(pkg.pkg_src.recipe, pkg)
             if pkg.cmake: pkg.cmake = find_cmake(pkg.cmake, start)
             return pkg
         else:
             pkg_src = self.parse_pkg_src(pkg, start, no_recipe)
-            if pkg_src.recipe: return self.from_recipe(pkg_src.recipe, pkg_src.name)
+            if pkg_src.recipe: return self.from_recipe(pkg_src.recipe, name=pkg_src.name)
             else: return PackageBuild(pkg_src)
 
     def from_recipe(self, recipe, pkg=None, name=None):
@@ -256,7 +262,7 @@ class CGetPrefix:
         self.check(lambda:p.pkg_src is not None)
         requirements = os.path.join(recipe, "requirements.txt")
         if os.path.exists(requirements): p.requirements = requirements
-        p.pkg_src.recipe = None
+        p.pkg_src.recipe = recipe
         # Use original name
         if pkg: p.pkg_src.name = pkg.pkg_src.name
         elif name: p.pkg_src.name = name
@@ -285,21 +291,60 @@ class CGetPrefix:
     def write_parent(self, pb, track=True):
         if track and pb.parent is not None: util.mkfile(self.get_deps_directory(pb.to_fname()), pb.parent, pb.parent)
 
-    def install_deps(self, pb, d, test=False, test_all=False, generator=None, insecure=False):
-        for dependent in self.from_file(pb.requirements or os.path.join(d, 'requirements.txt'), pb.pkg_src.url):
+    def install_deps(
+        self,
+        pb,
+        src_dir=None, 
+        test=False,
+        test_all=False,
+        generator=None,
+        insecure=False,
+        use_build_cache=False,
+        recipe_deps_only=False
+    ):
+        for dependent in self.get_dependents(pb, src_dir):
             transient = dependent.test or dependent.build
             testing = test or test_all
             installable = not dependent.test or dependent.test == testing
             if installable: 
-                self.install(dependent.of(pb), test_all=test_all, generator=generator, track=not transient, insecure=insecure)
+                self.install(
+                    dependent.of(pb),
+                    test_all=test_all,
+                    generator=generator,
+                    track=not transient,
+                    insecure=insecure,
+                    use_build_cache=use_build_cache,
+                    recipe_deps_only=recipe_deps_only
+                )
+
+    def get_dependents(self, pb, src_dir):
+        if pb.requirements:
+            return self.from_file(pb.requirements, pb.pkg_src.url)
+        elif src_dir:
+            return self.from_file(os.path.join(src_dir, 'requirements.txt'), pb.pkg_src.url)
+        else:
+            return []
+
+    def get_real_install_path(self, pb):
+        return os.path.realpath(self.get_package_directory(pb.to_fname(), 'install'))
 
     @returns(six.string_types)
     @params(pb=PACKAGE_SOURCE_TYPES, test=bool, test_all=bool, update=bool, track=bool)
-    def install(self, pb, test=False, test_all=False, generator=None, update=False, track=True, insecure=False):
+    def install(
+        self,
+        pb,
+        test=False,
+        test_all=False,
+        generator=None,
+        update=False,
+        track=True,
+        insecure=False,
+        use_build_cache=False,
+        recipe_deps_only=False
+    ):
         pb = self.parse_pkg_build(pb)
         pkg_dir = self.get_package_directory(pb.to_fname())
         unlink_dir = self.get_unlink_directory(pb.to_fname())
-        install_dir = self.get_package_directory(pb.to_fname(), 'install')
         # If its been unlinked, then link it in
         if os.path.exists(unlink_dir):
             if update: shutil.rmtree(unlink_dir)
@@ -311,26 +356,81 @@ class CGetPrefix:
             self.write_parent(pb, track=track)
             if update: self.remove(pb)
             else: return "Package {} already installed".format(pb.to_name())
-        with self.create_builder(uuid.uuid4().hex, tmp=True) as builder:
-            # Fetch package
-            src_dir = builder.fetch(pb.pkg_src.url, pb.hash, (pb.cmake != None), insecure=insecure)
-            # Install any dependencies first
-            self.install_deps(pb, src_dir, test=test, test_all=test_all, generator=generator, insecure=insecure)
-            # Setup cmake file
-            if pb.cmake: 
-                target = os.path.join(src_dir, 'CMakeLists.txt')
-                if os.path.exists(target):
-                    os.rename(target, os.path.join(src_dir, builder.cmake_original_file))
-                shutil.copyfile(pb.cmake, target)
-            # Configure and build
-            builder.configure(src_dir, defines=pb.define, generator=generator, install_prefix=install_dir, test=test, variant=pb.variant)
-            builder.build(variant=pb.variant)
-            # Run tests if enabled
-            if test or test_all: builder.test(variant=pb.variant)
-            # Install
-            builder.build(target='install', variant=pb.variant)
-            if util.USE_SYMLINKS: util.symlink_dir(install_dir, self.prefix)
-            else: util.copy_dir(install_dir, self.prefix)
+        package_hash = self.hash_pkg(pb)
+        self.log("package %s hash %s" % (pb.to_name(), package_hash))
+        pkg_install_dir = self.get_package_directory(pb.to_fname(), 'install')
+        if use_build_cache:
+            install_dir = util.get_cache_path("builds", pb.to_name(), package_hash)
+            util.mkdir(pkg_dir)
+            os.symlink(install_dir, pkg_install_dir)
+            self.log("using cached install dir '%s'" % install_dir)
+        else:
+            install_dir = pkg_install_dir
+            self.log("using local install dir '%s'" % install_dir)
+        build_needed = True
+        if recipe_deps_only:
+            self.install_deps(
+                pb,
+                test=test,
+                test_all=test_all,
+                generator=generator,
+                insecure=insecure,
+                use_build_cache=use_build_cache,
+                recipe_deps_only=True
+            )
+            with util.cache_lock() as cache_lock:
+                if not update and use_build_cache and os.path.exists(install_dir):
+                    print("retreived Package {} from cache".format(pb.to_name()))
+                    build_needed = False
+        if build_needed:
+            with self.create_builder(uuid.uuid4().hex, tmp=True) as builder:
+                # Fetch package
+                src_dir = builder.fetch(pb.pkg_src.url, pb.hash, (pb.cmake != None), insecure=insecure)
+                # Install any dependencies first
+                if not recipe_deps_only:
+                    self.install_deps(
+                        pb,
+                        src_dir=src_dir,
+                        test=test,
+                        test_all=test_all,
+                        generator=generator,
+                        insecure=insecure,
+                        use_build_cache=use_build_cache,
+                        recipe_deps_only=False
+                    )
+                with util.cache_lock() as cache_lock:
+                    if not update and use_build_cache and os.path.exists(install_dir):
+                        print("retreived Package {} from cache".format(pb.to_name()))
+                    else:
+                        # Setup cmake file
+                        if pb.cmake:
+                            target = os.path.join(src_dir, 'CMakeLists.txt')
+                            if os.path.exists(target):
+                                os.rename(target, os.path.join(src_dir, builder.cmake_original_file))
+                            shutil.copyfile(pb.cmake, target)
+                        # Configure and build
+                        defines = list(pb.define or []) + [
+                            "CMAKE_PREFIX_PATH=%s" % ";".join(
+                                ['"%s"' % self.get_real_install_path(dep) for dep in self.get_dependents(pb, src_dir)]
+                            )
+                        ]
+                        print("defines")
+                        print(defines)
+                        builder.configure(
+                            src_dir,
+                            defines=defines,
+                            generator=generator,
+                            install_prefix=install_dir,
+                            test=test,
+                            variant=pb.variant
+                        )
+                        builder.build(variant=pb.variant)
+                        # Run tests if enabled
+                        if test or test_all: builder.test(variant=pb.variant)
+                        # Install
+                        builder.build(target='install', variant=pb.variant)
+        if util.USE_SYMLINKS: util.symlink_dir(install_dir, self.prefix)
+        else: util.copy_dir(install_dir, self.prefix)
         self.write_parent(pb, track=track)
         return "Successfully installed {}".format(pb.to_name())
 
