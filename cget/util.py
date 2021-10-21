@@ -146,16 +146,20 @@ def copy_dir(src, dst):
             src_file = os.path.join(root, file)
             shutil.copy2(adjust_path(src_file), os.path.join(d, file))
 
+def readlink(file):
+    f = os.readlink(file)
+    if not os.path.isabs(f):
+        f = os.path.normpath(os.path.join(os.path.dirname(file), f))
+    return f
+
 def rm_symlink(file):
     if os.path.islink(file):
-        f = os.readlink(file)
+        f = readlink(file)
         if not os.path.exists(f): os.remove(file)
 
 def rm_symlink_in(file, prefix):
     if os.path.islink(file):
-        f = os.readlink(file)
-        if not os.path.isabs(f):
-            f = os.path.normpath(os.path.join(os.path.dirname(file), f))
+        f = readlink(file)
         if f.startswith(prefix):
             os.remove(file)
 
