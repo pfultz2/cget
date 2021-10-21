@@ -285,8 +285,9 @@ class CGetPrefix:
     def write_parent(self, pb, track=True):
         if track and pb.parent is not None: util.mkfile(self.get_deps_directory(pb.to_fname()), pb.parent, pb.parent)
 
-    def install_deps(self, pb, d, test=False, test_all=False, generator=None, insecure=False):
-        for dependent in self.from_file(pb.requirements or os.path.join(d, 'requirements.txt'), pb.pkg_src.url):
+    def install_deps(self, pb, d, test=False, test_all=False, generator=None, insecure=False, ignore_requirements=False):
+        req_txt = os.path.join(d, 'requirements.txt') if not ignore_requirements else None
+        for dependent in self.from_file(pb.requirements or req_txt, pb.pkg_src.url):
             transient = dependent.test or dependent.build
             testing = test or test_all
             installable = not dependent.test or dependent.test == testing
@@ -315,7 +316,7 @@ class CGetPrefix:
             # Fetch package
             src_dir = builder.fetch(pb.pkg_src.url, pb.hash, (pb.cmake != None), insecure=insecure)
             # Install any dependencies first
-            self.install_deps(pb, src_dir, test=test, test_all=test_all, generator=generator, insecure=insecure)
+            self.install_deps(pb, src_dir, test=test, test_all=test_all, generator=generator, insecure=insecure, ignore_requirements=pb.ignore_requirements)
             # Setup cmake file
             if pb.cmake: 
                 target = os.path.join(src_dir, 'CMakeLists.txt')

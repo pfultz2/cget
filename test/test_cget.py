@@ -629,6 +629,16 @@ def test_without_reqs_f2(d):
     d.write_to('requirements.txt', [shlex_quote(get_exists_path('basicapp'))])
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple'))
 
+@appveyor_skip
+@pytest.mark.xfail(strict=True)
+def test_bad_req(d):
+    reqs_file = d.write_to('reqs', ['simpleapp-pyreq,' + shlex_quote(get_exists_path('simpleapp-pyreq'))])
+    d.cmds(install_cmds(url='--file {}'.format(reqs_file), alias='simpleapp-pyreq'))
+
+@appveyor_skip
+def test_skip_bad_req(d):
+    reqs_file = d.write_to('reqs', ['simpleapp-pyreq,' + shlex_quote(get_exists_path('simpleapp-pyreq')) + ' --ignore-requirements'])
+    d.cmds(install_cmds(url='--file {}'.format(reqs_file), alias='simpleapp-pyreq'))
 
 @appveyor_skip
 @pytest.mark.xfail(strict=True)
