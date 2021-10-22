@@ -4,7 +4,7 @@ import sys, os, tarfile, cget.util, shutil
 
 from six.moves import shlex_quote
 
-__appveyor__ = 'APPVEYOR' in os.environ
+__appveyor__ = 'APPVEYOR' in os.environ or ('GITHUB_WORKFLOW' in os.environ and os.name == 'nt')
 appveyor_skip = pytest.mark.skipif(__appveyor__, reason="Trimmed windows tests for appveyor")
 
 __test_dir__ = os.path.dirname(os.path.realpath(__file__))
@@ -629,6 +629,16 @@ def test_without_reqs_f2(d):
     d.write_to('requirements.txt', [shlex_quote(get_exists_path('basicapp'))])
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple'))
 
+@appveyor_skip
+@pytest.mark.xfail(strict=True)
+def test_bad_req(d):
+    reqs_file = d.write_to('reqs', ['simpleapp-pyreq,' + shlex_quote(get_exists_path('simpleapp-pyreq'))])
+    d.cmds(install_cmds(url='--file {}'.format(reqs_file), alias='simpleapp-pyreq'))
+
+@appveyor_skip
+def test_skip_bad_req(d):
+    reqs_file = d.write_to('reqs', ['simpleapp-pyreq,' + shlex_quote(get_exists_path('simpleapp-pyreq')) + ' --ignore-requirements'])
+    d.cmds(install_cmds(url='--file {}'.format(reqs_file), alias='simpleapp-pyreq'))
 
 @appveyor_skip
 @pytest.mark.xfail(strict=True)
