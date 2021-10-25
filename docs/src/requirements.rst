@@ -34,4 +34,7 @@ This specifies the package source (see :ref:`pkg-src`) that will be installed.
 
     This will read the requirements from another requirements file.
 
+.. option::  --ignore-requirements
+
+    This will ignore the requirement.txt file in the project. This is useful when a package has a requirements.txt file that is actually for python packages, not cget.
 
