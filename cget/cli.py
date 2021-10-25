@@ -12,7 +12,7 @@ aliases = {
 }
 
 
-def buildType(debug, release, build_type):
+def get_build_type(debug, release, build_type):
     build_types = []
     if debug:
         build_types.append('Debug')
@@ -110,7 +110,7 @@ def init_command(prefix, toolchain, cc, cxx, cflags, cxxflags, ldflags, std, def
 @click.argument('pkgs', nargs=-1, type=click.STRING)
 def install_command(prefix, pkgs, define, file, test, test_all, update, generator, cmake, debug, release, build_type, insecure):
     """ Install packages """
-    variant = buildType(debug, release, build_type)
+    variant = get_build_type(debug, release, build_type)
     if not file and not pkgs:
         if os.path.exists('dev-requirements.txt'): file = 'dev-requirements.txt'
         else: file = 'requirements.txt'
@@ -148,7 +148,7 @@ def ignore_command(prefix, pkgs):
 def build_command(prefix, pkg, define, test, configure, clean, path, yes, target, generator, debug, release, build_type):
     """ Build package """
     pb = PackageBuild(pkg).merge_defines(define)
-    pb.variant = buildType(debug, release, build_type)
+    pb.variant = get_build_type(debug, release, build_type)
     with prefix.try_("Failed to build package {}".format(pb.to_name())):
         if configure: prefix.build_configure(pb)
         elif path: click.echo(prefix.build_path(pb))

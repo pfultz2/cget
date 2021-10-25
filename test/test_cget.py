@@ -181,6 +181,9 @@ def test_debug_dir_fail(d):
 def test_debug_dir_pass(d):
     d.cmds(install_cmds(url=get_exists_path('libsimpledebug'), lib='simple', variants=['--release', '']))
 
+def test_build_type_dir_pass(d):
+    d.cmds(install_cmds(url=get_exists_path('libsimpledebug'), lib='simple', variants=['--build-type=relwithdebinfo']))
+
 if cget.util.USE_SYMLINKS:
     def test_local_dir(d):
         cget.util.copy_to(get_exists_path('libsimple'), d.tmp_dir)
