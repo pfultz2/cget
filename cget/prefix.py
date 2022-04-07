@@ -1,4 +1,4 @@
-import os, shutil, shlex, six, inspect, click, contextlib, uuid, sys, functools
+import os, shutil, shlex, six, inspect, click, contextlib, sys, functools
 
 from cget.builder import Builder
 from cget.package import fname_to_pkg
@@ -183,7 +183,7 @@ class CGetPrefix:
     @contextlib.contextmanager
     def create_builder(self, name, tmp=False):
         pre = ''
-        if tmp: pre = 'tmp-'
+        if tmp: pre = '/tmp/cgettmp-'
         d = self.get_builder_path(pre + name)
         exists = os.path.exists(d)
         util.mkdir(d)
@@ -312,7 +312,7 @@ class CGetPrefix:
             self.write_parent(pb, track=track)
             if update: self.remove(pb)
             else: return "Package {} already installed".format(pb.to_name())
-        with self.create_builder(uuid.uuid4().hex, tmp=True) as builder:
+        with self.create_builder(pb.pkg_src.get_hash(), tmp=True) as builder:
             # Fetch package
             src_dir = builder.fetch(pb.pkg_src.url, pb.hash, (pb.cmake != None), insecure=insecure)
             # Install any dependencies first

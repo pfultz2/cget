@@ -1,4 +1,4 @@
-import base64, copy, argparse, six
+import base64, copy, argparse, six, hashlib
 
 def encode_url(url):
     x = six.b(url[url.find('://')+3:])
@@ -30,6 +30,16 @@ class PackageSource:
         if self.url.startswith('file://'):
             return self.url[7:] # Remove "file://"
         raise TypeError()
+    def get_hash(self):
+        name_h = hashlib.md5(self.name.encode('utf-8')).hexdigest()
+        url_h = hashlib.md5(self.url.encode('utf-8')).hexdigest()
+        fname_h = hashlib.md5(self.fname.encode('utf-8')).hexdigest()
+        if self.recipe:
+            recipe_h = hashlib.md5(self.recipe.encode('utf-8')).hexdigest()
+        else:
+            recipe_h = hashlib.md5('None'.encode('utf-8')).hexdigest()
+        total_h = name_h + url_h + fname_h + recipe_h
+        return hashlib.md5(total_h.encode('utf-8')).hexdigest()
 
 
 def fname_to_pkg(fname):
