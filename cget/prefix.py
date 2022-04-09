@@ -1,4 +1,4 @@
-import os, shutil, shlex, six, inspect, click, contextlib, sys, functools
+import os, shutil, shlex, six, inspect, click, contextlib, sys, functools, tempfile
 
 from cget.builder import Builder
 from cget.package import fname_to_pkg
@@ -183,7 +183,7 @@ class CGetPrefix:
     @contextlib.contextmanager
     def create_builder(self, name, tmp=False):
         pre = ''
-        if tmp: pre = '/tmp/cgettmp-'
+        if tmp: pre = os.path.join(tempfile.gettempdir(), 'cget-')
         d = self.get_builder_path(pre + name)
         exists = os.path.exists(d)
         util.mkdir(d)

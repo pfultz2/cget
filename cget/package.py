@@ -31,13 +31,15 @@ class PackageSource:
             return self.url[7:] # Remove "file://"
         raise TypeError()
     def get_hash(self):
-        name_h = hashlib.md5(self.name.encode('utf-8')).hexdigest()
-        url_h = hashlib.md5(self.url.encode('utf-8')).hexdigest()
-        fname_h = hashlib.md5(self.fname.encode('utf-8')).hexdigest()
-        if self.recipe:
-            recipe_h = hashlib.md5(self.recipe.encode('utf-8')).hexdigest()
-        else:
-            recipe_h = hashlib.md5('None'.encode('utf-8')).hexdigest()
+        str2hash = lambda x : hashlib.sha256(x.encode('utf-8')).hexdigest()
+        name_h = self.name if self.name is not None else 'NoneName'
+        name_h = str2hash(name_h)
+        url_h = self.url if self.url is not None else 'NoneURL'
+        url_h = str2hash(url_h)
+        fname_h = self.fname if self.fname is not None else 'NoneFName'
+        fname_h = str2hash(fname_h)
+        recipe_h = self.recipe if self.recipe is not None else 'NoneRecipe'
+        recipe_h = str2hash(recipe_h)
         total_h = name_h + url_h + fname_h + recipe_h
         return hashlib.md5(total_h.encode('utf-8')).hexdigest()
 
