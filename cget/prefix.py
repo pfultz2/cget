@@ -183,7 +183,8 @@ class CGetPrefix:
     @contextlib.contextmanager
     def create_builder(self, name, tmp=False):
         pre = ''
-        if tmp: pre = os.path.join(tempfile.gettempdir(), 'cget-')
+        if tmp: 
+            pre = os.path.join(tempfile.gettempdir(), 'cget-')
         d = self.get_builder_path(pre + name)
         exists = os.path.exists(d)
         util.mkdir(d)

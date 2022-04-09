@@ -41,7 +41,7 @@ class PackageSource:
         recipe_h = self.recipe if self.recipe is not None else 'NoneRecipe'
         recipe_h = str2hash(recipe_h)
         total_h = name_h + url_h + fname_h + recipe_h
-        return hashlib.md5(total_h.encode('utf-8')).hexdigest()
+        return hashlib.sha256(total_h.encode('utf-8')).hexdigest()
 
 
 def fname_to_pkg(fname):
