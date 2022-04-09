@@ -206,7 +206,7 @@ def copy_to(src, dst_dir):
         shutil.copyfile(src, target)
     else:
         if target_exists: shutil.rmtree(target, ignore_errors=True) 
-        shutil.copytree(src, target, dirs_exist_ok=True)
+        shutil.copytree(src, target)
     return target
 
 def symlink_to(src, dst_dir):
