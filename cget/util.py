@@ -205,7 +205,7 @@ def copy_to(src, dst_dir):
         if target_exists: os.remove(target)
         shutil.copyfile(src, target)
     else:
-        if target_exists: os.removedirs(target) 
+        if target_exists: shutil.rmtree(target) 
         shutil.copytree(src, target)
     return target
 
