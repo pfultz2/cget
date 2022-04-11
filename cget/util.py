@@ -200,13 +200,8 @@ def get_dirs(d):
 
 def copy_to(src, dst_dir):
     target = os.path.join(dst_dir, os.path.basename(src))
-    target_exists = os.path.exists(target)
-    if os.path.isfile(src): 
-        if target_exists: os.remove(target)
-        shutil.copyfile(src, target)
-    else:
-        if target_exists: shutil.rmtree(target, ignore_errors=True) 
-        shutil.copytree(src, target)
+    if os.path.isfile(src): shutil.copyfile(src, target)
+    else: shutil.copytree(src, target)
     return target
 
 def symlink_to(src, dst_dir):
