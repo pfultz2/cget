@@ -1,4 +1,4 @@
-import os, shutil, shlex, six, inspect, click, contextlib, sys, functools, tempfile
+import os, shutil, shlex, six, inspect, click, contextlib, sys, functools
 
 from cget.builder import Builder
 from cget.package import fname_to_pkg
