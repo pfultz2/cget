@@ -1009,3 +1009,6 @@ def test_cmake_trouble(d):
 
 def test_subdir(d):
     d.cmds(install_cmds(url='-X subdir {}'.format(get_exists_path('libsimplesubdir')), lib='simple', alias=get_exists_path('libsimplesubdir')))
+
+def test_subdir_exist(d):
+    d.cmds(install_cmds(url='-d cmake {}'.format(get_exists_path('libsimplesubdir')), lib='simple', alias=get_exists_path('libsimplesubdir')))

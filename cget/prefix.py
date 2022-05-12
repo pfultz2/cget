@@ -324,7 +324,7 @@ class CGetPrefix:
                     os.rename(target, os.path.join(src_dir, builder.cmake_original_file))
                 shutil.copyfile(pb.cmake, target)
             # Configure and build
-            builder.configure(src_dir, defines=pb.define, generator=generator, install_prefix=install_dir, test=test, variant=pb.variant)
+            builder.configure(src_dir, dir=pb.dir, defines=pb.define, generator=generator, install_prefix=install_dir, test=test, variant=pb.variant)
             builder.build(variant=pb.variant)
             # Run tests if enabled
             if test or test_all: builder.test(variant=pb.variant)
@@ -359,7 +359,7 @@ class CGetPrefix:
             # Install any dependencies first
             self.install_deps(pb, src_dir, generator=generator, test=test)
             # Configure and build
-            if not builder.exists: builder.configure(src_dir, defines=pb.define, generator=generator, test=test, variant=pb.variant)
+            if not builder.exists: builder.configure(src_dir, dir=pb.dir, defines=pb.define, generator=generator, test=test, variant=pb.variant)
             builder.build(variant=pb.variant, target=target)
             # Run tests if enabled
             if test: builder.test(variant=pb.variant)
