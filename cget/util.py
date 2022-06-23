@@ -16,7 +16,7 @@ if os.name == 'posix' and sys.version_info[0] < 3:
 else:
     import subprocess
 
-from six.moves.urllib import request
+from six.moves.urllib import request, error
 
 def to_bool(value):
     x = str(value).lower()
@@ -209,12 +209,6 @@ def symlink_to(src, dst_dir):
     os.symlink(src, target)
     return target
 
-class CGetURLOpener(request.FancyURLopener):
-    def http_error_default(self, url, fp, errcode, errmsg, headers):
-        if errcode >= 400:
-            raise BuildError("Download failed with error {0} for: {1}".format(errcode, url))
-        return request.FancyURLopener.http_error_default(self, url, fp, errcode, errmsg, headers)
-
 def download_to(url, download_dir, insecure=False):
     name = url.split('/')[-1]
     file = os.path.join(download_dir, name)
@@ -229,7 +223,12 @@ def download_to(url, download_dir, insecure=False):
                 bar.update(0)
         context = None
         if insecure: context = ssl._create_unverified_context()
-        CGetURLOpener(context=context).retrieve(url, filename=file, reporthook=hook, data=None)
+        try:
+            request.urlretrieve(url, filename=file, reporthook=hook, data=None)
+        except error.HTTPError as e:
+            if e.status >= 400:
+                raise BuildError("Download failed with error {0} for: {1}".format(e.status, url))
+            raise
         bar.update(bar_len)
     if not os.path.exists(file):
         raise BuildError("Download failed for: {0}".format(url))
