@@ -1,4 +1,4 @@
-import click, os, sys, shutil, json, six, hashlib, ssl
+import click, os, sys, shutil, json, six, hashlib
 
 if sys.version_info[0] < 3:
     try:
