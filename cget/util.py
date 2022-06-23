@@ -221,8 +221,6 @@ def download_to(url, download_dir, insecure=False):
                 # Hack because we can't set the position
                 bar.pos = percent
                 bar.update(0)
-        context = None
-        if insecure: context = ssl._create_unverified_context()
         try:
             request.urlretrieve(url, filename=file, reporthook=hook, data=None)
         except error.HTTPError as e:
