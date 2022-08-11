@@ -16,7 +16,7 @@ jobs:
       matrix:
         platform:
           - ubuntu-18.04
-          - macos-10.14
+          - macos-12
 #           - windows-2016
         python-version: [2.7, 3.5, 3.6, 3.7, 3.8, 3.9]
 
