@@ -103,18 +103,19 @@ def init_command(prefix, toolchain, cc, cxx, cflags, cxxflags, ldflags, std, def
 @click.option('-D', '--define', multiple=True, help="Extra configuration variables to pass to CMake")
 @click.option('-G', '--generator', envvar='CGET_GENERATOR', help='Set the generator for CMake to use')
 @click.option('-X', '--cmake', help='Set cmake file to use to build project')
+@click.option('-d', '--dir', help='Use cmake subdir in project for configure step')
 @click.option('--debug', is_flag=True, help="Install debug version")
 @click.option('--release', is_flag=True, help="Install release version")
 @click.option('--build-type', help="Install custom version [Release, Debug, RelWithDebInfo or other cmake build type]")
 @click.option('--insecure', is_flag=True, help="Don't use https urls")
 @click.argument('pkgs', nargs=-1, type=click.STRING)
-def install_command(prefix, pkgs, define, file, test, test_all, update, generator, cmake, debug, release, build_type, insecure):
+def install_command(prefix, pkgs, define, file, test, test_all, update, generator, cmake, dir, debug, release, build_type, insecure):
     """ Install packages """
     variant = get_build_type(debug, release, build_type)
     if not file and not pkgs:
         if os.path.exists('dev-requirements.txt'): file = 'dev-requirements.txt'
         else: file = 'requirements.txt'
-    pbs = [PackageBuild(pkg, cmake=cmake, variant=variant) for pkg in pkgs]
+    pbs = [PackageBuild(pkg, cmake=cmake, dir=dir, variant=variant) for pkg in pkgs]
     for pbu in util.flat([prefix.from_file(file), pbs]):
         pb = pbu.merge_defines(define)
         pb.variant = variant
@@ -135,6 +136,7 @@ def ignore_command(prefix, pkgs):
 @use_prefix
 @click.option('-t', '--test', is_flag=True, help="Test package by running ctest or check target")
 @click.option('-c', '--configure', is_flag=True, help="Configure cmake")
+@click.option('-d', '--dir', help='Use cmake subdir in project for configure step')
 @click.option('-C', '--clean', is_flag=True, help="Remove build directory")
 @click.option('-P', '--path', is_flag=True, help="Show path to build directory")
 @click.option('-D', '--define', multiple=True, help="Extra configuration variables to pass to CMake")
@@ -147,7 +149,7 @@ def ignore_command(prefix, pkgs):
 @click.argument('pkg', nargs=1, default='.', type=click.STRING)
 def build_command(prefix, pkg, define, test, configure, clean, path, yes, target, generator, debug, release, build_type):
     """ Build package """
-    pb = PackageBuild(pkg).merge_defines(define)
+    pb = PackageBuild(pkg, dir=dir).merge_defines(define)
     pb.variant = get_build_type(debug, release, build_type)
     with prefix.try_("Failed to build package {}".format(pb.to_name())):
         if configure: prefix.build_configure(pb)

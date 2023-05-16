@@ -50,7 +50,7 @@ class Builder:
             util.extract_ar(archive=f, dst=self.top_dir)
         return next(util.get_dirs(self.top_dir))
 
-    def configure(self, src_dir, defines=None, generator=None, install_prefix=None, test=True, variant=None):
+    def configure(self, src_dir, dir=None, defines=None, generator=None, install_prefix=None, test=True, variant=None):
         self.prefix.log("configure")
         util.mkdir(self.build_dir)
         args = [
@@ -65,6 +65,7 @@ class Builder:
         if test: args.extend(['-DBUILD_TESTING=On'])
         else: args.extend(['-DBUILD_TESTING=Off'])
         args.extend(['-DCMAKE_BUILD_TYPE={}'.format(variant or 'Release')])
+        if dir is not None: args.extend([os.path.join(src_dir,dir)])
         if install_prefix is not None: args.extend(['-DCMAKE_INSTALL_PREFIX=' + install_prefix])
         try:
             self.cmake(args=args, cwd=self.build_dir, use_toolchain=True)
