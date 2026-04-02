@@ -186,7 +186,7 @@ class CGetPrefix:
         if tmp: 
             pre = 'tmp-'
             # Use a short hash to avoid exceeding Windows MAX_PATH (260 chars)
-            name = hashlib.sha256(name.encode()).hexdigest()[:12]
+            name = hashlib.sha256(name.encode()).hexdigest()[:12] if len(name) > 12 else name
         d = self.get_builder_path(pre + name)
         exists = os.path.exists(d)
         util.mkdir(d)
