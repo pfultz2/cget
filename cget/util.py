@@ -258,7 +258,29 @@ def extract_ar(archive, dst, *kwargs):
     if sys.version_info[0] < 3 and archive.endswith('.xz'):
         with contextlib.closing(lzma.LZMAFile(archive)) as xz:
             with tarfile.open(fileobj=xz, *kwargs) as f:
-                f.extractall(dst)
+                
+                import os
+                
+                def is_within_directory(directory, target):
+                    
+                    abs_directory = os.path.abspath(directory)
+                    abs_target = os.path.abspath(target)
+                
+                    prefix = os.path.commonprefix([abs_directory, abs_target])
+                    
+                    return prefix == abs_directory
+                
+                def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+                
+                    for member in tar.getmembers():
+                        member_path = os.path.join(path, member.name)
+                        if not is_within_directory(path, member_path):
+                            raise Exception("Attempted Path Traversal in Tar File")
+                
+                    tar.extractall(path, members, numeric_owner=numeric_owner) 
+                    
+                
+                safe_extract(f, dst)
     elif archive.endswith('.zip'):
         with zipfile.ZipFile(archive,'r') as f:
             f.extractall(dst)
