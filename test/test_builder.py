@@ -195,7 +195,7 @@ class TestConfigure:
 
         with mock.patch.object(b, 'cmake') as mock_cmake:
             b.configure(src_dir, defines=["FOO=1", "BAR=2"])
-            args = mock_cmake.call_args.kwargs['args']
+            args = mock_cmake.call_args[1]['args']
             assert '-DFOO=1' in args
             assert '-DBAR=2' in args
 
@@ -209,7 +209,7 @@ class TestConfigure:
 
         with mock.patch.object(b, 'cmake') as mock_cmake:
             b.configure(src_dir, generator="Ninja")
-            args = mock_cmake.call_args.kwargs['args']
+            args = mock_cmake.call_args[1]['args']
             assert '-G' in args
             idx = args.index('-G')
             assert args[idx + 1] == "Ninja"
@@ -224,7 +224,7 @@ class TestConfigure:
 
         with mock.patch.object(b, 'cmake') as mock_cmake:
             b.configure(src_dir, install_prefix="/install/here")
-            args = mock_cmake.call_args.kwargs['args']
+            args = mock_cmake.call_args[1]['args']
             assert '-DCMAKE_INSTALL_PREFIX=/install/here' in args
 
     def test_configure_test_off(self, tmp_path):
@@ -237,7 +237,7 @@ class TestConfigure:
 
         with mock.patch.object(b, 'cmake') as mock_cmake:
             b.configure(src_dir, test=False)
-            args = mock_cmake.call_args.kwargs['args']
+            args = mock_cmake.call_args[1]['args']
             assert '-DBUILD_TESTING=Off' in args
 
     def test_configure_with_variant(self, tmp_path):
@@ -250,7 +250,7 @@ class TestConfigure:
 
         with mock.patch.object(b, 'cmake') as mock_cmake:
             b.configure(src_dir, variant="Debug")
-            args = mock_cmake.call_args.kwargs['args']
+            args = mock_cmake.call_args[1]['args']
             assert '-DCMAKE_BUILD_TYPE=Debug' in args
 
 
@@ -265,7 +265,7 @@ class TestBuild:
 
         with mock.patch.object(b, 'cmake') as mock_cmake:
             b.build()
-            args = mock_cmake.call_args.kwargs['args']
+            args = mock_cmake.call_args[1]['args']
             assert '--build' in args
             assert b.build_dir in args
 
@@ -277,7 +277,7 @@ class TestBuild:
 
         with mock.patch.object(b, 'cmake') as mock_cmake:
             b.build(target="install")
-            args = mock_cmake.call_args.kwargs['args']
+            args = mock_cmake.call_args[1]['args']
             assert '--target' in args
             assert 'install' in args
 
@@ -289,7 +289,7 @@ class TestBuild:
 
         with mock.patch.object(b, 'cmake') as mock_cmake:
             b.build(variant="Debug")
-            args = mock_cmake.call_args.kwargs['args']
+            args = mock_cmake.call_args[1]['args']
             assert '--config' in args
             assert 'Debug' in args
 
@@ -304,7 +304,7 @@ class TestBuild:
 
         with mock.patch.object(b, 'cmake') as mock_cmake:
             b.build()
-            args = mock_cmake.call_args.kwargs['args']
+            args = mock_cmake.call_args[1]['args']
             assert '-j' in args
 
 
@@ -446,7 +446,7 @@ class TestConfigureAdditional:
 
         with mock.patch.object(b, 'cmake') as mock_cmake:
             b.configure(src_dir, test=True)
-            args = mock_cmake.call_args.kwargs['args']
+            args = mock_cmake.call_args[1]['args']
             assert '-DBUILD_TESTING=On' in args
 
     def test_configure_default_variant_release(self, tmp_path):
@@ -459,7 +459,7 @@ class TestConfigureAdditional:
 
         with mock.patch.object(b, 'cmake') as mock_cmake:
             b.configure(src_dir)
-            args = mock_cmake.call_args.kwargs['args']
+            args = mock_cmake.call_args[1]['args']
             assert '-DCMAKE_BUILD_TYPE=Release' in args
 
     def test_configure_verbose_adds_verbose_makefile(self, tmp_path):
@@ -472,7 +472,7 @@ class TestConfigureAdditional:
 
         with mock.patch.object(b, 'cmake') as mock_cmake:
             b.configure(src_dir)
-            args = mock_cmake.call_args.kwargs['args']
+            args = mock_cmake.call_args[1]['args']
             assert '-DCMAKE_VERBOSE_MAKEFILE=On' in args
 
     def test_configure_cmake_failure_shows_logs(self, tmp_path):
@@ -499,7 +499,7 @@ class TestConfigureAdditional:
 
         with mock.patch.object(b, 'cmake') as mock_cmake:
             b.configure(src_dir)
-            args = mock_cmake.call_args.kwargs['args']
+            args = mock_cmake.call_args[1]['args']
             cget_dir_args = [a for a in args if 'CGET_CMAKE_DIR' in a]
             assert len(cget_dir_args) == 1
             original_args = [a for a in args if 'CGET_CMAKE_ORIGINAL_SOURCE_FILE' in a]
@@ -517,7 +517,7 @@ class TestBuildAdditional:
 
         with mock.patch.object(b, 'cmake') as mock_cmake:
             b.build()
-            args = mock_cmake.call_args.kwargs['args']
+            args = mock_cmake.call_args[1]['args']
             assert '-j' not in args
             assert '--' not in args
 
@@ -529,7 +529,7 @@ class TestBuildAdditional:
 
         with mock.patch.object(b, 'cmake') as mock_cmake:
             b.build(cwd="/some/dir")
-            assert mock_cmake.call_args.kwargs.get('cwd') == "/some/dir"
+            assert mock_cmake.call_args[1].get('cwd') == "/some/dir"
 
     def test_build_verbose_makefile_adds_verbose_flag(self, tmp_path):
         prefix = MockPrefix(str(tmp_path), verbose=True)
@@ -542,7 +542,7 @@ class TestBuildAdditional:
 
         with mock.patch.object(b, 'cmake') as mock_cmake:
             b.build()
-            args = mock_cmake.call_args.kwargs['args']
+            args = mock_cmake.call_args[1]['args']
             assert 'VERBOSE=1' in args
 
 
