@@ -282,12 +282,22 @@ def check_hash(f, hash):
     t, h = hash.lower().split(':')
     return hash_file(f, t) == h
 
+def is_executable(filepath):
+    if not os.path.isfile(filepath):
+        return False
+
+    if sys.platform == 'win32':
+        pathext = os.environ.get('PATHEXT', '').split(';')
+        return os.path.splitext(filepath)[1].upper() in [e.upper() for e in pathext]
+    else:
+        return os.access(filepath, os.X_OK)
+
 def which(p, paths=None, throws=True):
     exes = [p+x for x in ['', '.exe', '.bat']]
     for dirname in list(paths or [])+os.environ['PATH'].split(os.pathsep):
         for exe in exes:
             candidate = os.path.join(os.path.expanduser(dirname), exe)
-            if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+            if is_executable(candidate):
                 return candidate
     if throws: raise BuildError("Can't find file %s" % p)
     else: return None
