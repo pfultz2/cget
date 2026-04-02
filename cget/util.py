@@ -305,7 +305,13 @@ def which(p, paths=None, throws=True):
 def merge(*args):
     result = {}
     for d in args:
-        result.update(dict(d or {}))
+        if d is None:
+            continue
+        for key, val in dict(d or {}).items():
+            if key in result:
+                result[key] = result[key] + ":" + val
+            else:
+                result[key] = val
     return result
 
 def flat(*args):
