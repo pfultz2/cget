@@ -1018,7 +1018,8 @@ class TestFromFileAdditional:
         inner = tmp_path / "inner.txt"
         inner.write_text("user/inner_pkg\n")
         outer = tmp_path / "outer.txt"
-        outer.write_text("user/outer_pkg\n-f {}\n".format(str(inner)))
+        # Quote the path so shlex.split handles Windows backslashes correctly
+        outer.write_text('user/outer_pkg\n-f "{}"\n'.format(str(inner)))
         results = list(p.from_file(str(outer)))
         assert len(results) == 2
         names = [r.pkg_src.name for r in results]
@@ -1045,7 +1046,7 @@ class TestFromFileAdditional:
         cmake_file.write_text("# cmake")
         p = CGetPrefix(str(tmp_path / "pfx"))
         req = tmp_path / "requirements.txt"
-        req.write_text("user/repo -X {}\n".format(str(cmake_file)))
+        req.write_text('user/repo -X "{}"\n'.format(str(cmake_file)))
         results = list(p.from_file(str(req)))
         assert len(results) == 1
         assert results[0].cmake is not None
@@ -1069,12 +1070,13 @@ class TestFromFileAdditional:
     def test_deeply_nested_file_references(self, tmp_path):
         p = CGetPrefix(str(tmp_path / "pfx"))
         # level3 -> level2 -> level1
+        # Quote paths so shlex.split handles Windows backslashes correctly
         level1 = tmp_path / "level1.txt"
         level1.write_text("user/pkg1\n")
         level2 = tmp_path / "level2.txt"
-        level2.write_text("-f {}\nuser/pkg2\n".format(str(level1)))
+        level2.write_text('-f "{}"\nuser/pkg2\n'.format(str(level1)))
         level3 = tmp_path / "level3.txt"
-        level3.write_text("-f {}\nuser/pkg3\n".format(str(level2)))
+        level3.write_text('-f "{}"\nuser/pkg3\n'.format(str(level2)))
         results = list(p.from_file(str(level3)))
         assert len(results) == 3
         names = sorted([r.pkg_src.name for r in results])
