@@ -12,6 +12,7 @@ jobs:
           access_token: ${{ github.token }}
   test:
     runs-on: ${{ matrix.platform }}
+    container: ${{ matrix.container || '' }}
     strategy:
       matrix:
         platform:
