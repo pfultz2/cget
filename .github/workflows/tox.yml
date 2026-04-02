@@ -47,7 +47,7 @@ jobs:
       if: matrix.container
       run: |
         apt-get update
-        apt-get install -y make gcc g++
+        apt-get install -y make gcc g++ pkg-config
     - name: Install dependencies
       run: |
         python -m pip install --upgrade setuptools pip wheel
