@@ -52,6 +52,9 @@ jobs:
       run: |
         python -m pip install --upgrade setuptools pip wheel
         python -m pip install tox
+    - name: Install pkg-config (Windows)
+      if: runner.os == 'Windows'
+      run: choco install pkgconfiglite -y
     - name: Test with tox
       run: tox -e py,lint
       env:
