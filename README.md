@@ -50,6 +50,6 @@ See [here](http://cget.readthedocs.io/) for the latest documentation.
 Supported platforms
 -------------------
 
-This is supported on python 2.7, 3.4, and 3.5. 
+This is supported on python 3.6 and later. 
 
 
