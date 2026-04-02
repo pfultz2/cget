@@ -1,4 +1,4 @@
-import os, shutil, shlex, six, inspect, click, contextlib, sys, functools
+import os, shutil, shlex, six, inspect, click, contextlib, sys, functools, hashlib
 
 from cget.builder import Builder
 from cget.package import fname_to_pkg
@@ -183,7 +183,10 @@ class CGetPrefix:
     @contextlib.contextmanager
     def create_builder(self, name, tmp=False):
         pre = ''
-        if tmp: pre = 'tmp-'
+        if tmp: 
+            pre = 'tmp-'
+            # Use a short hash to avoid exceeding Windows MAX_PATH (260 chars)
+            name = hashlib.sha256(name.encode()).hexdigest()[:12]
         d = self.get_builder_path(pre + name)
         exists = os.path.exists(d)
         util.mkdir(d)
