@@ -29,9 +29,6 @@ jobs:
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
       continue-on-error: true
-    - name: Install pkg-config (Windows)
-      if: runner.os == 'Windows'
-      run: choco install pkgconfiglite -y
     - name: Install dependencies
       run: |
         python -m pip install --upgrade setuptools pip wheel
