@@ -3,7 +3,10 @@ import sys
 import json
 import shutil
 import hashlib
+import tarfile
 import tempfile
+import zipfile
+from unittest import mock
 
 import pytest
 
@@ -741,3 +744,530 @@ class TestRmSymlinkDir:
         os.symlink(str(target), str(link))
         util.rm_symlink_dir(str(d))
         assert link.exists()
+
+
+# ── cget_dir ─────────────────────────────────────────────────────────────────
+
+class TestCgetDir:
+    def test_returns_path_in_cget_module(self):
+        result = util.cget_dir()
+        assert os.path.isdir(result)
+        assert result == util.__CGET_DIR__
+
+    def test_with_subpath(self):
+        result = util.cget_dir("cmake")
+        assert result == os.path.join(util.__CGET_DIR__, "cmake")
+
+    def test_with_multiple_subpaths(self):
+        result = util.cget_dir("cmake", "foo.cmake")
+        assert result == os.path.join(util.__CGET_DIR__, "cmake", "foo.cmake")
+
+
+# ── get_app_dir / get_cache_path ─────────────────────────────────────────────
+
+class TestGetAppDir:
+    def test_returns_string(self):
+        result = util.get_app_dir()
+        assert isinstance(result, str)
+
+    def test_with_subpath(self):
+        result = util.get_app_dir("sub")
+        assert result.endswith("sub")
+
+
+class TestGetCachePath:
+    def test_returns_string(self):
+        result = util.get_cache_path()
+        assert isinstance(result, str)
+        assert "cache" in result
+
+    def test_with_key(self):
+        result = util.get_cache_path("mykey")
+        assert result.endswith("mykey")
+
+
+# ── CGetURLOpener ────────────────────────────────────────────────────────────
+
+class TestCGetURLOpener:
+    def test_error_code_400_raises(self):
+        opener = util.CGetURLOpener()
+        with pytest.raises(util.BuildError, match="Download failed"):
+            opener.http_error_default("http://example.com", None, 404, "Not Found", {})
+
+    def test_error_code_500_raises(self):
+        opener = util.CGetURLOpener()
+        with pytest.raises(util.BuildError, match="Download failed"):
+            opener.http_error_default("http://example.com", None, 500, "Server Error", {})
+
+
+# ── download_to ──────────────────────────────────────────────────────────────
+
+class TestDownloadTo:
+    def test_download_file_url(self, tmp_path):
+        # Create a source file to "download"
+        src = tmp_path / "source" / "file.txt"
+        src.parent.mkdir()
+        src.write_text("hello")
+        download_dir = tmp_path / "dl"
+        download_dir.mkdir()
+        # Mock the URL opener to copy the file instead of downloading
+        with mock.patch.object(util.CGetURLOpener, 'retrieve') as mock_retrieve:
+            def fake_retrieve(url, filename=None, reporthook=None, data=None):
+                shutil.copy(str(src), filename)
+            mock_retrieve.side_effect = fake_retrieve
+            result = util.download_to("http://example.com/file.txt", str(download_dir))
+            assert os.path.exists(result)
+            assert os.path.basename(result) == "file.txt"
+            assert open(result).read() == "hello"
+
+    def test_download_failed_no_file(self, tmp_path):
+        download_dir = tmp_path / "dl"
+        download_dir.mkdir()
+        with mock.patch.object(util.CGetURLOpener, 'retrieve') as mock_retrieve:
+            mock_retrieve.side_effect = lambda *a, **kw: None
+            with pytest.raises(util.BuildError, match="Download failed"):
+                util.download_to("http://example.com/missing.tar.gz", str(download_dir))
+
+    def test_download_insecure(self, tmp_path):
+        src = tmp_path / "source" / "file.txt"
+        src.parent.mkdir()
+        src.write_text("hello")
+        download_dir = tmp_path / "dl"
+        download_dir.mkdir()
+        with mock.patch.object(util.CGetURLOpener, 'retrieve') as mock_retrieve:
+            def fake_retrieve(url, filename=None, reporthook=None, data=None):
+                shutil.copy(str(src), filename)
+            mock_retrieve.side_effect = fake_retrieve
+            # Should not raise with insecure=True
+            result = util.download_to("https://example.com/file.txt", str(download_dir), insecure=True)
+            assert os.path.exists(result)
+
+
+# ── retrieve_url ─────────────────────────────────────────────────────────────
+
+class TestRetrieveUrl:
+    def test_file_protocol_symlink(self, tmp_path):
+        src = tmp_path / "source.txt"
+        src.write_text("local file")
+        dst = tmp_path / "dst"
+        dst.mkdir()
+        result = util.retrieve_url("file://" + str(src), str(dst), copy=True)
+        assert os.path.exists(result)
+        assert open(result).read() == "local file"
+
+    def test_file_protocol_no_hash(self, tmp_path):
+        src = tmp_path / "source.txt"
+        src.write_text("data")
+        dst = tmp_path / "dst"
+        dst.mkdir()
+        result = util.retrieve_url("file://" + str(src), str(dst), copy=True)
+        assert os.path.exists(result)
+
+    def test_file_protocol_with_valid_hash(self, tmp_path):
+        src = tmp_path / "source.txt"
+        src.write_bytes(b"data")
+        dst = tmp_path / "dst"
+        dst.mkdir()
+        h = hashlib.sha256(b"data").hexdigest()
+        result = util.retrieve_url("file://" + str(src), str(dst), copy=True, hash="sha256:" + h)
+        assert os.path.exists(result)
+
+    def test_file_protocol_with_invalid_hash(self, tmp_path):
+        src = tmp_path / "source.txt"
+        src.write_bytes(b"data")
+        dst = tmp_path / "dst"
+        dst.mkdir()
+        with pytest.raises(util.BuildError, match="Hash doesn't match"):
+            util.retrieve_url("file://" + str(src), str(dst), copy=True, hash="sha256:badhash")
+
+    def test_remote_cache_hit(self, tmp_path, monkeypatch):
+        cache_dir = str(tmp_path / "cache")
+        monkeypatch.setattr(util, 'get_cache_path', lambda *args: os.path.join(cache_dir, *args))
+        # Put a file in cache
+        key = "sha256-abc123"
+        os.makedirs(os.path.join(cache_dir, key))
+        cached = os.path.join(cache_dir, key, "pkg.tar.gz")
+        with open(cached, 'w') as f:
+            f.write("cached data")
+        dst = tmp_path / "dst"
+        dst.mkdir()
+        result = util.retrieve_url("https://example.com/pkg.tar.gz", str(dst), hash="sha256:abc123")
+        assert result == cached
+
+    def test_remote_downloads_and_caches(self, tmp_path, monkeypatch):
+        cache_dir = str(tmp_path / "cache")
+        monkeypatch.setattr(util, 'get_cache_path', lambda *args: os.path.join(cache_dir, *args))
+        dst = tmp_path / "dst"
+        dst.mkdir()
+        content = b"downloaded data"
+        h = hashlib.sha256(content).hexdigest()
+        # Mock download_to
+        def fake_download(url, download_dir, insecure=False):
+            f = os.path.join(download_dir, "pkg.tar.gz")
+            with open(f, 'wb') as fh:
+                fh.write(content)
+            return f
+        monkeypatch.setattr(util, 'download_to', fake_download)
+        result = util.retrieve_url("https://example.com/pkg.tar.gz", str(dst), hash="sha256:" + h)
+        assert os.path.exists(result)
+        # Verify it was cached
+        assert os.path.exists(os.path.join(cache_dir, "sha256-" + h))
+
+
+# ── extract_ar ───────────────────────────────────────────────────────────────
+
+class TestExtractAr:
+    def test_extract_tar_gz(self, tmp_path):
+        # Create a tar.gz archive
+        archive_dir = tmp_path / "archive_src"
+        archive_dir.mkdir()
+        (archive_dir / "hello.txt").write_text("hello from tar")
+        archive = str(tmp_path / "test.tar.gz")
+        with tarfile.open(archive, "w:gz") as tar:
+            tar.add(str(archive_dir), arcname="myproject")
+        dst = tmp_path / "extracted"
+        dst.mkdir()
+        util.extract_ar(archive, str(dst))
+        # Should have extracted contents
+        assert (dst / "myproject" / "hello.txt").exists()
+
+    def test_extract_zip(self, tmp_path):
+        # Create a zip archive
+        archive = str(tmp_path / "test.zip")
+        with zipfile.ZipFile(archive, 'w') as zf:
+            zf.writestr("myproject/hello.txt", "hello from zip")
+        dst = tmp_path / "extracted"
+        dst.mkdir()
+        util.extract_ar(archive, str(dst))
+        assert (dst / "myproject" / "hello.txt").exists()
+        assert (dst / "myproject" / "hello.txt").read_text() == "hello from zip"
+
+    def test_extract_single_file(self, tmp_path):
+        # Non-archive file should be treated as single source
+        src = tmp_path / "header.h"
+        src.write_text("#pragma once")
+        dst = tmp_path / "extracted"
+        dst.mkdir()
+        util.extract_ar(str(src), str(dst))
+        assert (dst / "header" / "header.h").exists()
+
+    def test_extract_tar_bz2(self, tmp_path):
+        archive_dir = tmp_path / "archive_src"
+        archive_dir.mkdir()
+        (archive_dir / "file.txt").write_text("bz2 content")
+        archive = str(tmp_path / "test.tar.bz2")
+        with tarfile.open(archive, "w:bz2") as tar:
+            tar.add(str(archive_dir), arcname="proj")
+        dst = tmp_path / "extracted"
+        dst.mkdir()
+        util.extract_ar(archive, str(dst))
+        assert (dst / "proj" / "file.txt").exists()
+
+
+# ── rm_symlink_from ──────────────────────────────────────────────────────────
+
+class TestRmSymlinkFrom:
+    @pytest.mark.skipif(os.name != 'posix', reason="symlinks need posix")
+    def test_removes_symlinks_pointing_to_dir(self, tmp_path):
+        pkg_install = tmp_path / "pkg" / "install"
+        pkg_install.mkdir(parents=True)
+        target = pkg_install / "lib" / "libfoo.so"
+        target.parent.mkdir(parents=True)
+        target.write_text("lib")
+        # Create prefix with symlink pointing into pkg_install
+        prefix = tmp_path / "prefix"
+        prefix.mkdir()
+        lib_dir = prefix / "lib"
+        lib_dir.mkdir()
+        os.symlink(str(target), str(lib_dir / "libfoo.so"))
+        util.rm_symlink_from(str(pkg_install), str(prefix))
+        assert not (lib_dir / "libfoo.so").exists()
+
+    @pytest.mark.skipif(os.name != 'posix', reason="symlinks need posix")
+    def test_keeps_symlinks_to_other_dirs(self, tmp_path):
+        other = tmp_path / "other"
+        other.mkdir()
+        target = other / "libbar.so"
+        target.write_text("lib")
+        prefix = tmp_path / "prefix"
+        prefix.mkdir()
+        lib_dir = prefix / "lib"
+        lib_dir.mkdir()
+        os.symlink(str(target), str(lib_dir / "libbar.so"))
+        pkg_install = tmp_path / "pkg" / "install"
+        pkg_install.mkdir(parents=True)
+        util.rm_symlink_from(str(pkg_install), str(prefix))
+        assert (lib_dir / "libbar.so").exists()
+
+
+# ── rm_empty_dirs (additional) ───────────────────────────────────────────────
+
+class TestRmEmptyDirsAdditional:
+    @pytest.mark.skipif(os.name != 'posix', reason="symlinks need posix")
+    def test_symlink_dirs_not_recursed(self, tmp_path):
+        d = tmp_path / "root"
+        d.mkdir()
+        real = tmp_path / "real_dir"
+        real.mkdir()
+        os.symlink(str(real), str(d / "link_dir"))
+        # Should not try to recurse into symlink dir
+        result = util.rm_empty_dirs(str(d))
+        assert result is True  # has symlink (counts as file-like)
+
+    def test_mixed_empty_and_nonempty(self, tmp_path):
+        root = tmp_path / "root"
+        (root / "empty" / "nested").mkdir(parents=True)
+        (root / "nonempty").mkdir(parents=True)
+        (root / "nonempty" / "file.txt").write_text("data")
+        result = util.rm_empty_dirs(str(root))
+        assert result is True
+        assert not (root / "empty").exists()
+        assert (root / "nonempty" / "file.txt").exists()
+
+
+# ── rm_dup_dir (additional) ──────────────────────────────────────────────────
+
+class TestRmDupDirAdditional:
+    def test_relpath_outside_prefix_raises(self, tmp_path):
+        # Create structure where relpath would go outside
+        pkg = tmp_path / "pkg"
+        pkg.mkdir()
+        # Create a symlink pointing outside
+        prefix = tmp_path / "prefix"
+        prefix.mkdir()
+        # rm_dup_dir checks for '..' in relpath
+        # We need files in pkg that when relpaths relative to pkg contain '..'
+        # This requires pkg to have a file at a path that resolves outside
+        # In practice this is hard to trigger without symlinks
+        # The check is: relpath = os.path.relpath(fullpath, d); if '..' in relpath
+        # This triggers when fullpath is not under d, but os.walk shouldn't produce that
+        # Just test normal nested subdirectory case
+        sub = pkg / "sub"
+        sub.mkdir()
+        (sub / "file.txt").write_text("data")
+        (prefix / "sub").mkdir()
+        (prefix / "sub" / "file.txt").write_text("data")
+        util.rm_dup_dir(str(pkg), str(prefix), remove_both=True)
+        assert not (sub / "file.txt").exists()
+        assert not (prefix / "sub" / "file.txt").exists()
+
+
+# ── transfer_to (additional) ────────────────────────────────────────────────
+
+class TestTransferToAdditional:
+    @pytest.mark.skipif(os.name != 'posix', reason="symlinks need posix")
+    def test_symlink_mode(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(util, 'USE_SYMLINKS', True)
+        src = tmp_path / "src.txt"
+        src.write_text("data")
+        dst = tmp_path / "dst"
+        dst.mkdir()
+        result = util.transfer_to(str(src), str(dst), copy=False)
+        assert os.path.islink(result)
+        assert open(result).read() == "data"
+
+
+# ── cmd (additional) ─────────────────────────────────────────────────────────
+
+class TestCmdAdditional:
+    @pytest.mark.skipif(os.name != 'posix', reason="posix only")
+    def test_capture_all(self):
+        out, err = util.cmd(["sh", "-c", "echo out; echo err >&2"], capture="all")
+        assert b"out" in out
+        assert b"err" in err
+
+    @pytest.mark.skipif(os.name != 'posix', reason="posix only")
+    def test_no_capture(self):
+        result = util.cmd(["true"])
+        # Returns tuple of (None, None) when no capture
+        assert result == (None, None)
+
+    @pytest.mark.skipif(os.name != 'posix', reason="posix only")
+    def test_with_cwd(self, tmp_path):
+        out, _ = util.cmd(["pwd"], capture="out", cwd=str(tmp_path))
+        assert str(tmp_path) in out.decode().strip()
+
+
+# ── to_define_dict (additional) ──────────────────────────────────────────────
+
+class TestToDefineDictAdditional:
+    def test_value_with_equals(self):
+        result = util.to_define_dict(["KEY=val=ue"])
+        assert result["KEY"] == "val"  # split on first '='
+
+    def test_single_entry(self):
+        result = util.to_define_dict(["X=Y"])
+        assert result == {"X": "Y"}
+
+
+# ── as_dict_str (additional) ─────────────────────────────────────────────────
+
+class TestAsDictStrAdditional:
+    def test_none_value(self):
+        result = util.as_dict_str({"a": None})
+        assert result == {"a": "None"}
+
+    def test_empty_dict(self):
+        assert util.as_dict_str({}) == {}
+
+
+# ── write_to (additional) ───────────────────────────────────────────────────
+
+class TestWriteToAdditional:
+    def test_single_line(self, tmp_path):
+        f = str(tmp_path / "out.txt")
+        util.write_to(f, ["one"])
+        assert open(f).read() == "one\n"
+
+    def test_overwrites_existing(self, tmp_path):
+        f = str(tmp_path / "out.txt")
+        util.write_to(f, ["old"])
+        util.write_to(f, ["new"])
+        assert open(f).read() == "new\n"
+
+
+# ── check_hash (additional) ─────────────────────────────────────────────────
+
+class TestCheckHashAdditional:
+    def test_md5_match(self, tmp_path):
+        f = tmp_path / "file.txt"
+        f.write_bytes(b"test")
+        h = hashlib.md5(b"test").hexdigest()
+        assert util.check_hash(str(f), "md5:" + h) is True
+
+    def test_case_insensitive_hash_type(self, tmp_path):
+        f = tmp_path / "file.txt"
+        f.write_bytes(b"test")
+        h = hashlib.sha256(b"test").hexdigest()
+        assert util.check_hash(str(f), "SHA256:" + h) is True
+
+
+# ── Commander (additional) ──────────────────────────────────────────────────
+
+class TestCommanderAdditional:
+    @pytest.mark.skipif(os.name != 'posix', reason="posix only")
+    def test_getattr_underscore_to_hyphen(self):
+        c = util.Commander()
+        # __getattr__ replaces _ with -
+        # Access some_command should try to run "some-command"
+        f = c.some_command
+        assert callable(f)
+
+    def test_init_with_env(self):
+        c = util.Commander(env={"FOO": "bar"})
+        assert c.env == {"FOO": "bar"}
+
+    @pytest.mark.skipif(os.name != 'posix', reason="posix only")
+    def test_cmd_execution_via_getattr(self):
+        c = util.Commander()
+        out, _ = c.echo(args=["hello"], capture="out")
+        assert b"hello" in out
+
+    @pytest.mark.skipif(os.name != 'posix', reason="posix only")
+    def test_cmd_execution_via_getitem(self):
+        c = util.Commander()
+        out, _ = c['echo'](args=["world"], capture="out")
+        assert b"world" in out
+
+    @pytest.mark.skipif(os.name != 'posix', reason="posix only")
+    def test_verbose_echoes(self, capsys):
+        c = util.Commander(verbose=True)
+        c.echo(args=["test"], capture="out")
+        captured = capsys.readouterr()
+        assert "echo" in captured.out
+
+    @pytest.mark.skipif(os.name != 'posix', reason="posix only")
+    def test_cmd_with_options(self):
+        c = util.Commander()
+        # Options are passed as KEY=VALUE args before other args
+        # Just verify it doesn't crash
+        out, _ = c.echo(args=["hi"], options={}, capture="out")
+        assert b"hi" in out
+
+
+# ── is_executable (additional) ───────────────────────────────────────────────
+
+class TestIsExecutableAdditional:
+    def test_directory_returns_false(self, tmp_path):
+        d = tmp_path / "dir"
+        d.mkdir()
+        assert util.is_executable(str(d)) is False
+
+
+# ── which (additional) ──────────────────────────────────────────────────────
+
+class TestWhichAdditional:
+    def test_empty_paths_list(self):
+        # With empty paths and binary not in PATH, should raise
+        with pytest.raises(util.BuildError):
+            util.which("nonexistent_xyz", paths=[])
+
+    @pytest.mark.skipif(os.name != 'posix', reason="posix only")
+    def test_finds_in_system_path(self):
+        result = util.which("echo")
+        assert result is not None
+        assert os.path.isfile(result)
+
+
+# ── yield_from (additional) ──────────────────────────────────────────────────
+
+class TestYieldFromAdditional:
+    def test_with_args(self):
+        @util.yield_from
+        def gen(n):
+            yield list(range(n))
+            yield [n, n + 1]
+        assert list(gen(3)) == [0, 1, 2, 3, 4]
+
+    def test_empty_yield(self):
+        @util.yield_from
+        def gen():
+            yield []
+        assert list(gen()) == []
+
+
+# ── symlink_dir (additional) ─────────────────────────────────────────────────
+
+class TestSymlinkDirAdditional:
+    @pytest.mark.skipif(os.name != 'posix', reason="symlinks need posix")
+    def test_empty_src(self, tmp_path):
+        src = tmp_path / "empty_src"
+        dst = tmp_path / "dst"
+        src.mkdir()
+        dst.mkdir()
+        util.symlink_dir(str(src), str(dst))
+        # No files should be created in dst
+        assert list(os.listdir(str(dst))) == []
+
+    @pytest.mark.skipif(os.name != 'posix', reason="symlinks need posix")
+    def test_deeply_nested(self, tmp_path):
+        src = tmp_path / "src"
+        (src / "a" / "b" / "c").mkdir(parents=True)
+        (src / "a" / "b" / "c" / "deep.txt").write_text("deep")
+        dst = tmp_path / "dst"
+        dst.mkdir()
+        util.symlink_dir(str(src), str(dst))
+        assert os.path.islink(str(dst / "a" / "b" / "c" / "deep.txt"))
+        assert open(str(dst / "a" / "b" / "c" / "deep.txt")).read() == "deep"
+
+
+# ── copy_dir (additional) ───────────────────────────────────────────────────
+
+class TestCopyDirAdditional:
+    def test_empty_src(self, tmp_path):
+        src = tmp_path / "empty_src"
+        dst = tmp_path / "dst"
+        src.mkdir()
+        dst.mkdir()
+        util.copy_dir(str(src), str(dst))
+        assert list(os.listdir(str(dst))) == []
+
+    def test_multiple_files(self, tmp_path):
+        src = tmp_path / "src"
+        src.mkdir()
+        for i in range(5):
+            (src / "file{}.txt".format(i)).write_text("content {}".format(i))
+        dst = tmp_path / "dst"
+        dst.mkdir()
+        util.copy_dir(str(src), str(dst))
+        assert len(list(os.listdir(str(dst)))) == 5

@@ -216,3 +216,168 @@ class TestParamsReturns:
         def get_value():
             return 42
         assert get_value() == 42
+
+
+# ── Additional decorator_with_args tests ─────────────────────────────────────
+
+class TestDecoratorWithArgsAdditional:
+    def test_with_no_args(self):
+        @decorator_with_args
+        def noop_decorator(f):
+            return f
+
+        @noop_decorator()
+        def func():
+            return 99
+
+        assert func() == 99
+
+    def test_with_kwargs(self):
+        @decorator_with_args
+        def multiply(f, factor=1):
+            def wrapper(*args, **kwargs):
+                return f(*args, **kwargs) * factor
+            return wrapper
+
+        @multiply(factor=3)
+        def get_five():
+            return 5
+
+        assert get_five() == 15
+
+    def test_preserves_function_args(self):
+        @decorator_with_args
+        def log_decorator(f, prefix=""):
+            def wrapper(*args, **kwargs):
+                return prefix + str(f(*args, **kwargs))
+            return wrapper
+
+        @log_decorator(prefix="result: ")
+        def add(a, b):
+            return a + b
+
+        assert add(1, 2) == "result: 3"
+
+
+# ── Additional is_iterable tests ────────────────────────────────────────────
+
+class TestIsIterableAdditional:
+    def test_float(self):
+        assert is_iterable(3.14) is False
+
+    def test_bool(self):
+        assert is_iterable(True) is False
+
+    def test_bytes(self):
+        assert is_iterable(b"hello") is True
+
+    def test_custom_iterable(self):
+        class MyIter:
+            def __iter__(self):
+                return iter([])
+        assert is_iterable(MyIter()) is True
+
+    def test_range(self):
+        assert is_iterable(range(10)) is True
+
+
+# ── Additional default_checker tests ────────────────────────────────────────
+
+class TestDefaultCheckerAdditional:
+    def test_none_type(self):
+        result, msg = default_checker(None, type(None))
+        assert result is True
+
+    def test_custom_class(self):
+        class Foo:
+            pass
+        result, msg = default_checker(Foo(), Foo)
+        assert result is True
+
+    def test_inheritance(self):
+        class Base:
+            pass
+        class Sub(Base):
+            pass
+        result, _ = default_checker(Sub(), Base)
+        assert result is True
+
+
+# ── Additional callable_checker tests ───────────────────────────────────────
+
+class TestCallableCheckerAdditional:
+    def test_lambda(self):
+        check = lambda x: x > 0
+        result, name = callable_checker(5, check)
+        assert result is True
+        assert name == "<lambda>"
+
+    def test_method(self):
+        class Validator:
+            @staticmethod
+            def is_even(x):
+                return x % 2 == 0
+        result, name = callable_checker(4, Validator.is_even)
+        assert result is True
+
+
+# ── Additional get_checker tests ────────────────────────────────────────────
+
+class TestGetCheckerAdditional:
+    def test_class_mismatch(self):
+        checker = get_checker(int)
+        result, msg = checker("hello", int)
+        assert result is False
+
+    def test_callable_mismatch(self):
+        def is_positive(x):
+            return x > 0
+        checker = get_checker(is_positive)
+        result, _ = checker(-1, is_positive)
+        assert result is False
+
+    def test_iterable_no_match(self):
+        checker = get_checker([int, float])
+        result, _ = checker("hello", [int, float])
+        assert result is False
+
+    def test_iterable_second_type_matches(self):
+        checker = get_checker([int, str])
+        result, _ = checker("hello", [int, str])
+        assert result is True
+
+
+# ── Additional require_type tests ───────────────────────────────────────────
+
+class TestRequireTypeAdditional:
+    def test_with_callable_checker(self):
+        def is_positive(x):
+            return x > 0
+        result = require_type(5, is_positive, "func")
+        assert result == 5
+
+    def test_with_callable_checker_fail(self):
+        def is_positive(x):
+            return x > 0
+        with pytest.raises(TypeError):
+            require_type(-1, is_positive, "func", "x")
+
+    def test_with_iterable_type(self):
+        result = require_type("hello", [int, str], "func", "x")
+        assert result == "hello"
+
+    def test_with_iterable_type_fail(self):
+        with pytest.raises(TypeError):
+            require_type([], [int, str], "func", "x")
+
+
+# ── format_checkers additional ──────────────────────────────────────────────
+
+class TestFormatCheckersAdditional:
+    def test_empty_list(self):
+        result = format_checkers([])
+        assert result == "()"
+
+    def test_single_failure(self):
+        result = format_checkers([(False, "type 'int'")])
+        assert "int" in result

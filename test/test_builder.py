@@ -332,3 +332,270 @@ class TestBuilderTest:
             with mock.patch.object(prefix.cmd, 'ctest') as mock_ctest:
                 b.test(variant='Release')
                 mock_ctest.assert_called_once()
+
+    def test_test_default_variant(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+
+        with mock.patch.object(b, 'targets', return_value=iter(['check'])):
+            with mock.patch.object(b, 'build') as mock_build:
+                b.test()
+                mock_build.assert_called_once_with(target='check', variant='Release')
+
+
+# ── fetch ────────────────────────────────────────────────────────────────────
+
+class TestFetch:
+    def test_fetch_calls_retrieve_and_extract(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+
+        # Create fake extracted directory
+        extracted_dir = os.path.join(top, "project-1.0")
+        os.makedirs(extracted_dir)
+
+        with mock.patch('cget.util.retrieve_url', return_value=os.path.join(top, "pkg.tar.gz")) as mock_retrieve:
+            # Create the archive file so os.path.isfile returns True
+            with open(os.path.join(top, "pkg.tar.gz"), 'w') as f:
+                f.write("")
+            with mock.patch('cget.util.extract_ar') as mock_extract:
+                result = b.fetch("https://example.com/pkg.tar.gz")
+                mock_retrieve.assert_called_once()
+                mock_extract.assert_called_once()
+                assert result == extracted_dir
+
+    def test_fetch_with_hash(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+
+        extracted_dir = os.path.join(top, "project-1.0")
+        os.makedirs(extracted_dir)
+
+        with mock.patch('cget.util.retrieve_url', return_value=os.path.join(top, "pkg.tar.gz")) as mock_retrieve:
+            with open(os.path.join(top, "pkg.tar.gz"), 'w') as f:
+                f.write("")
+            with mock.patch('cget.util.extract_ar'):
+                b.fetch("https://example.com/pkg.tar.gz", hash="sha256:abc123")
+                call_kwargs = mock_retrieve.call_args
+                assert call_kwargs[1].get('hash') == "sha256:abc123" or call_kwargs[0][3] == "sha256:abc123"
+
+    def test_fetch_insecure_replaces_https(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+
+        extracted_dir = os.path.join(top, "project-1.0")
+        os.makedirs(extracted_dir)
+
+        with mock.patch('cget.util.retrieve_url', return_value=os.path.join(top, "pkg.tar.gz")) as mock_retrieve:
+            with open(os.path.join(top, "pkg.tar.gz"), 'w') as f:
+                f.write("")
+            with mock.patch('cget.util.extract_ar'):
+                b.fetch("https://example.com/pkg.tar.gz", insecure=True)
+                url_arg = mock_retrieve.call_args[0][0]
+                assert url_arg.startswith("http://")
+
+    def test_fetch_with_copy(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+
+        extracted_dir = os.path.join(top, "project-1.0")
+        os.makedirs(extracted_dir)
+
+        with mock.patch('cget.util.retrieve_url', return_value=os.path.join(top, "pkg.tar.gz")) as mock_retrieve:
+            with open(os.path.join(top, "pkg.tar.gz"), 'w') as f:
+                f.write("")
+            with mock.patch('cget.util.extract_ar'):
+                b.fetch("https://example.com/pkg.tar.gz", copy=True)
+                assert mock_retrieve.call_args[1].get('copy') is True or mock_retrieve.call_args[0][2] is True
+
+    def test_fetch_directory_result(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+
+        # When retrieve returns a directory (not a file), no extraction happens
+        src_dir = os.path.join(top, "source")
+        os.makedirs(src_dir)
+
+        with mock.patch('cget.util.retrieve_url', return_value=src_dir):
+            result = b.fetch("https://example.com/pkg.tar.gz")
+            assert result == src_dir
+
+
+# ── configure (additional) ───────────────────────────────────────────────────
+
+class TestConfigureAdditional:
+    def test_configure_test_on(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+        src_dir = str(tmp_path / "src")
+        os.makedirs(src_dir)
+
+        with mock.patch.object(b, 'cmake') as mock_cmake:
+            b.configure(src_dir, test=True)
+            args = mock_cmake.call_args.kwargs['args']
+            assert '-DBUILD_TESTING=On' in args
+
+    def test_configure_default_variant_release(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+        src_dir = str(tmp_path / "src")
+        os.makedirs(src_dir)
+
+        with mock.patch.object(b, 'cmake') as mock_cmake:
+            b.configure(src_dir)
+            args = mock_cmake.call_args.kwargs['args']
+            assert '-DCMAKE_BUILD_TYPE=Release' in args
+
+    def test_configure_verbose_adds_verbose_makefile(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path), verbose=True)
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+        src_dir = str(tmp_path / "src")
+        os.makedirs(src_dir)
+
+        with mock.patch.object(b, 'cmake') as mock_cmake:
+            b.configure(src_dir)
+            args = mock_cmake.call_args.kwargs['args']
+            assert '-DCMAKE_VERBOSE_MAKEFILE=On' in args
+
+    def test_configure_cmake_failure_shows_logs(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+        src_dir = str(tmp_path / "src")
+        os.makedirs(src_dir)
+
+        with mock.patch.object(b, 'cmake', side_effect=util.BuildError("cmake failed")):
+            with mock.patch.object(b, 'show_logs') as mock_show:
+                with pytest.raises(util.BuildError):
+                    b.configure(src_dir)
+                mock_show.assert_called_once()
+
+    def test_configure_includes_cget_cmake_dir(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+        src_dir = str(tmp_path / "src")
+        os.makedirs(src_dir)
+
+        with mock.patch.object(b, 'cmake') as mock_cmake:
+            b.configure(src_dir)
+            args = mock_cmake.call_args.kwargs['args']
+            cget_dir_args = [a for a in args if 'CGET_CMAKE_DIR' in a]
+            assert len(cget_dir_args) == 1
+            original_args = [a for a in args if 'CGET_CMAKE_ORIGINAL_SOURCE_FILE' in a]
+            assert len(original_args) == 1
+
+
+# ── build (additional) ──────────────────────────────────────────────────────
+
+class TestBuildAdditional:
+    def test_build_no_makefile_no_parallel(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+
+        with mock.patch.object(b, 'cmake') as mock_cmake:
+            b.build()
+            args = mock_cmake.call_args.kwargs['args']
+            assert '-j' not in args
+            assert '--' not in args
+
+    def test_build_with_cwd(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+
+        with mock.patch.object(b, 'cmake') as mock_cmake:
+            b.build(cwd="/some/dir")
+            assert mock_cmake.call_args.kwargs.get('cwd') == "/some/dir"
+
+    def test_build_verbose_makefile_adds_verbose_flag(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path), verbose=True)
+        top = str(tmp_path / "top")
+        build_dir = os.path.join(top, "build")
+        os.makedirs(build_dir)
+        with open(os.path.join(build_dir, "Makefile"), "w") as f:
+            f.write("")
+        b = Builder(prefix, top)
+
+        with mock.patch.object(b, 'cmake') as mock_cmake:
+            b.build()
+            args = mock_cmake.call_args.kwargs['args']
+            assert 'VERBOSE=1' in args
+
+
+# ── show_logs (additional) ──────────────────────────────────────────────────
+
+class TestShowLogsAdditional:
+    def test_show_logs_with_both_files(self, tmp_path, capsys):
+        prefix = MockPrefix(str(tmp_path), verbose=True)
+        top = str(tmp_path / "top")
+        cmake_files = os.path.join(top, "build", "CMakeFiles")
+        os.makedirs(cmake_files)
+        with open(os.path.join(cmake_files, "CMakeOutput.log"), "w") as f:
+            f.write("output log\n")
+        with open(os.path.join(cmake_files, "CMakeError.log"), "w") as f:
+            f.write("error log\n")
+        b = Builder(prefix, top)
+        b.show_logs()
+        captured = capsys.readouterr()
+        assert "output log" in captured.out
+        assert "error log" in captured.out
+
+
+# ── targets (additional) ────────────────────────────────────────────────────
+
+class TestTargetsAdditional:
+    def test_targets_parses_output(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+
+        cmake_output = b"... all\n... clean\n... install\nother line\n"
+        with mock.patch.object(b, 'cmake', return_value=(cmake_output, None)):
+            result = list(b.targets())
+            assert b'all' in result
+            assert b'clean' in result
+            assert b'install' in result
+            assert len(result) == 3
+
+
+# ── get_path / get_build_path (additional) ──────────────────────────────────
+
+class TestPathsAdditional:
+    def test_get_path_no_args(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+        assert b.get_path() == top
+
+    def test_get_build_path_no_args(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+        assert b.get_build_path() == os.path.join(top, "build")

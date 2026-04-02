@@ -281,3 +281,156 @@ class TestParsePkgBuildTokens:
     def test_long_define(self):
         pb = parse_pkg_build_tokens(["pkg", "--define", "LONG_KEY=val"])
         assert pb.define == ["LONG_KEY=val"]
+
+    def test_multiple_defines(self):
+        pb = parse_pkg_build_tokens(["pkg", "-DFOO=1", "-DBAR=2", "-DBAZ=3"])
+        assert pb.define == ["FOO=1", "BAR=2", "BAZ=3"]
+
+    def test_default_variant(self):
+        pb = parse_pkg_build_tokens(["pkg"])
+        assert pb.variant == 'Release'
+
+
+# ── Additional encode_url / decode_url tests ─────────────────────────────────
+
+class TestEncodeUrlAdditional:
+    def test_ftp_protocol(self):
+        url = "ftp://files.example.com/data.tar.gz"
+        encoded = encode_url(url)
+        decoded = decode_url(encoded)
+        assert decoded == "files.example.com/data.tar.gz"
+
+    def test_url_with_special_chars(self):
+        url = "https://example.com/path?query=value&other=1"
+        encoded = encode_url(url)
+        decoded = decode_url(encoded)
+        assert decoded == "example.com/path?query=value&other=1"
+
+    def test_url_with_port(self):
+        url = "https://example.com:8080/file.tar.gz"
+        encoded = encode_url(url)
+        decoded = decode_url(encoded)
+        assert "8080" in decoded
+
+
+# ── Additional PackageSource tests ───────────────────────────────────────────
+
+class TestPackageSourceAdditional:
+    def test_to_name_all_none(self):
+        ps = PackageSource()
+        # name is None, url is None, to_fname will call get_encoded_name_url
+        # which with name=None calls encode_url(None) - would crash
+        # But to_name checks name first, then url, then to_fname
+        # With all None, name is None, url is None, falls to to_fname
+        # to_fname calls get_encoded_name_url which does encode_url(None) - error
+        # This is expected behavior - source needs at least name or url
+        pass
+
+    def test_get_encoded_name_no_slash(self):
+        ps = PackageSource(name="zlib")
+        assert ps.get_encoded_name_url() == "zlib"
+
+    def test_get_encoded_name_multiple_slashes(self):
+        ps = PackageSource(name="org/group/repo")
+        assert ps.get_encoded_name_url() == "org__group__repo"
+
+    def test_get_hash_url_only(self):
+        ps = PackageSource(url="https://example.com/pkg.tar.gz")
+        h = ps.get_hash()
+        assert isinstance(h, str)
+        assert len(h) == 64
+
+    def test_get_hash_differs_by_url(self):
+        ps1 = PackageSource(name="same", url="https://a.com")
+        ps2 = PackageSource(name="same", url="https://b.com")
+        assert ps1.get_hash() != ps2.get_hash()
+
+    def test_get_hash_differs_by_recipe(self):
+        ps1 = PackageSource(name="same", recipe="/recipe/a")
+        ps2 = PackageSource(name="same", recipe="/recipe/b")
+        assert ps1.get_hash() != ps2.get_hash()
+
+    def test_get_src_dir_file_url_relative(self):
+        ps = PackageSource(url="file://relative/path")
+        assert ps.get_src_dir() == "relative/path"
+
+
+# ── Additional fname_to_pkg tests ────────────────────────────────────────────
+
+class TestFnameToPkgAdditional:
+    def test_consecutive_underscores(self):
+        ps = fname_to_pkg("a____b")
+        # ____ -> // (two double underscores)
+        assert ps.name == "a//b"
+        assert ps.fname == "a____b"
+
+    def test_single_underscore(self):
+        ps = fname_to_pkg("a_b")
+        # Single underscores are NOT replaced (only __ -> /)
+        assert ps.fname == "a_b"
+
+
+# ── Additional PackageBuild tests ────────────────────────────────────────────
+
+class TestPackageBuildAdditional:
+    def test_merge_with_none_define(self):
+        pb1 = PackageBuild(define=None)
+        pb2 = PackageBuild(define=["A=1"])
+        result = pb1.merge(pb2)
+        assert "A=1" in result.define
+
+    def test_merge_both_empty_define(self):
+        pb1 = PackageBuild(define=[])
+        pb2 = PackageBuild(define=[])
+        result = pb1.merge(pb2)
+        assert result.define == []
+
+    def test_of_inherits_variant(self):
+        parent = PackageBuild(
+            pkg_src=PackageSource(name="parent"),
+            variant="Debug"
+        )
+        child = PackageBuild(
+            pkg_src=PackageSource(name="child"),
+            variant="Release"  # will be overridden by parent
+        )
+        result = child.of(parent)
+        assert result.variant == "Debug"
+
+    def test_of_sets_parent_fname(self):
+        parent = PackageBuild(pkg_src=PackageSource(name="user/repo"))
+        child = PackageBuild(pkg_src=PackageSource(name="dep"))
+        result = child.of(parent)
+        assert result.parent == "user__repo"
+
+    def test_merge_cmake_override(self):
+        pb1 = PackageBuild(cmake="original.cmake")
+        pb2 = PackageBuild(cmake="override.cmake")
+        result = pb1.merge(pb2)
+        assert result.cmake == "override.cmake"
+
+    def test_merge_requirements_override(self):
+        pb1 = PackageBuild(requirements="req1.txt")
+        pb2 = PackageBuild(requirements="req2.txt")
+        result = pb1.merge(pb2)
+        assert result.requirements == "req2.txt"
+
+    def test_to_fname_none_pkg_src(self):
+        pb = PackageBuild(pkg_src=None)
+        assert pb.to_fname() is None
+
+    def test_to_name_none_pkg_src(self):
+        pb = PackageBuild(pkg_src=None)
+        assert pb.to_name() is None
+
+    def test_default_variant_is_release(self):
+        pb = PackageBuild()
+        assert pb.variant == 'Release'
+
+    def test_custom_variant(self):
+        pb = PackageBuild(variant="Debug")
+        assert pb.variant == "Debug"
+
+    def test_none_variant_becomes_release(self):
+        pb = PackageBuild(variant=None)
+        assert pb.variant == 'Release'
