@@ -1,6 +1,7 @@
 import click, os, functools, sys
 
 from cget import __version__
+from cget import display
 from cget.prefix import CGetPrefix
 from cget.prefix import PackageBuild
 import cget.util as util
@@ -78,7 +79,7 @@ def use_prefix(f):
 def init_command(prefix, toolchain, cc, cxx, cflags, cxxflags, ldflags, std, define, shared, static):
     """ Initialize install directory """
     if shared and static:
-        click.echo("ERROR: shared and static are not supported together")
+        display.error("shared and static are not supported together")
         sys.exit(1)
     defines = util.to_define_dict(define)
     if shared: defines['BUILD_SHARED_LIBS'] = 'On'
@@ -119,7 +120,7 @@ def install_command(prefix, pkgs, define, file, test, test_all, update, generato
         pb = pbu.merge_defines(define)
         pb.variant = variant
         with prefix.try_("Failed to build package {}".format(pb.to_name()), on_fail=lambda: prefix.remove(pb)):
-            click.echo(prefix.install(pb, test=test, test_all=test_all, update=update, generator=generator, insecure=insecure))
+            display.console.print(prefix.install(pb, test=test, test_all=test_all, update=update, generator=generator, insecure=insecure))
 
 @cli.command(name='ignore')
 @use_prefix
@@ -129,7 +130,7 @@ def ignore_command(prefix, pkgs):
     pbs = [PackageBuild(pkg) for pkg in pkgs]
     for pb in pbs:
         with prefix.try_("Failed to ignore package {}".format(pb.to_name()), on_fail=lambda: prefix.remove(pb)):
-            click.echo(prefix.ignore(pb))
+            display.console.print(prefix.ignore(pb))
 
 @cli.command(name='build')
 @use_prefix
@@ -151,9 +152,9 @@ def build_command(prefix, pkg, define, test, configure, clean, path, yes, target
     pb.variant = get_build_type(debug, release, build_type)
     with prefix.try_("Failed to build package {}".format(pb.to_name())):
         if configure: prefix.build_configure(pb)
-        elif path: click.echo(prefix.build_path(pb))
+        elif path: display.console.print(prefix.build_path(pb))
         elif clean: 
-            if not yes: yes = click.confirm("Are you sure you want to delete the build directory?")
+            if not yes: yes = display.confirm("Are you sure you want to delete the build directory?")
             if yes: prefix.build_clean(pb)
         else: prefix.build(pb, test=test, target=target, generator=generator)
 
@@ -168,21 +169,22 @@ def remove_command(prefix, pkgs, yes, unlink, all):
     if all: pkgs = [None]
     verb = "unlink" if unlink else "remove"
     pkgs_set = set((dep.name for pkg in pkgs for dep in prefix.list(pkg, recursive=True)))
-    click.echo("The following packages will be removed:")
-    for pkg in pkgs_set: click.echo(pkg)
-    if not yes: yes = click.confirm("Are you sure you want to {} these packages?".format(verb))
+    display.warning("The following packages will be removed:")
+    for pkg in pkgs_set: display.console.print("  {}".format(display.pkg(pkg)))
+    if not yes: yes = display.confirm("Are you sure you want to {} these packages?".format(verb))
     if yes:
         for pkg in pkgs_set:
             with prefix.try_("Failed to {} package {}".format(verb, pkg)):
                 prefix.unlink(pkg, delete=not unlink)
-                click.echo("{} package {}".format(verb, pkg))
+                display.success("{} package {}".format(verb, display.pkg(pkg)))
 
 @cli.command(name='list')
 @use_prefix
 def list_command(prefix):
     """ List installed packages """
-    for pkg in prefix.list():
-        click.echo(pkg.name)
+    packages = list(prefix.list())
+    if packages:
+        display.console.print(display.package_table([p.name for p in packages]))
 
 # TODO: Make this command hidden
 @cli.command(name='size')
@@ -202,7 +204,7 @@ def clean_command(prefix, yes, cache):
     if cache:
         prefix.clean_cache()
     else:
-        if not yes: yes = click.confirm("Are you sure you want to delete all cget packages in {}?".format(prefix.prefix))
+        if not yes: yes = display.confirm("Are you sure you want to delete all cget packages in {}?".format(prefix.prefix))
         if yes: prefix.clean()
 
 @cli.command(name='pkg-config', context_settings=dict(
