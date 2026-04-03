@@ -154,7 +154,7 @@ def build_command(prefix, pkg, define, test, configure, clean, path, yes, target
         if configure: prefix.build_configure(pb)
         elif path: display.console.print(prefix.build_path(pb))
         elif clean: 
-            if not yes: yes = click.confirm("Are you sure you want to delete the build directory?")
+            if not yes: yes = display.confirm("Are you sure you want to delete the build directory?")
             if yes: prefix.build_clean(pb)
         else: prefix.build(pb, test=test, target=target, generator=generator)
 
@@ -171,7 +171,7 @@ def remove_command(prefix, pkgs, yes, unlink, all):
     pkgs_set = set((dep.name for pkg in pkgs for dep in prefix.list(pkg, recursive=True)))
     display.warning("The following packages will be removed:")
     for pkg in pkgs_set: display.console.print("  {}".format(display.pkg(pkg)))
-    if not yes: yes = click.confirm("Are you sure you want to {} these packages?".format(verb))
+    if not yes: yes = display.confirm("Are you sure you want to {} these packages?".format(verb))
     if yes:
         for pkg in pkgs_set:
             with prefix.try_("Failed to {} package {}".format(verb, pkg)):
@@ -204,7 +204,7 @@ def clean_command(prefix, yes, cache):
     if cache:
         prefix.clean_cache()
     else:
-        if not yes: yes = click.confirm("Are you sure you want to delete all cget packages in {}?".format(prefix.prefix))
+        if not yes: yes = display.confirm("Are you sure you want to delete all cget packages in {}?".format(prefix.prefix))
         if yes: prefix.clean()
 
 @cli.command(name='pkg-config', context_settings=dict(
