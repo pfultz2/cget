@@ -1,6 +1,7 @@
-import click, os, multiprocessing, six
+import os, multiprocessing, six
 
 import cget.util as util
+from cget import display
 
 class Builder:
     def __init__(self, prefix, top_dir, exists=False):
@@ -25,7 +26,7 @@ class Builder:
 
     def show_log(self, log):
         if self.prefix.verbose and os.path.exists(log):
-            click.echo(open(log).read())
+            display.console.print(open(log).read())
 
     def show_logs(self):
         self.show_log(self.get_build_path('CMakeFiles', 'CMakeOutput.log'))
@@ -46,12 +47,12 @@ class Builder:
         if insecure: url = url.replace('https', 'http')
         f = util.retrieve_url(url, self.top_dir, copy=copy, insecure=insecure, hash=hash)
         if os.path.isfile(f):
-            click.echo("Extracting archive {0} ...".format(f))
-            util.extract_ar(archive=f, dst=self.top_dir)
+            with display.status("Extracting archive..."):
+                util.extract_ar(archive=f, dst=self.top_dir)
         return next(util.get_dirs(self.top_dir))
 
     def configure(self, src_dir, defines=None, generator=None, install_prefix=None, test=True, variant=None):
-        self.prefix.log("configure")
+        display.phase("Configuring")
         util.mkdir(self.build_dir)
         args = [
             src_dir, 
@@ -73,7 +74,12 @@ class Builder:
             raise
 
     def build(self, target=None, variant=None, cwd=None):
-        self.prefix.log("build")
+        if target == 'install':
+            display.phase("Installing")
+        elif target:
+            display.phase("Building target '{}'".format(target))
+        else:
+            display.phase("Building")
         args = ['--build', self.build_dir]
         if variant is not None: args.extend(['--config', variant])
         if target is not None: args.extend(['--target', target])
@@ -83,7 +89,7 @@ class Builder:
         self.cmake(args=args, cwd=cwd)
 
     def test(self, variant=None):
-        self.prefix.log("test")
+        display.phase("Testing")
         if 'check' in self.targets():
             self.build(target='check', variant=variant or 'Release')
         else:

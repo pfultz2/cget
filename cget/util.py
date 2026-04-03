@@ -18,6 +18,8 @@ else:
 
 from six.moves.urllib import request
 
+from cget import display
+
 def to_bool(value):
     x = str(value).lower()
     if x in ("no",  "n", "false", "f", "0", "0.0", "", "none", "[]", "{}"): return False
@@ -218,19 +220,19 @@ class CGetURLOpener(request.FancyURLopener):
 def download_to(url, download_dir, insecure=False):
     name = url.split('/')[-1]
     file = os.path.join(download_dir, name)
-    click.echo("Downloading {0}".format(url))
-    bar_len = 1000
-    with click.progressbar(length=bar_len, width=70) as bar:
+    display.info("Downloading [bold]{}[/bold]".format(url))
+    with display.create_download_progress() as progress:
+        task = progress.add_task(name, total=None)
         def hook(count, block_size, total_size):
-            percent = int(count*block_size*bar_len/total_size)
-            if percent > 0 and percent < bar_len:
-                # Hack because we can't set the position
-                bar.pos = percent
-                bar.update(0)
+            if total_size > 0:
+                progress.update(task, total=total_size, completed=min(count * block_size, total_size))
+            else:
+                progress.update(task, completed=count * block_size)
         context = None
         if insecure: context = ssl._create_unverified_context()
         CGetURLOpener(context=context).retrieve(url, filename=file, reporthook=hook, data=None)
-        bar.update(bar_len)
+        if progress.tasks[0].total is not None:
+            progress.update(task, completed=progress.tasks[0].total)
     if not os.path.exists(file):
         raise BuildError("Download failed for: {0}".format(url))
     return file
@@ -247,8 +249,9 @@ def retrieve_url(url, dst, copy=False, insecure=False, hash=None):
         if f: return f
     f = download_to(url, dst, insecure=insecure) if remote else transfer_to(url[7:], dst, copy=copy)
     if os.path.isfile(f) and hash:
-        click.echo("Computing hash: {}".format(hash))
-        if check_hash(f, hash):
+        with display.status("Computing hash..."):
+            result = check_hash(f, hash)
+        if result:
             if remote: add_cache_file(hash.replace(':', '-'), f)
         else:
             raise BuildError("Hash doesn't match for {0}: {1}".format(url, hash))
@@ -372,7 +375,7 @@ class Commander:
         exe = which(name, self.paths)
         option_args = ["{0}={1}".format(key, value) for key, value in six.iteritems(options or {})]
         c = [exe] + option_args + as_list(args or [])
-        if self.verbose: click.secho(' '.join(c), bold=True)
+        if self.verbose: display.verbose(' '.join(c))
         return cmd(c, env=as_dict_str(merge(self.env, self._get_paths_env(), env)), **kwargs)
 
     def __getattr__(self, name):

@@ -1,4 +1,4 @@
-import os, shutil, shlex, six, inspect, click, contextlib, sys, functools, hashlib
+import os, shutil, shlex, six, inspect, contextlib, sys, functools, hashlib
 
 from cget.builder import Builder
 from cget.package import fname_to_pkg
@@ -6,6 +6,7 @@ from cget.package import PackageSource
 from cget.package import PackageBuild
 from cget.package import parse_pkg_build_tokens
 import cget.util as util
+from cget import display
 from cget.types import returns
 from cget.types import params
 
@@ -16,7 +17,7 @@ __CGET_CMAKE_DIR__ = os.path.join(__CGET_DIR__, 'cmake')
 def parse_deprecated_alias(s):
     i = s.find(':', 0, max(s.find('://'), s.find(':\\')))
     if i > 0: 
-        click.echo("WARNING: Using ':' for aliases is now deprecated.")
+        display.warning("Using ':' for aliases is now deprecated.")
         return s[0:i], s[i+1:]
     else: return None, s
 
@@ -99,7 +100,7 @@ class CGetPrefix:
         self.toolchain = self.write_cmake()
 
     def log(self, *args):
-        if self.verbose: click.secho(' '.join([str(arg) for arg in args]), bold=True)
+        if self.verbose: display.verbose(' '.join([str(arg) for arg in args]))
 
     def check(self, f, *args):
         if self.verbose and not f(*args):
@@ -310,11 +311,11 @@ class CGetPrefix:
             else:
                 self.link(pb)
                 self.write_parent(pb, track=track)
-                return "Linking package {}".format(pb.to_name())
+                return "[green]\u2713[/] Linking package {}".format(display.pkg(pb.to_name()))
         if os.path.exists(pkg_dir): 
             self.write_parent(pb, track=track)
             if update: self.remove(pb)
-            else: return "Package {} already installed".format(pb.to_name())
+            else: return "[yellow]![/] Package {} already installed".format(display.pkg(pb.to_name()))
         with self.create_builder(pb.pkg_src.get_hash(), tmp=True) as builder:
             # Fetch package
             src_dir = builder.fetch(pb.pkg_src.url, pb.hash, (pb.cmake != None), insecure=insecure)
@@ -336,7 +337,7 @@ class CGetPrefix:
             if util.USE_SYMLINKS: util.symlink_dir(install_dir, self.prefix)
             else: util.copy_dir(install_dir, self.prefix)
         self.write_parent(pb, track=track)
-        return "Successfully installed {}".format(pb.to_name())
+        return "[green]\u2713[/] Successfully installed {}".format(display.pkg(pb.to_name()))
 
     @returns(six.string_types)
     @params(pb=PACKAGE_SOURCE_TYPES)
@@ -346,9 +347,9 @@ class CGetPrefix:
         # If package doesn't exist
         if not os.path.exists(pkg_dir):
             util.mkfile(pkg_dir, "ignore", "ignore")
-            return "Ignore package {}".format(pb.to_name())
+            return "[yellow]![/] Ignore package {}".format(display.pkg(pb.to_name()))
         else:
-            return "Package {} already installed".format(pb.to_name())
+            return "[yellow]![/] Package {} already installed".format(display.pkg(pb.to_name()))
 
     @params(pb=PACKAGE_SOURCE_TYPES, test=bool)
     def build(self, pb, test=False, target=None, generator=None):
@@ -465,18 +466,18 @@ class CGetPrefix:
         try:
             yield
         except util.BuildError as err:
-            if err.msg: click.echo(err.msg)
-            if msg: click.echo(msg)
+            if err.msg: display.error(err.msg)
+            if msg: display.error(msg)
             if on_fail: on_fail()
-            if self.verbose: 
-                if err.data: click.echo(err.data)
+            if self.verbose:
+                if err.data: display.console.print(str(err.data))
                 raise
             sys.exit(1)
         except:
             extype, exvalue, extraceback = sys.exc_info()
-            click.echo("Unexpected error: " + str(extype))
-            click.echo(str(exvalue))
-            if msg: click.echo(msg)
+            display.error("Unexpected error: " + str(extype))
+            display.console.print(str(exvalue))
+            if msg: display.error(msg)
             if on_fail: on_fail()
             if self.verbose: raise
             sys.exit(1)
