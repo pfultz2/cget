@@ -1,6 +1,6 @@
 name: cget
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
   cancel:
@@ -17,7 +17,6 @@ jobs:
       matrix:
         platform:
           - ubuntu-24.04
-          - windows-2025
         python-version: ['3.8', '3.9', '3.10', '3.12']
         include:
           - platform: ubuntu-24.04
@@ -27,6 +26,8 @@ jobs:
             python-version: '3.7'
             container: python:3.7-slim
           - platform: macos-15
+            python-version: '3.12'
+          - platform: windows-2025
             python-version: '3.12'
 
     steps:
