@@ -4,6 +4,7 @@ from cget import __version__
 from cget import display
 from cget.prefix import CGetPrefix
 from cget.prefix import PackageBuild
+from cget.prefix import find_requirements_file
 import cget.util as util
 
 
@@ -113,8 +114,9 @@ def install_command(prefix, pkgs, define, file, test, test_all, update, generato
     """ Install packages """
     variant = get_build_type(debug, release, build_type)
     if not file and not pkgs:
-        if os.path.exists('dev-requirements.txt'): file = 'dev-requirements.txt'
-        else: file = 'requirements.txt'
+        dev_req = find_requirements_file('.', 'dev-requirements')
+        if dev_req is not None: file = dev_req
+        else: file = find_requirements_file('.') or 'requirements.cget'
     pbs = [PackageBuild(pkg, cmake=cmake, variant=variant) for pkg in pkgs]
     for pbu in util.flat([prefix.from_file(file), pbs]):
         pb = pbu.merge_defines(define)

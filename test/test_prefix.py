@@ -15,6 +15,7 @@ from cget.prefix import (
     cmake_else,
     parse_cmake_var_type,
     find_cmake,
+    find_requirements_file,
     CGetPrefix,
 )
 from cget.package import PackageSource, PackageBuild
@@ -526,7 +527,7 @@ class TestFromFile:
 
     def test_parses_package_file(self, tmp_path):
         p = CGetPrefix(str(tmp_path / "pfx"))
-        req = tmp_path / "requirements.txt"
+        req = tmp_path / "requirements.cget"
         req.write_text("user/repo\n")
         results = list(p.from_file(str(req)))
         assert len(results) == 1
@@ -534,28 +535,28 @@ class TestFromFile:
 
     def test_skips_comments(self, tmp_path):
         p = CGetPrefix(str(tmp_path / "pfx"))
-        req = tmp_path / "requirements.txt"
+        req = tmp_path / "requirements.cget"
         req.write_text("# comment\nuser/repo\n")
         results = list(p.from_file(str(req)))
         assert len(results) == 1
 
     def test_skips_empty_lines(self, tmp_path):
         p = CGetPrefix(str(tmp_path / "pfx"))
-        req = tmp_path / "requirements.txt"
+        req = tmp_path / "requirements.cget"
         req.write_text("\n\nuser/repo\n\n")
         results = list(p.from_file(str(req)))
         assert len(results) == 1
 
     def test_multiple_packages(self, tmp_path):
         p = CGetPrefix(str(tmp_path / "pfx"))
-        req = tmp_path / "requirements.txt"
+        req = tmp_path / "requirements.cget"
         req.write_text("user/repo1\nuser/repo2\n")
         results = list(p.from_file(str(req)))
         assert len(results) == 2
 
     def test_with_defines(self, tmp_path):
         p = CGetPrefix(str(tmp_path / "pfx"))
-        req = tmp_path / "requirements.txt"
+        req = tmp_path / "requirements.cget"
         req.write_text("user/repo -DFOO=1\n")
         results = list(p.from_file(str(req)))
         assert len(results) == 1
@@ -983,7 +984,7 @@ class TestFromRecipe:
         os.makedirs(recipe)
         with open(os.path.join(recipe, "package.txt"), 'w') as f:
             f.write("user/repo\n")
-        req = os.path.join(recipe, "requirements.txt")
+        req = os.path.join(recipe, "requirements.cget")
         with open(req, 'w') as f:
             f.write("dep/lib\n")
         result = p.from_recipe(recipe)
@@ -1028,14 +1029,14 @@ class TestFromFileAdditional:
 
     def test_with_url(self, tmp_path):
         p = CGetPrefix(str(tmp_path / "pfx"))
-        req = tmp_path / "requirements.txt"
+        req = tmp_path / "requirements.cget"
         req.write_text("user/repo\n")
         results = list(p.from_file(str(req), url="file://" + str(tmp_path)))
         assert len(results) == 1
 
     def test_with_hash(self, tmp_path):
         p = CGetPrefix(str(tmp_path / "pfx"))
-        req = tmp_path / "requirements.txt"
+        req = tmp_path / "requirements.cget"
         req.write_text("user/repo -H sha256:abc123\n")
         results = list(p.from_file(str(req)))
         assert len(results) == 1
@@ -1045,7 +1046,7 @@ class TestFromFileAdditional:
         cmake_file = tmp_path / "custom.cmake"
         cmake_file.write_text("# cmake")
         p = CGetPrefix(str(tmp_path / "pfx"))
-        req = tmp_path / "requirements.txt"
+        req = tmp_path / "requirements.cget"
         req.write_text('user/repo -X "{}"\n'.format(str(cmake_file)))
         results = list(p.from_file(str(req)))
         assert len(results) == 1
@@ -1053,7 +1054,7 @@ class TestFromFileAdditional:
 
     def test_with_test_flag(self, tmp_path):
         p = CGetPrefix(str(tmp_path / "pfx"))
-        req = tmp_path / "requirements.txt"
+        req = tmp_path / "requirements.cget"
         req.write_text("user/repo -t\n")
         results = list(p.from_file(str(req)))
         assert len(results) == 1
@@ -1061,7 +1062,7 @@ class TestFromFileAdditional:
 
     def test_with_build_flag(self, tmp_path):
         p = CGetPrefix(str(tmp_path / "pfx"))
-        req = tmp_path / "requirements.txt"
+        req = tmp_path / "requirements.cget"
         req.write_text("user/repo -b\n")
         results = list(p.from_file(str(req)))
         assert len(results) == 1
@@ -1341,7 +1342,7 @@ class TestInstallDeps:
         pb = PackageBuild(pkg_src=ps)
         src_dir = str(tmp_path / "src")
         os.makedirs(src_dir)
-        # No requirements.txt in src_dir, should not raise
+        # No requirements file in src_dir, should not raise
         p.install_deps(pb, src_dir)
 
     def test_with_requirements_file(self, tmp_path):
@@ -1350,7 +1351,7 @@ class TestInstallDeps:
         pb = PackageBuild(pkg_src=ps)
         src_dir = str(tmp_path / "src")
         os.makedirs(src_dir)
-        req = os.path.join(src_dir, "requirements.txt")
+        req = os.path.join(src_dir, "requirements.cget")
         with open(req, 'w') as f:
             f.write("dep/lib\n")
         with mock.patch.object(p, 'install') as mock_install:
@@ -1364,7 +1365,7 @@ class TestInstallDeps:
         pb = PackageBuild(pkg_src=ps)
         src_dir = str(tmp_path / "src")
         os.makedirs(src_dir)
-        req = os.path.join(src_dir, "requirements.txt")
+        req = os.path.join(src_dir, "requirements.cget")
         with open(req, 'w') as f:
             f.write("dep/lib\n")
         with mock.patch.object(p, 'install') as mock_install:
@@ -1377,7 +1378,7 @@ class TestInstallDeps:
         pb = PackageBuild(pkg_src=ps)
         src_dir = str(tmp_path / "src")
         os.makedirs(src_dir)
-        req = os.path.join(src_dir, "requirements.txt")
+        req = os.path.join(src_dir, "requirements.cget")
         with open(req, 'w') as f:
             f.write("dep/lib -t\n")
         with mock.patch.object(p, 'install') as mock_install:
@@ -1391,7 +1392,7 @@ class TestInstallDeps:
         pb = PackageBuild(pkg_src=ps)
         src_dir = str(tmp_path / "src")
         os.makedirs(src_dir)
-        req = os.path.join(src_dir, "requirements.txt")
+        req = os.path.join(src_dir, "requirements.cget")
         with open(req, 'w') as f:
             f.write("dep/lib -t\n")
         with mock.patch.object(p, 'install') as mock_install:
@@ -1435,7 +1436,7 @@ class TestPrefixBuild:
         p = CGetPrefix(str(tmp_path / "pfx"))
         src = tmp_path / "project"
         src.mkdir()
-        dev_req = src / "dev-requirements.txt"
+        dev_req = src / "dev-requirements.cget"
         dev_req.write_text("dep/dev\n")
         ps = PackageSource(name="test", url="file://" + str(src))
         pb = PackageBuild(pkg_src=ps)
@@ -1443,14 +1444,13 @@ class TestPrefixBuild:
             with mock.patch('cget.builder.Builder.configure'):
                 with mock.patch('cget.builder.Builder.build'):
                     p.build(pb)
-                    # pb.requirements should be set to dev-requirements.txt
                     assert pb.requirements == str(dev_req)
 
     def test_build_with_regular_requirements(self, tmp_path):
         p = CGetPrefix(str(tmp_path / "pfx"))
         src = tmp_path / "project"
         src.mkdir()
-        req = src / "requirements.txt"
+        req = src / "requirements.cget"
         req.write_text("dep/lib\n")
         ps = PackageSource(name="test", url="file://" + str(src))
         pb = PackageBuild(pkg_src=ps)
@@ -1562,3 +1562,104 @@ class TestCreateBuilderAdditional:
         with p.create_builder("short", tmp=True) as builder:
             dirname = os.path.basename(builder.top_dir)
             assert dirname == "tmp-short"
+
+
+# ── find_requirements_file ─────────────────────────────────────────────────
+
+class TestFindRequirementsFile:
+    def test_prefers_cget_extension(self, tmp_path):
+        (tmp_path / "requirements.cget").write_text("pkg\n")
+        (tmp_path / "requirements.txt").write_text("pkg\n")
+        result = find_requirements_file(str(tmp_path))
+        assert result.endswith("requirements.cget")
+
+    def test_falls_back_to_txt(self, tmp_path):
+        (tmp_path / "requirements.txt").write_text("pkg\n")
+        result = find_requirements_file(str(tmp_path))
+        assert result.endswith("requirements.txt")
+
+    def test_returns_none_when_missing(self, tmp_path):
+        result = find_requirements_file(str(tmp_path))
+        assert result is None
+
+    def test_dev_requirements_cget(self, tmp_path):
+        (tmp_path / "dev-requirements.cget").write_text("pkg\n")
+        result = find_requirements_file(str(tmp_path), 'dev-requirements')
+        assert result.endswith("dev-requirements.cget")
+
+    def test_dev_requirements_txt_fallback(self, tmp_path):
+        (tmp_path / "dev-requirements.txt").write_text("pkg\n")
+        result = find_requirements_file(str(tmp_path), 'dev-requirements')
+        assert result.endswith("dev-requirements.txt")
+
+    def test_txt_fallback_warns(self, tmp_path, capsys):
+        (tmp_path / "requirements.txt").write_text("pkg\n")
+        find_requirements_file(str(tmp_path))
+        captured = capsys.readouterr()
+        assert "deprecated" in captured.out.lower()
+        assert "requirements.txt" in captured.out
+        assert "requirements.cget" in captured.out
+
+    def test_cget_extension_no_warning(self, tmp_path, capsys):
+        (tmp_path / "requirements.cget").write_text("pkg\n")
+        find_requirements_file(str(tmp_path))
+        captured = capsys.readouterr()
+        assert "deprecated" not in captured.out.lower()
+
+
+# ── Backwards compatibility: .txt files still work ─────────────────────────
+
+class TestRequirementsTxtBackwardsCompat:
+    def test_install_deps_with_txt_fallback(self, tmp_path):
+        p = CGetPrefix(str(tmp_path / "pfx"))
+        ps = PackageSource(name="pkg", url="https://example.com")
+        pb = PackageBuild(pkg_src=ps)
+        src_dir = str(tmp_path / "src")
+        os.makedirs(src_dir)
+        req = os.path.join(src_dir, "requirements.txt")
+        with open(req, 'w') as f:
+            f.write("dep/lib\n")
+        with mock.patch.object(p, 'install') as mock_install:
+            mock_install.return_value = "installed"
+            p.install_deps(pb, src_dir)
+            mock_install.assert_called_once()
+
+    def test_build_with_dev_requirements_txt_fallback(self, tmp_path):
+        p = CGetPrefix(str(tmp_path / "pfx"))
+        src = tmp_path / "project"
+        src.mkdir()
+        dev_req = src / "dev-requirements.txt"
+        dev_req.write_text("dep/dev\n")
+        ps = PackageSource(name="test", url="file://" + str(src))
+        pb = PackageBuild(pkg_src=ps)
+        with mock.patch.object(p, 'install_deps'):
+            with mock.patch('cget.builder.Builder.configure'):
+                with mock.patch('cget.builder.Builder.build'):
+                    p.build(pb)
+                    assert pb.requirements == str(dev_req)
+
+    def test_build_with_requirements_txt_fallback(self, tmp_path):
+        p = CGetPrefix(str(tmp_path / "pfx"))
+        src = tmp_path / "project"
+        src.mkdir()
+        req = src / "requirements.txt"
+        req.write_text("dep/lib\n")
+        ps = PackageSource(name="test", url="file://" + str(src))
+        pb = PackageBuild(pkg_src=ps)
+        with mock.patch.object(p, 'install_deps'):
+            with mock.patch('cget.builder.Builder.configure'):
+                with mock.patch('cget.builder.Builder.build'):
+                    p.build(pb)
+                    assert pb.requirements == str(req)
+
+    def test_recipe_with_requirements_txt_fallback(self, tmp_path):
+        p = CGetPrefix(str(tmp_path / "pfx"))
+        recipe = str(tmp_path / "recipe")
+        os.makedirs(recipe)
+        with open(os.path.join(recipe, "package.txt"), 'w') as f:
+            f.write("user/repo\n")
+        req = os.path.join(recipe, "requirements.txt")
+        with open(req, 'w') as f:
+            f.write("dep/lib\n")
+        result = p.from_recipe(recipe)
+        assert result.requirements == req

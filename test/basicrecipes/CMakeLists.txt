@@ -1,5 +1,5 @@
 
-file(GLOB_RECURSE RECIPES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} recipes/*.txt recipes/*.cmake)
+file(GLOB_RECURSE RECIPES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} recipes/*.txt recipes/*.cget recipes/*.cmake)
 
 macro(get_directory_base OUTPUT_VAR DIR)
     if(CMAKE_VERSION VERSION_LESS "3.0")

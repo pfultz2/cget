@@ -586,7 +586,7 @@ def test_reqs_alias_f(d):
 
 @appveyor_skip
 def test_reqs_file_flag(d):
-    reqs_file = d.write_to('reqs', ['-f'+shlex_quote(get_exists_path('basicapp', 'requirements.txt'))])
+    reqs_file = d.write_to('reqs', ['-f'+shlex_quote(get_exists_path('basicapp', 'requirements.cget'))])
     d.cmds(install_cmds(url='--file {}'.format(reqs_file), lib='simple', alias='simple'))
 
 @appveyor_skip
@@ -595,13 +595,13 @@ def test_reqs_f(d):
     d.cmds(install_cmds(url='-f {}'.format(reqs_file), lib='simple', alias=get_exists_path('libsimple')))
 
 def test_reqs_f2(d):
-    reqs_file = get_exists_path('basicapp', 'requirements.txt')
+    reqs_file = get_exists_path('basicapp', 'requirements.cget')
     d.cmds(install_cmds(url='-f {}'.format(reqs_file), lib='simple', alias='simple'))
 
 @appveyor_skip
 def test_reqs_f3(d):
     reqs_file = d.write_to('reqs', [shlex_quote(get_exists_path('libsimple'))])
-    d.write_to('requirements.txt', [shlex_quote(get_exists_path('basicapp'))])
+    d.write_to('requirements.cget', [shlex_quote(get_exists_path('basicapp'))])
     d.cmds(install_cmds(url='-f {}'.format(reqs_file), lib='simple', alias=get_exists_path('libsimple')))
 
 def test_reqs_hash(d):
@@ -613,23 +613,23 @@ def test_reqs_hash(d):
 
 @appveyor_skip
 def test_without_reqs_f(d):
-    d.write_to('requirements.txt', [shlex_quote(get_exists_path('libsimple'))])
+    d.write_to('requirements.cget', [shlex_quote(get_exists_path('libsimple'))])
     d.cmds(install_cmds(url='', lib='simple', alias=get_exists_path('libsimple')))
 
 @appveyor_skip
 def test_without_reqs_f_dev(d):
-    d.write_to('dev-requirements.txt', [shlex_quote(get_exists_path('libsimple'))])
+    d.write_to('dev-requirements.cget', [shlex_quote(get_exists_path('libsimple'))])
     d.cmds(install_cmds(url='', lib='simple', alias=get_exists_path('libsimple')))
 
 @appveyor_skip
 def test_without_reqs_f_dev2(d):
-    d.write_to('dev-requirements.txt', [shlex_quote(get_exists_path('libsimple'))])
-    d.write_to('requirements.txt', ['fail'])
+    d.write_to('dev-requirements.cget', [shlex_quote(get_exists_path('libsimple'))])
+    d.write_to('requirements.cget', ['fail'])
     d.cmds(install_cmds(url='', lib='simple', alias=get_exists_path('libsimple')))
 
 @appveyor_skip
 def test_without_reqs_f2(d):
-    d.write_to('requirements.txt', [shlex_quote(get_exists_path('basicapp'))])
+    d.write_to('requirements.cget', [shlex_quote(get_exists_path('basicapp'))])
     d.cmds(install_cmds(url=get_exists_path('libsimple'), lib='simple'))
 
 @appveyor_skip

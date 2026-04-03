@@ -13,6 +13,16 @@ from cget.types import params
 __CGET_DIR__ = os.path.dirname(os.path.realpath(__file__))
 __CGET_CMAKE_DIR__ = os.path.join(__CGET_DIR__, 'cmake')
 
+def find_requirements_file(directory, name='requirements'):
+    cget_file = os.path.join(directory, name + '.cget')
+    if os.path.exists(cget_file):
+        return cget_file
+    txt_file = os.path.join(directory, name + '.txt')
+    if os.path.exists(txt_file):
+        display.warning("Using '{}' is deprecated. Rename to '{}'.".format(name + '.txt', name + '.cget'))
+        return txt_file
+    return None
+
 @params(s=six.string_types)
 def parse_deprecated_alias(s):
     i = s.find(':', 0, max(s.find('://'), s.find(':\\')))
@@ -258,8 +268,8 @@ class CGetPrefix:
         util.ensure_exists(recipe_pkg)
         p = next(iter(self.from_file(recipe_pkg, no_recipe=True)))
         self.check(lambda:p.pkg_src is not None)
-        requirements = os.path.join(recipe, "requirements.txt")
-        if os.path.exists(requirements): p.requirements = requirements
+        requirements = find_requirements_file(recipe)
+        if requirements is not None: p.requirements = requirements
         p.pkg_src.recipe = None
         # Use original name
         if pkg: p.pkg_src.name = pkg.pkg_src.name
@@ -290,7 +300,7 @@ class CGetPrefix:
         if track and pb.parent is not None: util.mkfile(self.get_deps_directory(pb.to_fname()), pb.parent, pb.parent)
 
     def install_deps(self, pb, d, test=False, test_all=False, generator=None, insecure=False, ignore_requirements=False):
-        req_txt = os.path.join(d, 'requirements.txt') if not ignore_requirements else None
+        req_txt = find_requirements_file(d) if not ignore_requirements else None
         for dependent in self.from_file(pb.requirements or req_txt, pb.pkg_src.url):
             transient = dependent.test or dependent.build
             testing = test or test_all
@@ -355,10 +365,13 @@ class CGetPrefix:
     def build(self, pb, test=False, target=None, generator=None):
         pb = self.parse_pkg_build(pb)
         src_dir = pb.pkg_src.get_src_dir()
-        if os.path.exists(os.path.join(src_dir, 'dev-requirements.txt')):
-            pb.requirements = os.path.join(src_dir, 'dev-requirements.txt')
-        elif os.path.exists(os.path.join(src_dir, 'requirements.txt')):
-            pb.requirements = os.path.join(src_dir, 'requirements.txt')
+        dev_req = find_requirements_file(src_dir, 'dev-requirements')
+        if dev_req is not None:
+            pb.requirements = dev_req
+        else:
+            req = find_requirements_file(src_dir)
+            if req is not None:
+                pb.requirements = req
         with self.create_builder(pb.to_fname()) as builder:
             # Install any dependencies first
             self.install_deps(pb, src_dir, generator=generator, test=test)
