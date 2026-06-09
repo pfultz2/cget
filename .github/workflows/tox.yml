@@ -21,7 +21,7 @@ jobs:
       matrix:
         platform:
           - ubuntu-24.04
-        python-version: ['3.8', '3.9', '3.10', '3.12']
+        python-version: ['3.8', '3.9', '3.10', '3.12', '3.14']
         include:
           - platform: ubuntu-24.04
             python-version: '3.6'
