@@ -60,7 +60,7 @@ jobs:
         python -m pip install tox
     - name: Install pkg-config (Windows)
       if: runner.os == 'Windows'
-      run: choco install pkgconfiglite -y
+      run: choco install pkgconfiglite -y --allow-empty-checksums
     - name: Test with tox
       run: tox -e py,lint
       env:
