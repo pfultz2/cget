@@ -16,7 +16,7 @@ if os.name == 'posix' and sys.version_info[0] < 3:
 else:
     import subprocess
 
-from six.moves.urllib import request
+from six.moves.urllib import request, error
 
 from cget import display
 
@@ -211,11 +211,24 @@ def symlink_to(src, dst_dir):
     os.symlink(src, target)
     return target
 
-class CGetURLOpener(request.FancyURLopener):
-    def http_error_default(self, url, fp, errcode, errmsg, headers):
-        if errcode >= 400:
-            raise BuildError("Download failed with error {0} for: {1}".format(errcode, url))
-        return request.FancyURLopener.http_error_default(self, url, fp, errcode, errmsg, headers)
+def url_retrieve(url, filename, reporthook=None, context=None):
+    # Replacement for the removed urllib FancyURLopener.retrieve (gone in
+    # Python 3.14) that still supports a custom SSL context and a reporthook.
+    block_size = 1024 * 8
+    response = request.urlopen(url, context=context)
+    try:
+        total_size = int(response.headers.get("Content-Length", -1))
+        count = 0
+        if reporthook: reporthook(count, block_size, total_size)
+        with open(filename, 'wb') as out:
+            while True:
+                block = response.read(block_size)
+                if not block: break
+                out.write(block)
+                count += 1
+                if reporthook: reporthook(count, block_size, total_size)
+    finally:
+        response.close()
 
 def download_to(url, download_dir, insecure=False):
     name = url.split('/')[-1]
@@ -230,7 +243,10 @@ def download_to(url, download_dir, insecure=False):
                 progress.update(task, completed=count * block_size)
         context = None
         if insecure: context = ssl._create_unverified_context()
-        CGetURLOpener(context=context).retrieve(url, filename=file, reporthook=hook, data=None)
+        try:
+            url_retrieve(url, file, reporthook=hook, context=context)
+        except error.HTTPError as e:
+            raise BuildError("Download failed with error {0} for: {1}".format(e.code, url))
         if progress.tasks[0].total is not None:
             progress.update(task, completed=progress.tasks[0].total)
     if not os.path.exists(file):

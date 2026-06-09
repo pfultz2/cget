@@ -786,18 +786,33 @@ class TestGetCachePath:
         assert result.endswith("mykey")
 
 
-# ── CGetURLOpener ────────────────────────────────────────────────────────────
+# ── url_retrieve ─────────────────────────────────────────────────────────────
 
-class TestCGetURLOpener:
-    def test_error_code_400_raises(self):
-        opener = util.CGetURLOpener()
-        with pytest.raises(util.BuildError, match="Download failed"):
-            opener.http_error_default("http://example.com", None, 404, "Not Found", {})
+class TestUrlRetrieve:
+    def _fake_response(self, data, total=None):
+        chunks = [data[i:i + 4] for i in range(0, len(data), 4)] or [b""]
+        response = mock.MagicMock()
+        response.headers.get.return_value = str(total) if total is not None else -1
+        response.read.side_effect = chunks + [b""]
+        return response
 
-    def test_error_code_500_raises(self):
-        opener = util.CGetURLOpener()
-        with pytest.raises(util.BuildError, match="Download failed"):
-            opener.http_error_default("http://example.com", None, 500, "Server Error", {})
+    def test_writes_file(self, tmp_path):
+        dest = tmp_path / "out.txt"
+        response = self._fake_response(b"hello world", total=11)
+        with mock.patch.object(util.request, 'urlopen', return_value=response):
+            util.url_retrieve("http://example.com/file.txt", str(dest))
+        assert dest.read_bytes() == b"hello world"
+        response.close.assert_called_once()
+
+    def test_reports_progress(self, tmp_path):
+        dest = tmp_path / "out.txt"
+        response = self._fake_response(b"abcdefgh", total=8)
+        calls = []
+        with mock.patch.object(util.request, 'urlopen', return_value=response):
+            util.url_retrieve("http://example.com/file.txt", str(dest),
+                              reporthook=lambda c, b, t: calls.append((c, t)))
+        # Reported at least once and propagated the total size
+        assert calls and all(t == 8 for c, t in calls)
 
 
 # ── download_to ──────────────────────────────────────────────────────────────
@@ -810,9 +825,9 @@ class TestDownloadTo:
         src.write_text("hello")
         download_dir = tmp_path / "dl"
         download_dir.mkdir()
-        # Mock the URL opener to copy the file instead of downloading
-        with mock.patch.object(util.CGetURLOpener, 'retrieve') as mock_retrieve:
-            def fake_retrieve(url, filename=None, reporthook=None, data=None):
+        # Mock url_retrieve to copy the file instead of downloading
+        with mock.patch.object(util, 'url_retrieve') as mock_retrieve:
+            def fake_retrieve(url, filename, reporthook=None, context=None):
                 shutil.copy(str(src), filename)
             mock_retrieve.side_effect = fake_retrieve
             result = util.download_to("http://example.com/file.txt", str(download_dir))
@@ -823,9 +838,17 @@ class TestDownloadTo:
     def test_download_failed_no_file(self, tmp_path):
         download_dir = tmp_path / "dl"
         download_dir.mkdir()
-        with mock.patch.object(util.CGetURLOpener, 'retrieve') as mock_retrieve:
+        with mock.patch.object(util, 'url_retrieve') as mock_retrieve:
             mock_retrieve.side_effect = lambda *a, **kw: None
             with pytest.raises(util.BuildError, match="Download failed"):
+                util.download_to("http://example.com/missing.tar.gz", str(download_dir))
+
+    def test_download_http_error(self, tmp_path):
+        download_dir = tmp_path / "dl"
+        download_dir.mkdir()
+        http_error = util.error.HTTPError("http://example.com", 404, "Not Found", {}, None)
+        with mock.patch.object(util, 'url_retrieve', side_effect=http_error):
+            with pytest.raises(util.BuildError, match="error 404"):
                 util.download_to("http://example.com/missing.tar.gz", str(download_dir))
 
     def test_download_insecure(self, tmp_path):
@@ -834,8 +857,8 @@ class TestDownloadTo:
         src.write_text("hello")
         download_dir = tmp_path / "dl"
         download_dir.mkdir()
-        with mock.patch.object(util.CGetURLOpener, 'retrieve') as mock_retrieve:
-            def fake_retrieve(url, filename=None, reporthook=None, data=None):
+        with mock.patch.object(util, 'url_retrieve') as mock_retrieve:
+            def fake_retrieve(url, filename, reporthook=None, context=None):
                 shutil.copy(str(src), filename)
             mock_retrieve.side_effect = fake_retrieve
             # Should not raise with insecure=True
