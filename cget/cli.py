@@ -47,12 +47,14 @@ class AliasedGroup(click.Group):
 @click.option('-p', '--prefix', envvar='CGET_PREFIX', help='Set prefix used to install packages')
 @click.option('-v', '--verbose', is_flag=True, envvar='VERBOSE', help="Enable verbose mode")
 @click.option('-B', '--build-path', envvar='CGET_BUILD_PATH', help='Set the path for the build directory to use when building the package')
+@click.option('--download-tool', envvar='CGET_DOWNLOAD_TOOL', help='Set the download tool to use (wget or curl)')
 @click.pass_context
-def cli(ctx, prefix, verbose, build_path):
+def cli(ctx, prefix, verbose, build_path, download_tool):
     ctx.obj = {}
     if prefix: ctx.obj['PREFIX'] = prefix
     if verbose: ctx.obj['VERBOSE'] = verbose
     if build_path: ctx.obj['BUILD_PATH'] = build_path
+    if download_tool: ctx.obj['DOWNLOAD_TOOL'] = download_tool
 
 def use_prefix(f):
     @click.option('-p', '--prefix', help='Set prefix used to install packages')
@@ -61,7 +63,7 @@ def use_prefix(f):
     @click.pass_obj
     @functools.wraps(f)
     def w(obj, prefix, verbose, build_path, *args, **kwargs):
-        p = CGetPrefix(prefix or obj.get('PREFIX'), verbose or obj.get('VERBOSE'), build_path or obj.get('BUILD_PATH'))
+        p = CGetPrefix(prefix or obj.get('PREFIX'), verbose or obj.get('VERBOSE'), build_path or obj.get('BUILD_PATH'), obj.get('DOWNLOAD_TOOL'))
         f(p, *args, **kwargs)
     return w
 

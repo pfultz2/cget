@@ -42,10 +42,10 @@ class Builder:
             if line.startswith(six.b('... ')):
                 yield line[4:]
 
-    def fetch(self, url, hash=None, copy=False, insecure=False):
+    def fetch(self, url, hash=None, copy=False, insecure=False, download_tool=None):
         self.prefix.log("fetch:", url)
         if insecure: url = url.replace('https', 'http')
-        f = util.retrieve_url(url, self.top_dir, copy=copy, insecure=insecure, hash=hash)
+        f = util.retrieve_url(url, self.top_dir, copy=copy, insecure=insecure, hash=hash, download_tool=download_tool)
         if os.path.isfile(f):
             with display.status("Extracting archive..."):
                 util.extract_ar(archive=f, dst=self.top_dir)
