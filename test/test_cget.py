@@ -994,6 +994,20 @@ def test_ignore_dep(d):
         cget_cmd('install', '--verbose', get_exists_path('basicapp'))
     ])
 
+def test_ignore_recipe_ignore(d):
+    d.cmds([
+        cget_cmd('ignore', '--verbose', 'simple'),
+        cget_cmd('size', '1'),
+        cget_cmd('install', '--verbose --test --update', 'recipes,'+get_exists_path('basicrecipes')),
+        cget_cmd('size', '2'),
+        cget_cmd('rm', '--verbose -y', 'simple'),
+        cget_cmd('size', '1'),
+        cget_cmd('rm', '--verbose -y', 'recipes'),
+        cget_cmd('size', '0'),
+        cget_cmd('ignore', '--verbose', 'simple'),
+        cget_cmd('size', '1')
+    ])
+
 @appveyor_skip
 def test_symlink_dir(d):
     d.cmds([
