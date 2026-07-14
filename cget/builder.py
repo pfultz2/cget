@@ -74,7 +74,8 @@ class Builder:
         ]
         for d in defines or []:
             args.append('-D{0}'.format(d))
-        if generator is not None: args = ['-G', generator] + args
+        if generator is None: generator = os.environ.get('CGET_DEFAULT_GENERATOR')
+        if generator: args = ['-G', generator] + args
         if self.prefix.verbose: args.extend(['-DCMAKE_VERBOSE_MAKEFILE=On'])
         if test: args.extend(['-DBUILD_TESTING=On'])
         else: args.extend(['-DBUILD_TESTING=Off'])

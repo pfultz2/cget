@@ -257,6 +257,52 @@ class TestConfigure:
             idx = args.index('-G')
             assert args[idx + 1] == "Ninja"
 
+    def test_configure_default_generator_env(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("CGET_DEFAULT_GENERATOR", "NMake Makefiles")
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+        src_dir = str(tmp_path / "src")
+        os.makedirs(src_dir)
+
+        with mock.patch.object(b, 'cmake') as mock_cmake:
+            b.configure(src_dir)
+            args = mock_cmake.call_args[1]['args']
+            assert '-G' in args
+            idx = args.index('-G')
+            assert args[idx + 1] == "NMake Makefiles"
+
+    def test_configure_generator_overrides_env(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("CGET_DEFAULT_GENERATOR", "NMake Makefiles")
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+        src_dir = str(tmp_path / "src")
+        os.makedirs(src_dir)
+
+        with mock.patch.object(b, 'cmake') as mock_cmake:
+            b.configure(src_dir, generator="Ninja")
+            args = mock_cmake.call_args[1]['args']
+            idx = args.index('-G')
+            assert args[idx + 1] == "Ninja"
+            assert "NMake Makefiles" not in args
+
+    def test_configure_empty_generator_env_ignored(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("CGET_DEFAULT_GENERATOR", "")
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+        src_dir = str(tmp_path / "src")
+        os.makedirs(src_dir)
+
+        with mock.patch.object(b, 'cmake') as mock_cmake:
+            b.configure(src_dir)
+            args = mock_cmake.call_args[1]['args']
+            assert '-G' not in args
+
     def test_configure_with_install_prefix(self, tmp_path):
         prefix = MockPrefix(str(tmp_path))
         top = str(tmp_path / "top")
