@@ -31,8 +31,17 @@ jobs:
             container: python:3.7-slim
           - platform: macos-15
             python-version: '3.12'
+          # Cover both cmake generator styles on windows: MSBuild and NMake.
+          # VS 2026 needs cmake >= 4.2, which needs a policy minimum for the
+          # cmake_minimum_required(VERSION 2.8) test packages.
           - platform: windows-2025
             python-version: '3.12'
+            cmake-generator: 'Visual Studio 18 2026'
+            cmake-version: '4.2.0'
+            cmake-policy-min: '3.5'
+          - platform: windows-2025
+            python-version: '3.12'
+            cmake-generator: 'NMake Makefiles'
 
     steps:
     - uses: actions/checkout@v6
@@ -48,7 +57,7 @@ jobs:
     - name: Setup cmake
       uses: jwlawson/actions-setup-cmake@v1.9
       with:
-        cmake-version: 3.31.0
+        cmake-version: ${{ matrix.cmake-version || '3.31.0' }}
     - name: Install build tools
       if: matrix.container
       run: |
@@ -65,3 +74,5 @@ jobs:
       run: tox -e py,lint
       env:
         CGET_VERBOSE: 1
+        CGET_DEFAULT_GENERATOR: ${{ matrix.cmake-generator }}
+        CMAKE_POLICY_VERSION_MINIMUM: ${{ matrix.cmake-policy-min }}

@@ -82,6 +82,49 @@ class TestIsMakeGenerator:
         b = Builder(prefix, top)
         assert b.is_make_generator() is False
 
+    def write_cache(self, build_dir, generator):
+        with open(os.path.join(build_dir, "CMakeCache.txt"), "w") as f:
+            f.write("CMAKE_GENERATOR:INTERNAL={}\n".format(generator))
+            f.write("CMAKE_GENERATOR_INSTANCE:INTERNAL=\n")
+
+    def test_true_for_unix_makefiles_cache(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        build_dir = os.path.join(top, "build")
+        os.makedirs(build_dir)
+        self.write_cache(build_dir, "Unix Makefiles")
+        with open(os.path.join(build_dir, "Makefile"), "w") as f:
+            f.write("")
+        b = Builder(prefix, top)
+        assert b.is_make_generator() is True
+
+    def test_false_for_nmake_cache(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        build_dir = os.path.join(top, "build")
+        os.makedirs(build_dir)
+        self.write_cache(build_dir, "NMake Makefiles")
+        with open(os.path.join(build_dir, "Makefile"), "w") as f:
+            f.write("")
+        b = Builder(prefix, top)
+        assert b.is_make_generator() is False
+
+    def test_false_for_ninja_cache(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        build_dir = os.path.join(top, "build")
+        os.makedirs(build_dir)
+        self.write_cache(build_dir, "Ninja")
+        b = Builder(prefix, top)
+        assert b.is_make_generator() is False
+
+    def test_get_generator_no_cache(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+        assert b.get_generator() is None
+
 
 # ── show_log / show_logs ─────────────────────────────────────────────────────
 
@@ -213,6 +256,52 @@ class TestConfigure:
             assert '-G' in args
             idx = args.index('-G')
             assert args[idx + 1] == "Ninja"
+
+    def test_configure_default_generator_env(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("CGET_DEFAULT_GENERATOR", "NMake Makefiles")
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+        src_dir = str(tmp_path / "src")
+        os.makedirs(src_dir)
+
+        with mock.patch.object(b, 'cmake') as mock_cmake:
+            b.configure(src_dir)
+            args = mock_cmake.call_args[1]['args']
+            assert '-G' in args
+            idx = args.index('-G')
+            assert args[idx + 1] == "NMake Makefiles"
+
+    def test_configure_generator_overrides_env(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("CGET_DEFAULT_GENERATOR", "NMake Makefiles")
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+        src_dir = str(tmp_path / "src")
+        os.makedirs(src_dir)
+
+        with mock.patch.object(b, 'cmake') as mock_cmake:
+            b.configure(src_dir, generator="Ninja")
+            args = mock_cmake.call_args[1]['args']
+            idx = args.index('-G')
+            assert args[idx + 1] == "Ninja"
+            assert "NMake Makefiles" not in args
+
+    def test_configure_empty_generator_env_ignored(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("CGET_DEFAULT_GENERATOR", "")
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+        src_dir = str(tmp_path / "src")
+        os.makedirs(src_dir)
+
+        with mock.patch.object(b, 'cmake') as mock_cmake:
+            b.configure(src_dir)
+            args = mock_cmake.call_args[1]['args']
+            assert '-G' not in args
 
     def test_configure_with_install_prefix(self, tmp_path):
         prefix = MockPrefix(str(tmp_path))

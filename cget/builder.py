@@ -17,7 +17,20 @@ class Builder:
     def get_build_path(self, *args):
         return self.get_path('build', *args)
 
+    def get_generator(self):
+        cache_file = self.get_build_path('CMakeCache.txt')
+        if os.path.exists(cache_file):
+            with open(cache_file) as f:
+                for line in f:
+                    if line.startswith('CMAKE_GENERATOR:'):
+                        return line.split('=', 1)[1].strip()
+        return None
+
     def is_make_generator(self):
+        # NMake also writes a Makefile, but nmake has no -j option
+        generator = self.get_generator()
+        if generator is not None:
+            return 'Makefiles' in generator and 'NMake' not in generator
         return os.path.exists(self.get_build_path('Makefile'))
 
     def cmake(self, options=None, use_toolchain=False, **kwargs):
@@ -61,7 +74,8 @@ class Builder:
         ]
         for d in defines or []:
             args.append('-D{0}'.format(d))
-        if generator is not None: args = ['-G', generator] + args
+        if generator is None: generator = os.environ.get('CGET_DEFAULT_GENERATOR')
+        if generator: args = ['-G', generator] + args
         if self.prefix.verbose: args.extend(['-DCMAKE_VERBOSE_MAKEFILE=On'])
         if test: args.extend(['-DBUILD_TESTING=On'])
         else: args.extend(['-DBUILD_TESTING=Off'])
