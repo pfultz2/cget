@@ -82,6 +82,49 @@ class TestIsMakeGenerator:
         b = Builder(prefix, top)
         assert b.is_make_generator() is False
 
+    def write_cache(self, build_dir, generator):
+        with open(os.path.join(build_dir, "CMakeCache.txt"), "w") as f:
+            f.write("CMAKE_GENERATOR:INTERNAL={}\n".format(generator))
+            f.write("CMAKE_GENERATOR_INSTANCE:INTERNAL=\n")
+
+    def test_true_for_unix_makefiles_cache(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        build_dir = os.path.join(top, "build")
+        os.makedirs(build_dir)
+        self.write_cache(build_dir, "Unix Makefiles")
+        with open(os.path.join(build_dir, "Makefile"), "w") as f:
+            f.write("")
+        b = Builder(prefix, top)
+        assert b.is_make_generator() is True
+
+    def test_false_for_nmake_cache(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        build_dir = os.path.join(top, "build")
+        os.makedirs(build_dir)
+        self.write_cache(build_dir, "NMake Makefiles")
+        with open(os.path.join(build_dir, "Makefile"), "w") as f:
+            f.write("")
+        b = Builder(prefix, top)
+        assert b.is_make_generator() is False
+
+    def test_false_for_ninja_cache(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        build_dir = os.path.join(top, "build")
+        os.makedirs(build_dir)
+        self.write_cache(build_dir, "Ninja")
+        b = Builder(prefix, top)
+        assert b.is_make_generator() is False
+
+    def test_get_generator_no_cache(self, tmp_path):
+        prefix = MockPrefix(str(tmp_path))
+        top = str(tmp_path / "top")
+        os.makedirs(top)
+        b = Builder(prefix, top)
+        assert b.get_generator() is None
+
 
 # ── show_log / show_logs ─────────────────────────────────────────────────────
 
