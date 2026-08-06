@@ -102,10 +102,11 @@ def find_cmake(p, start):
 PACKAGE_SOURCE_TYPES = (six.string_types, PackageSource, PackageBuild)
 
 class CGetPrefix:
-    def __init__(self, prefix, verbose=False, build_path=None):
+    def __init__(self, prefix, verbose=False, build_path=None, download_tool=None):
         self.prefix = os.path.abspath(prefix or 'cget')
         self.verbose = verbose
         self.build_path_var = build_path
+        self.download_tool = download_tool
         self.cmd = util.Commander(paths=[self.get_path('bin')], env=self.get_env(), verbose=self.verbose)
         self.toolchain = self.write_cmake()
 
@@ -299,22 +300,25 @@ class CGetPrefix:
     def write_parent(self, pb, track=True):
         if track and pb.parent is not None: util.mkfile(self.get_deps_directory(pb.to_fname()), pb.parent, pb.parent)
 
-    def install_deps(self, pb, d, test=False, test_all=False, generator=None, insecure=False, ignore_requirements=False):
+    def install_deps(self, pb, d, test=False, test_all=False, generator=None, insecure=False, ignore_requirements=False, download_tool=None):
         req_txt = find_requirements_file(d) if not ignore_requirements else None
         for dependent in self.from_file(pb.requirements or req_txt, pb.pkg_src.url):
             transient = dependent.test or dependent.build
             testing = test or test_all
             installable = not dependent.test or dependent.test == testing
-            if installable: 
-                self.install(dependent.of(pb), test_all=test_all, generator=generator, track=not transient, insecure=insecure)
+            if installable:
+                self.install(dependent.of(pb), test_all=test_all, generator=generator, track=not transient, insecure=insecure, download_tool=download_tool)
 
     @returns(six.string_types)
     @params(pb=PACKAGE_SOURCE_TYPES, test=bool, test_all=bool, update=bool, track=bool)
-    def install(self, pb, test=False, test_all=False, generator=None, update=False, track=True, insecure=False):
+    def install(self, pb, test=False, test_all=False, generator=None, update=False, track=True, insecure=False, download_tool=None):
         pb = self.parse_pkg_build(pb)
         pkg_dir = self.get_package_directory(pb.to_fname())
         unlink_dir = self.get_unlink_directory(pb.to_fname())
         install_dir = self.get_package_directory(pb.to_fname(), 'install')
+        # Use download_tool from instance if not provided
+        if download_tool is None:
+            download_tool = self.download_tool
         # If its been unlinked, then link it in
         if os.path.exists(unlink_dir):
             if update: shutil.rmtree(unlink_dir)
@@ -322,15 +326,15 @@ class CGetPrefix:
                 self.link(pb)
                 self.write_parent(pb, track=track)
                 return "[green]\u2713[/] Linking package {}".format(display.pkg(pb.to_name()))
-        if os.path.exists(pkg_dir): 
+        if os.path.exists(pkg_dir):
             self.write_parent(pb, track=track)
             if update: self.remove(pb)
             else: return "[yellow]![/] Package {} already installed".format(display.pkg(pb.to_name()))
         with self.create_builder(pb.pkg_src.get_hash(), tmp=True) as builder:
             # Fetch package
-            src_dir = builder.fetch(pb.pkg_src.url, pb.hash, (pb.cmake != None), insecure=insecure)
+            src_dir = builder.fetch(pb.pkg_src.url, pb.hash, (pb.cmake != None), insecure=insecure, download_tool=download_tool)
             # Install any dependencies first
-            self.install_deps(pb, src_dir, test=test, test_all=test_all, generator=generator, insecure=insecure, ignore_requirements=pb.ignore_requirements)
+            self.install_deps(pb, src_dir, test=test, test_all=test_all, generator=generator, insecure=insecure, ignore_requirements=pb.ignore_requirements, download_tool=download_tool)
             # Setup cmake file
             if pb.cmake: 
                 target = os.path.join(src_dir, 'CMakeLists.txt')

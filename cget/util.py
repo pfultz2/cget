@@ -232,10 +232,15 @@ def url_retrieve(url, filename, reporthook=None, context=None):
     finally:
         response.close()
 
-def download_to(url, download_dir, insecure=False):
+def download_to(url, download_dir, insecure=False, download_tool=None):
     name = url.split('/')[-1]
     file = os.path.join(download_dir, name)
     display.info("Downloading [bold]{}[/bold]".format(url))
+
+    # Use external tool if specified
+    if download_tool:
+        return download_with_tool(url, file, download_tool, insecure)
+
     with display.create_download_progress() as progress:
         task = progress.add_task(name, total=None)
         def hook(count, block_size, total_size):
@@ -255,17 +260,46 @@ def download_to(url, download_dir, insecure=False):
         raise BuildError("Download failed for: {0}".format(url))
     return file
 
+def download_with_tool(url, file, tool, insecure=False):
+    """Download using external tool (wget or curl)"""
+    tool = tool.lower()
+    cmd_args = None
+
+    if tool == 'wget':
+        cmd_args = ['wget', '-O', file, url]
+        if insecure:
+            cmd_args.insert(1, '--no-check-certificate')
+    elif tool == 'curl':
+        cmd_args = ['curl', '-L', '-o', file, url]
+        if insecure:
+            cmd_args.insert(1, '-k')
+    else:
+        raise BuildError("Unsupported download tool: {}. Supported tools: wget, curl".format(tool))
+
+    display.info("Using {} to download".format(tool))
+    try:
+        child = subprocess.Popen(cmd_args)
+        child.communicate()
+        if child.returncode != 0:
+            raise BuildError("Download failed with {} for: {}".format(tool, url))
+    except FileNotFoundError:
+        raise BuildError("Download tool '{}' not found. Please install it first.".format(tool))
+
+    if not os.path.exists(file):
+        raise BuildError("Download failed for: {0}".format(url))
+    return file
+
 def transfer_to(f, dst, copy=False):
     if USE_SYMLINKS and not copy: return symlink_to(f, dst)
     else: return copy_to(f, dst)
 
-def retrieve_url(url, dst, copy=False, insecure=False, hash=None):
+def retrieve_url(url, dst, copy=False, insecure=False, hash=None, download_tool=None):
     remote = not url.startswith('file://')
     # Retrieve from cache
     if remote and hash:
         f = get_cache_file(hash.replace(':', '-'))
         if f: return f
-    f = download_to(url, dst, insecure=insecure) if remote else transfer_to(url[7:], dst, copy=copy)
+    f = download_to(url, dst, insecure=insecure, download_tool=download_tool) if remote else transfer_to(url[7:], dst, copy=copy)
     if os.path.isfile(f) and hash:
         with display.status("Computing hash..."):
             result = check_hash(f, hash)
