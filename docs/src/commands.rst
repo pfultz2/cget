@@ -161,7 +161,7 @@ This will initialize the cmake toolchain. By default, the ``install`` command wi
 
 .. option::  --env VAR=VALUE
 
-    Environment variables to set when building packages. These are set for the cmake configure, build and install steps of every package installed in the prefix. They are not set when cget downloads the package.
+    Environment variables to set when building packages. These are set for the cmake configure, build and install steps of every package installed in the prefix. They are not set when cget runs.
 
 .. option::  --shared               
 
