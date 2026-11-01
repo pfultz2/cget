@@ -906,6 +906,22 @@ def test_flags_define(d):
     d.cmds([cget_cmd('install', '--verbose --test --define CGET_FLAG=On', get_exists_path('libsimpleflag'))])
 
 @appveyor_skip
+def test_env_init(d):
+    d.cmds(install_cmds(init='--env CGET_ENV_FLAG=On --env CGET_ENV_VALUE=a=b', url=get_exists_path('libsimpleenv')))
+
+@pytest.mark.xfail(strict=True)
+def test_env_fail(d):
+    d.cmds([cget_cmd('install', '--verbose --test', get_path('libsimpleenv'))])
+
+@pytest.mark.xfail(strict=True)
+def test_env_init_reset(d):
+    d.cmds([
+        cget_cmd('init', '--env CGET_ENV_FLAG=On --env CGET_ENV_VALUE=a=b'),
+        cget_cmd('init'),
+        cget_cmd('install', '--verbose --test', get_path('libsimpleenv'))
+    ])
+
+@appveyor_skip
 def test_flags_toolchain(d):
     d.cmds([
         cget_cmd('init', '--toolchain', get_toolchain('toolchainflag.cmake')),
