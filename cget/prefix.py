@@ -118,10 +118,23 @@ class CGetPrefix:
 
 
     def get_env(self):
-        return {
+        env = {
             'LD_LIBRARY_PATH': self.get_path('lib'),
             'PKG_CONFIG_PATH': self.pkg_config_path()
         }
+        env.update(self.read_env())
+        return env
+
+    def get_env_file(self):
+        return self.get_private_path('env.json')
+
+    def read_env(self):
+        return util.read_json(self.get_env_file(), {})
+
+    def write_env(self, env):
+        util.mkdir(self.get_private_path())
+        util.write_json(self.get_env_file(), env)
+        return self.get_env_file()
 
     def write_cmake(self, always_write=False, **kwargs):
         return util.mkfile(self.get_private_path(), 'cget.cmake', self.generate_cmake_toolchain(**kwargs), always_write=always_write)

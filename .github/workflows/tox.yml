@@ -61,6 +61,11 @@ jobs:
     - name: Install build tools
       if: matrix.container
       run: |
+        # Debian 11 (bullseye) is end-of-life and its packages have moved
+        # from deb.debian.org/security.debian.org to archive.debian.org.
+        if grep -qs bullseye /etc/apt/sources.list; then
+          sed -i -E 's#https?://(deb|security)\.debian\.org/#http://archive.debian.org/#g' /etc/apt/sources.list
+        fi
         apt-get update
         apt-get install -y make gcc g++ pkg-config
     - name: Install dependencies

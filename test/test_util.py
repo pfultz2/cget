@@ -159,6 +159,27 @@ class TestWriteTo:
         assert not os.path.exists(f)
 
 
+# ── read_json / write_json ───────────────────────────────────────────────────
+
+class TestJson:
+    def test_round_trip(self, tmp_path):
+        f = str(tmp_path / "data.json")
+        data = {"KEY": "first\nsecond", "EQ": "a=b", "EMPTY": ""}
+        util.write_json(f, data)
+        assert util.read_json(f) == data
+
+    def test_missing_file_returns_default(self, tmp_path):
+        f = str(tmp_path / "missing.json")
+        assert util.read_json(f) is None
+        assert util.read_json(f, {}) == {}
+
+    def test_overwrites_existing(self, tmp_path):
+        f = str(tmp_path / "data.json")
+        util.write_json(f, {"a": "1"})
+        util.write_json(f, {})
+        assert util.read_json(f) == {}
+
+
 # ── mkdir ────────────────────────────────────────────────────────────────────
 
 class TestMkdir:
@@ -1119,7 +1140,7 @@ class TestCmdAdditional:
 class TestToDefineDictAdditional:
     def test_value_with_equals(self):
         result = util.to_define_dict(["KEY=val=ue"])
-        assert result["KEY"] == "val"  # split on first '='
+        assert result["KEY"] == "val=ue"  # split on first '=' only
 
     def test_single_entry(self):
         result = util.to_define_dict(["X=Y"])

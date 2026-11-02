@@ -75,9 +75,10 @@ def use_prefix(f):
 @click.option('--ldflags', required=False, help="Set additional linker flags")
 @click.option('--std', required=False, help="Set C++ standard if available")
 @click.option('-D', '--define', multiple=True, help="Extra configuration variables to pass to CMake")
+@click.option('--env', multiple=True, help="Environment variables to set when building packages")
 @click.option('--shared', is_flag=True, help="Set toolchain to build shared libraries by default")
 @click.option('--static', is_flag=True, help="Set toolchain to build static libraries by default")
-def init_command(prefix, toolchain, cc, cxx, cflags, cxxflags, ldflags, std, define, shared, static):
+def init_command(prefix, toolchain, cc, cxx, cflags, cxxflags, ldflags, std, define, env, shared, static):
     """ Initialize install directory """
     if shared and static:
         display.error("shared and static are not supported together")
@@ -95,6 +96,7 @@ def init_command(prefix, toolchain, cc, cxx, cflags, cxxflags, ldflags, std, def
         ldflags=ldflags, 
         std=std, 
         defines=defines)
+    prefix.write_env(util.to_define_dict(env))
 
 @cli.command(name='install')
 @use_prefix

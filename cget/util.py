@@ -78,6 +78,16 @@ def write_to(file, lines):
         with open(file, 'w') as f:
             f.writelines(content)
 
+def read_json(file, default=None):
+    if not os.path.exists(file):
+        return default
+    with open(file) as f:
+        return json.load(f)
+
+def write_json(file, data):
+    with open(file, 'w') as f:
+        json.dump(data, f)
+
 def mkdir(p):
     if not os.path.exists(p): os.makedirs(p)
     return p
@@ -361,7 +371,7 @@ def to_define_dict(xs):
     result = {}
     for x in xs:
         if '=' in x:
-            p = x.split('=')
+            p = x.split('=', 1)
             result[p[0]] = p[1]
         else:
             result[x] = ''
