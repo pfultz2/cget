@@ -78,11 +78,15 @@ def write_to(file, lines):
         with open(file, 'w') as f:
             f.writelines(content)
 
-def read_from(file):
-    if os.path.exists(file):
-        with open(file) as f:
-            for line in f.read().splitlines():
-                yield line
+def read_json(file, default=None):
+    if not os.path.exists(file):
+        return default
+    with open(file) as f:
+        return json.load(f)
+
+def write_json(file, data):
+    with open(file, 'w') as f:
+        json.dump(data, f)
 
 def mkdir(p):
     if not os.path.exists(p): os.makedirs(p)
@@ -123,9 +127,6 @@ def get_cache_file(key):
         return os.path.join(p, next(ls(p)))
     else:
         return None
-
-def delete_file(path):
-    if path is not None and os.path.exists(path): os.remove(adjust_path(path))
 
 def delete_dir(path):
     if path is not None and os.path.exists(path): shutil.rmtree(adjust_path(path))

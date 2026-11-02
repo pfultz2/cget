@@ -126,14 +126,15 @@ class CGetPrefix:
         return env
 
     def get_env_file(self):
-        return self.get_private_path('env')
+        return self.get_private_path('env.json')
 
     def read_env(self):
-        return util.to_define_dict(util.read_from(self.get_env_file()))
+        return util.read_json(self.get_env_file(), {})
 
     def write_env(self, env):
-        util.delete_file(self.get_env_file())
-        return util.mkfile(self.get_private_path(), 'env', ['{0}={1}'.format(key, value) for key, value in env.items()])
+        util.mkdir(self.get_private_path())
+        util.write_json(self.get_env_file(), env)
+        return self.get_env_file()
 
     def write_cmake(self, always_write=False, **kwargs):
         return util.mkfile(self.get_private_path(), 'cget.cmake', self.generate_cmake_toolchain(**kwargs), always_write=always_write)

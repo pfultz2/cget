@@ -292,6 +292,36 @@ class TestCGetPrefix:
         assert 'PKG_CONFIG_PATH' in env
         assert env['LD_LIBRARY_PATH'] == p.get_path('lib')
 
+    def test_read_env_missing_file(self, tmp_path):
+        p = CGetPrefix(str(tmp_path / "pfx"))
+        assert not os.path.exists(p.get_env_file())
+        assert p.read_env() == {}
+
+    def test_env_round_trip(self, tmp_path):
+        p = CGetPrefix(str(tmp_path / "pfx"))
+        env = {
+            "CGET_ENV_FLAG": "On",
+            "CGET_ENV_VALUE": "a=b",
+            "CGET_ENV_MULTILINE": "first\nsecond",
+        }
+        assert p.write_env(env) == p.get_env_file()
+        assert p.read_env() == env
+
+    def test_get_env_includes_multiline_value(self, tmp_path):
+        p = CGetPrefix(str(tmp_path / "pfx"))
+        p.write_env({"CGET_ENV_MULTILINE": "first\nsecond"})
+        env = p.get_env()
+        assert env["CGET_ENV_MULTILINE"] == "first\nsecond"
+        assert "second" not in env
+        assert env['LD_LIBRARY_PATH'] == p.get_path('lib')
+
+    def test_write_env_empty_resets(self, tmp_path):
+        p = CGetPrefix(str(tmp_path / "pfx"))
+        p.write_env({"CGET_ENV_FLAG": "On"})
+        p.write_env({})
+        assert p.read_env() == {}
+        assert "CGET_ENV_FLAG" not in p.get_env()
+
     def test_pkg_config_path(self, tmp_path):
         p = CGetPrefix(str(tmp_path / "pfx"))
         result = p.pkg_config_path()
