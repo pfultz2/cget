@@ -1119,7 +1119,7 @@ class TestCmdAdditional:
 class TestToDefineDictAdditional:
     def test_value_with_equals(self):
         result = util.to_define_dict(["KEY=val=ue"])
-        assert result["KEY"] == "val"  # split on first '='
+        assert result["KEY"] == "val=ue"  # split on first '=' only
 
     def test_single_entry(self):
         result = util.to_define_dict(["X=Y"])
